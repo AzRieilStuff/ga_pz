@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Inventory/IContainer.h"
+#include "Weapon/BaseWeapon.h"
 #include "CharacterMain.generated.h"
 
 UCLASS(config=Game)
@@ -31,9 +32,12 @@ public:
 
 	void InitInventory() override;
 
-protected:
+	UPROPERTY(BlueprintReadOnly)
+	UBaseWeapon* Weapon;
 
-	void OnResetVR();
+	virtual void BeginPlay() override;
+
+protected:
 
 	void MoveForward(float Value);
 
@@ -67,7 +71,6 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-
 	
 	UPROPERTY(Category=Character, VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	UInventory* InventoryComponent;

@@ -65,9 +65,6 @@ void ACharacterMain::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 	// handle touch devices
 	PlayerInputComponent->BindTouch(IE_Pressed, this, &ACharacterMain::TouchStarted);
 	PlayerInputComponent->BindTouch(IE_Released, this, &ACharacterMain::TouchStopped);
-
-	// VR headset functionality
-	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ACharacterMain::OnResetVR);
 }
 
 UInventory* ACharacterMain::GetInventory()
@@ -78,17 +75,6 @@ UInventory* ACharacterMain::GetInventory()
 void ACharacterMain::InitInventory()
 {
 	this->InventoryComponent = CreateDefaultSubobject<UInventory>(TEXT("Inventory"));
-}
-
-void ACharacterMain::OnResetVR()
-{
-	// If PZ_C_2 is added to a project via 'Add Feature' in the Unreal Editor the dependency on HeadMountedDisplay in PZ_C_2.Build.cs is not automatically propagated
-	// and a linker error will result.
-	// You will need to either:
-	//		Add "HeadMountedDisplay" to [YourProject].Build.cs PublicDependencyModuleNames in order to build successfully (appropriate if supporting VR).
-	// or:
-	//		Comment or delete the call to ResetOrientationAndPosition below (appropriate if not supporting VR)
-	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }
 
 void ACharacterMain::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
@@ -140,4 +126,10 @@ void ACharacterMain::MoveRight(float Value)
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
 	}
+}
+
+void ACharacterMain::BeginPlay()
+{
+	Super::BeginPlay();
+	Weapon = FindComponentByClass<UBaseWeapon>();
 }
