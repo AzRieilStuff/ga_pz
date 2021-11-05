@@ -5,5 +5,5 @@
 
 APlayerControllerMain::APlayerControllerMain()
 {
-	this->SetShowMouseCursor(true);
+	SetShowMouseCursor(true);
 }

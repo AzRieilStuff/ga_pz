@@ -41,7 +41,7 @@ ACharacterMain::ACharacterMain()
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 
-	this->InitInventory();
+	InitInventory();
 }
 
 void ACharacterMain::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -69,7 +69,7 @@ void ACharacterMain::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 
 UInventory* ACharacterMain::GetInventory()
 {
-	return this->InventoryComponent;
+	return InventoryComponent;
 }
 
 void ACharacterMain::InitInventory()

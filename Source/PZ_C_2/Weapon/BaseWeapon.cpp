@@ -9,63 +9,70 @@
 
 UBaseWeapon::UBaseWeapon()
 {
+	Range = 10000;
+	MuzzleSocketName = FName("Muzzle");
 }
 
 
 void UBaseWeapon::Fire()
 {
-	if( !this->CanFire() )
+	if( !this->CanFire() ){
 		return;
+	}
 	
-	auto* Socket = SkeletalMesh->FindSocket(this->MuzzleSocketName);
-	if(Socket == nullptr)
+	USkeletalMeshSocket* Socket = SkeletalMesh->FindSocket(this->MuzzleSocketName);
+	if(Socket == nullptr){
 		return;
+	}
 	
 	FVector SocketLocation = Socket->GetSocketLocation(this);
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, SocketLocation.ToString());
-	this->WeaponTrace(SocketLocation, SocketLocation + (GetOwner()->GetActorForwardVector() * 10000));
-	this->UseAmmo();
+
+	FVector TraceEndLocation = SocketLocation + (GetOwner()->GetActorForwardVector() * Range);
+	WeaponTrace(SocketLocation, TraceEndLocation);
+	UseAmmo();
 }
 
-bool UBaseWeapon::CanReload() const
+bool UBaseWeapon::bCanReload() const
 {
-	return this->AmmoInClip < this->MaxAmmoInClip && this->AmmoTotal > 0; 
+	return !IsReloading && AmmoInClip < MaxAmmoInClip && AmmoTotal > 0; 
 }
 
 bool UBaseWeapon::CanFire() const
 {
-	return this->AmmoInClip > 0 && !this->IsReloading;
+	return AmmoInClip > 0 && !IsReloading;
 }
 
 void UBaseWeapon::Reload()
 {
-	if( !this->CanReload() || this->IsReloading )
+	if( !bCanReload() || IsReloading ){
 		return;
+	}
 
-	this->IsReloading = true;
+	IsReloading = true;
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Reloading"));
 
 	FTimerHandle UnusedHandle;
 	FTimerDelegate TimerCallback;
 	TimerCallback.BindLambda([&] 
 	{
-		int32 Restore = this->MaxAmmoInClip > this->AmmoTotal ? this->AmmoTotal : this->MaxAmmoInClip;
-		Restore -= this->AmmoInClip;
-		this->AmmoInClip += Restore;
-		this->AmmoTotal -= Restore;
-		this->IsReloading = false;
+		int32 Restore = MaxAmmoInClip > AmmoTotal ? AmmoTotal : MaxAmmoInClip;
+		Restore -= AmmoInClip;
+		AmmoInClip += Restore;
+		AmmoTotal -= Restore;
+		IsReloading = false;
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Reloaded"));
 	});
 
-	GetOwner()->GetWorldTimerManager().SetTimer(UnusedHandle, TimerCallback, this->ReloadDuration, false);
+	GetOwner()->GetWorldTimerManager().SetTimer(UnusedHandle, TimerCallback, ReloadDuration, false);
 }
 
 void UBaseWeapon::UseAmmo()
 {
-	this->AmmoInClip--;
+	AmmoInClip--;
 }
 
-void UBaseWeapon::WeaponTrace(FVector from, FVector to)
+void UBaseWeapon::WeaponTrace(FVector &From, FVector &To)
 {
 	FHitResult RV_Hit(ForceInit);
 	
@@ -75,8 +82,8 @@ void UBaseWeapon::WeaponTrace(FVector from, FVector to)
 	
 	GetOwner()->GetWorld()->LineTraceSingleByChannel(
 		RV_Hit,
-		from,
-		to,
+		From,
+		To,
 		ECC_Pawn,
 		CollisionTraceParams
 	);

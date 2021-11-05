@@ -14,16 +14,16 @@ TArray<UInventoryItem*> UInventory::GetItems() const
 
 UInventoryItem* UInventory::GetItem(int32 index) const
 {
-	return index >= this->Items.Num() ? nullptr : this->Items[index];
+	return index >= Items.Num() ? nullptr : Items[index];
 }
 
 bool UInventory::AddItem(UInventoryItem* item)
 {
-		this->Items.Add(item);
+		Items.Add(item);
 		return true;
 }
 
 bool UInventory::HasFreeSlot()
 {
-	return this->Items.Num() < this->Slots;
+	return Items.Num() < Slots;
 }

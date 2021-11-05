@@ -38,26 +38,29 @@ public:
 	float ReloadDuration;
 
 	UPROPERTY(BlueprintReadWrite)
-	int Range;
+	int32 Range;
 
 	UPROPERTY(BlueprintReadWrite)
-	FName MuzzleSocketName = "Muzzle";
+	FName MuzzleSocketName;
 
 	UFUNCTION(BlueprintCallable)
 	void Fire();
 
-	virtual bool CanReload() const override;
 
 	UFUNCTION(BlueprintCallable)
 	bool CanFire() const;
-
+	
+	//~ Begin IReloadable Interface.
+	virtual bool bCanReload() const override;
+	
     UFUNCTION(BlueprintCallable)
 	virtual void Reload() override;
-
+	//~ End IReloadable Interface
+	
 	UPROPERTY(BlueprintReadOnly)
 	bool IsReloading = false;
 
 	void UseAmmo();
 
-	void WeaponTrace(FVector from, FVector to);
+	void WeaponTrace(FVector &from, FVector &to);
 };
