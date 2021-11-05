@@ -11,7 +11,7 @@
  */	
 
 UCLASS(BlueprintType)
- class PZ_C_2_API UInventory : public UObject
+ class PZ_C_2_API UInventory : public UActorComponent
 {
 	GENERATED_BODY()
 public:

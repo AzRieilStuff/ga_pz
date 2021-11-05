@@ -9,9 +9,6 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 
-//////////////////////////////////////////////////////////////////////////
-// APZ_C_2Character
-
 ACharacterMain::ACharacterMain()
 {
 	// Set size for collision capsule
@@ -43,12 +40,9 @@ ACharacterMain::ACharacterMain()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
-	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
-	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
-}
 
-//////////////////////////////////////////////////////////////////////////
-// Input
+	this->InitInventory();
+}
 
 void ACharacterMain::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
@@ -76,6 +70,15 @@ void ACharacterMain::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ACharacterMain::OnResetVR);
 }
 
+UInventory* ACharacterMain::GetInventory()
+{
+	return this->InventoryComponent;
+}
+
+void ACharacterMain::InitInventory()
+{
+	this->InventoryComponent = CreateDefaultSubobject<UInventory>(TEXT("Inventory"));
+}
 
 void ACharacterMain::OnResetVR()
 {
