@@ -46,19 +46,21 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Fire();
 
+	UFUNCTION(BlueprintCallable)
+	void RestoreAmmo();
 
 	UFUNCTION(BlueprintCallable)
 	bool CanFire() const;
 	
 	//~ Begin IReloadable Interface.
-	virtual bool bCanReload() const override;
+	virtual bool CanReload() const override;
 	
     UFUNCTION(BlueprintCallable)
 	virtual void Reload() override;
 	//~ End IReloadable Interface
 	
 	UPROPERTY(BlueprintReadOnly)
-	bool IsReloading = false;
+	bool bIsReloading = false;
 
 	void UseAmmo();
 

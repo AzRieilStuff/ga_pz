@@ -15,6 +15,6 @@ class PZ_C_2_API IReloadable
 {
 	GENERATED_BODY() 
 public:
-	virtual bool bCanReload() const = 0;
+	virtual bool CanReload() const = 0;
 	virtual void Reload() = 0;
 };

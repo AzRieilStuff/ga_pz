@@ -19,8 +19,8 @@ UInventoryItem* UInventory::GetItem(int32 index) const
 
 bool UInventory::AddItem(UInventoryItem* item)
 {
-		Items.Add(item);
-		return true;
+	Items.Add(item);
+	return true;
 }
 
 bool UInventory::HasFreeSlot()

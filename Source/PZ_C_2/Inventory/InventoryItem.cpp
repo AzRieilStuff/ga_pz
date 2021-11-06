@@ -2,7 +2,10 @@
 
 
 #include "InventoryItem.h"
-UInventoryItem::UInventoryItem(){}
+
+UInventoryItem::UInventoryItem()
+{
+}
 
 UInventoryItem::UInventoryItem(FName name) : Name(name)
 {

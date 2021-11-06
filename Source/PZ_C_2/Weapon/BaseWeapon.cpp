@@ -16,15 +16,17 @@ UBaseWeapon::UBaseWeapon()
 
 void UBaseWeapon::Fire()
 {
-	if( !this->CanFire() ){
+	if (!CanFire())
+	{
 		return;
 	}
-	
-	USkeletalMeshSocket* Socket = SkeletalMesh->FindSocket(this->MuzzleSocketName);
-	if(Socket == nullptr){
+
+	USkeletalMeshSocket* Socket = SkeletalMesh->FindSocket(MuzzleSocketName);
+	if (Socket == nullptr)
+	{
 		return;
 	}
-	
+
 	FVector SocketLocation = Socket->GetSocketLocation(this);
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, SocketLocation.ToString());
 
@@ -33,34 +35,40 @@ void UBaseWeapon::Fire()
 	UseAmmo();
 }
 
-bool UBaseWeapon::bCanReload() const
+bool UBaseWeapon::CanReload() const
 {
-	return !IsReloading && AmmoInClip < MaxAmmoInClip && AmmoTotal > 0; 
+	return !bIsReloading && AmmoInClip < MaxAmmoInClip && AmmoTotal > 0;
 }
 
 bool UBaseWeapon::CanFire() const
 {
-	return AmmoInClip > 0 && !IsReloading;
+	return AmmoInClip > 0 && !bIsReloading;
+}
+
+void UBaseWeapon::RestoreAmmo()
+{
+	int32 Restore = MaxAmmoInClip > AmmoTotal ? AmmoTotal : MaxAmmoInClip;
+	Restore -= AmmoInClip;
+	AmmoInClip += Restore;
+	AmmoTotal -= Restore;
 }
 
 void UBaseWeapon::Reload()
 {
-	if( !bCanReload() || IsReloading ){
+	if (!CanReload() || bIsReloading)
+	{
 		return;
 	}
 
-	IsReloading = true;
+	bIsReloading = true;
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Reloading"));
 
 	FTimerHandle UnusedHandle;
 	FTimerDelegate TimerCallback;
-	TimerCallback.BindLambda([&] 
+	TimerCallback.BindLambda([&]
 	{
-		int32 Restore = MaxAmmoInClip > AmmoTotal ? AmmoTotal : MaxAmmoInClip;
-		Restore -= AmmoInClip;
-		AmmoInClip += Restore;
-		AmmoTotal -= Restore;
-		IsReloading = false;
+		RestoreAmmo();
+		bIsReloading = false;
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Reloaded"));
 	});
 
@@ -72,14 +80,14 @@ void UBaseWeapon::UseAmmo()
 	AmmoInClip--;
 }
 
-void UBaseWeapon::WeaponTrace(FVector &From, FVector &To)
+void UBaseWeapon::WeaponTrace(FVector& From, FVector& To)
 {
 	FHitResult RV_Hit(ForceInit);
-	
+
 	const FName TraceTag("DebugTraceTag");
 	FCollisionQueryParams CollisionTraceParams = FCollisionQueryParams(TraceTag, true, GetOwner());
 	GetOwner()->GetWorld()->DebugDrawTraceTag = TraceTag;
-	
+
 	GetOwner()->GetWorld()->LineTraceSingleByChannel(
 		RV_Hit,
 		From,

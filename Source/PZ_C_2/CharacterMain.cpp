@@ -74,7 +74,7 @@ UInventory* ACharacterMain::GetInventory()
 
 void ACharacterMain::InitInventory()
 {
-	this->InventoryComponent = CreateDefaultSubobject<UInventory>(TEXT("Inventory"));
+	InventoryComponent = CreateDefaultSubobject<UInventory>(TEXT("Inventory"));
 }
 
 void ACharacterMain::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)

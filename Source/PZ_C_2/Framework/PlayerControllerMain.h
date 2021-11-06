@@ -12,8 +12,6 @@ UCLASS()
 class PZ_C_2_API APlayerControllerMain : public APlayerController
 {
 	GENERATED_BODY()
-
-
 public:
 	APlayerControllerMain();
 };

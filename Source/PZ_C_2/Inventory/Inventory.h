@@ -8,15 +8,15 @@
 
 /**
  * 
- */	
+ */
 
 UCLASS(BlueprintType)
- class PZ_C_2_API UInventory : public UActorComponent
+class PZ_C_2_API UInventory : public UActorComponent
 {
 	GENERATED_BODY()
 public:
 	UInventory();
-	
+
 	UPROPERTY()
 	TArray<UInventoryItem*> Items;
 
@@ -28,7 +28,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	UInventoryItem* GetItem(int32 index) const;
-	
+
 	UFUNCTION(BlueprintCallable)
 	bool AddItem(UInventoryItem* item);
 

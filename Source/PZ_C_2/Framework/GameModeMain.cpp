@@ -10,9 +10,9 @@
 
 AGameModeMain::AGameModeMain()
 {
-	this->PlayerStateClass = APlayerStateMain::StaticClass();
-	this->DefaultPawnClass = ACharacterMain::StaticClass();
-	this->PlayerControllerClass = APlayerControllerMain::StaticClass();
+	PlayerStateClass = APlayerStateMain::StaticClass();
+	DefaultPawnClass = ACharacterMain::StaticClass();
+	PlayerControllerClass = APlayerControllerMain::StaticClass();
 }
 
 bool AGameModeMain::IsAndroid() const
