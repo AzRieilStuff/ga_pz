@@ -4,21 +4,13 @@
 
 #include "PlayerControllerMain.h"
 #include "PlayerStateMain.h"
-#include "PZ_C_2/CharacterMain.h"
+#include "PZ_C_2/BaseCharacter.h"
 #include "PlayerControllerMain.h"
 #include "UObject/ConstructorHelpers.h"
 
 AGameModeMain::AGameModeMain()
 {
 	PlayerStateClass = APlayerStateMain::StaticClass();
-	DefaultPawnClass = ACharacterMain::StaticClass();
+	DefaultPawnClass = ABaseCharacter::StaticClass();
 	PlayerControllerClass = APlayerControllerMain::StaticClass();
-}
-
-bool AGameModeMain::IsAndroid() const
-{
-#if PLATFORM_ANDROID
-	return true;
-#endif
-	return false;
 }

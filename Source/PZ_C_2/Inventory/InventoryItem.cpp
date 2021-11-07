@@ -7,6 +7,6 @@ UInventoryItem::UInventoryItem()
 {
 }
 
-UInventoryItem::UInventoryItem(FName name) : Name(name)
+UInventoryItem::UInventoryItem(FName Name) : Name(Name)
 {
 }

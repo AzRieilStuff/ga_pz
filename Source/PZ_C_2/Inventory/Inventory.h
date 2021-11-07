@@ -27,10 +27,10 @@ public:
 	TArray<UInventoryItem*> GetItems() const;
 
 	UFUNCTION(BlueprintCallable)
-	UInventoryItem* GetItem(int32 index) const;
+	UInventoryItem* GetItem(const int32 Index) const;
 
 	UFUNCTION(BlueprintCallable)
-	bool AddItem(UInventoryItem* item);
+	bool AddItem(UInventoryItem* Item);
 
 	UFUNCTION(BlueprintCallable)
 	bool HasFreeSlot();

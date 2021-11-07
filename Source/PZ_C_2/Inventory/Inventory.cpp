@@ -12,14 +12,14 @@ TArray<UInventoryItem*> UInventory::GetItems() const
 	return Items;
 }
 
-UInventoryItem* UInventory::GetItem(int32 index) const
+UInventoryItem* UInventory::GetItem(const int32 Index) const
 {
-	return index >= Items.Num() ? nullptr : Items[index];
+	return Index >= Items.Num() ? nullptr : Items[Index];
 }
 
-bool UInventory::AddItem(UInventoryItem* item)
+bool UInventory::AddItem(UInventoryItem* Item)
 {
-	Items.Add(item);
+	Items.Add(Item);
 	return true;
 }
 

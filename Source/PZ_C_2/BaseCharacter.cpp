@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "CharacterMain.h"
+#include "BaseCharacter.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -9,7 +9,7 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 
-ACharacterMain::ACharacterMain()
+ABaseCharacter::ABaseCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -40,66 +40,54 @@ ACharacterMain::ACharacterMain()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
-
-	InitInventory();
 }
 
-void ACharacterMain::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
+void ABaseCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// Set up gameplay key bindings
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
-	PlayerInputComponent->BindAxis("MoveForward", this, &ACharacterMain::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &ACharacterMain::MoveRight);
+	PlayerInputComponent->BindAxis("MoveForward", this, &ABaseCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &ABaseCharacter::MoveRight);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
 	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &ACharacterMain::TurnAtRate);
+	PlayerInputComponent->BindAxis("TurnRate", this, &ABaseCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &ACharacterMain::LookUpAtRate);
+	PlayerInputComponent->BindAxis("LookUpRate", this, &ABaseCharacter::LookUpAtRate);
 
 	// handle touch devices
-	PlayerInputComponent->BindTouch(IE_Pressed, this, &ACharacterMain::TouchStarted);
-	PlayerInputComponent->BindTouch(IE_Released, this, &ACharacterMain::TouchStopped);
+	PlayerInputComponent->BindTouch(IE_Pressed, this, &ABaseCharacter::TouchStarted);
+	PlayerInputComponent->BindTouch(IE_Released, this, &ABaseCharacter::TouchStopped);
 }
 
-UInventory* ACharacterMain::GetInventory()
-{
-	return InventoryComponent;
-}
-
-void ACharacterMain::InitInventory()
-{
-	InventoryComponent = CreateDefaultSubobject<UInventory>(TEXT("Inventory"));
-}
-
-void ACharacterMain::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
+void ABaseCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
 {
 		Jump();
 }
 
-void ACharacterMain::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
+void ABaseCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
 {
 		StopJumping();
 }
 
-void ACharacterMain::TurnAtRate(float Rate)
+void ABaseCharacter::TurnAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
-void ACharacterMain::LookUpAtRate(float Rate)
+void ABaseCharacter::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-void ACharacterMain::MoveForward(float Value)
+void ABaseCharacter::MoveForward(float Value)
 {
 	if ((Controller != nullptr) && (Value != 0.0f))
 	{
@@ -113,7 +101,7 @@ void ACharacterMain::MoveForward(float Value)
 	}
 }
 
-void ACharacterMain::MoveRight(float Value)
+void ABaseCharacter::MoveRight(float Value)
 {
 	if ( (Controller != nullptr) && (Value != 0.0f) )
 	{
@@ -128,7 +116,7 @@ void ACharacterMain::MoveRight(float Value)
 	}
 }
 
-void ACharacterMain::BeginPlay()
+void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	Weapon = FindComponentByClass<UBaseWeapon>();
