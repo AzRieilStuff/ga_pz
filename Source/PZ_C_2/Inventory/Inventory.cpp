@@ -7,7 +7,7 @@ UInventory::UInventory()
 {
 }
 
-TArray<UInventoryItem*> UInventory::GetItems() const
+TArray<UInventoryItem*>& UInventory::GetItems()
 {
 	return Items;
 }
