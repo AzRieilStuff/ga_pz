@@ -12,10 +12,10 @@
 UCLASS(BlueprintType)
 class PZ_C_2_API UInventoryItem : public UObject
 {
-GENERATED_BODY()
+	GENERATED_BODY()
 public:
 	UInventoryItem();
-	UInventoryItem(FName name);
+	UInventoryItem(FName Name);
 
 	UPROPERTY(BlueprintReadWrite)
 	FName Name;

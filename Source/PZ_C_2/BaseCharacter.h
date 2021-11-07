@@ -5,20 +5,21 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Inventory/IContainer.h"
-#include "CharacterMain.generated.h"
+#include "Weapon/BaseWeapon.h"
+#include "BaseCharacter.generated.h"
 
 UCLASS(config=Game)
-class ACharacterMain : public ACharacter, public IContainer
+class ABaseCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
-	
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
 public:
-	ACharacterMain();
+	ABaseCharacter();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseTurnRate;
@@ -26,15 +27,14 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 
-	UFUNCTION(BlueprintCallable)
-	UInventory* GetInventory() override;
+	UPROPERTY(BlueprintReadOnly)
+	UBaseWeapon* Weapon;
 
-	void InitInventory() override;
+	virtual void BeginPlay() override;
 
+	UPROPERTY(BlueprintReadWrite)
+	int32 Health;
 protected:
-
-	void OnResetVR();
-
 	void MoveForward(float Value);
 
 	void MoveRight(float Value);
@@ -67,9 +67,4 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-
-	
-	UPROPERTY(Category=Character, VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
-	UInventory* InventoryComponent;
 };
-

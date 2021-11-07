@@ -13,10 +13,4 @@ class AGameModeMain : public AGameModeBase
 
 public:
 	AGameModeMain();
-	
-	UFUNCTION(BlueprintPure)
-	bool IsAndroid() const;
 };
-
-
-

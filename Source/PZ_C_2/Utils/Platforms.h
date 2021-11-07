@@ -3,15 +3,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PlayerControllerMain.generated.h"
+#include "Platforms.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PZ_C_2_API APlayerControllerMain : public APlayerController
+class PZ_C_2_API UPlatforms : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
-	APlayerControllerMain();
+	UFUNCTION(BlueprintCallable)
+	static bool IsAndroid();
 };

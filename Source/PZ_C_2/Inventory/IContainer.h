@@ -9,7 +9,7 @@
 UINTERFACE()
 class PZ_C_2_API UContainer : public UInterface
 {
-	GENERATED_BODY()
+	GENERATED_BODY()	
 public:
 };
 
