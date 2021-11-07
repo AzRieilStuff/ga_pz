@@ -7,45 +7,54 @@
 #include "TimerManager.h"
 #include "Engine/SkeletalMeshSocket.h"
 
-UBaseWeapon::UBaseWeapon()
+ABaseWeapon::ABaseWeapon()
 {
 	Range = 10000;
 	MuzzleSocketName = FName("Muzzle");
+	
+	MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>("Body");
+	MeshComponent->SetupAttachment(RootComponent);
+}
+
+void ABaseWeapon::BeginPlay()
+{
+	Super::BeginPlay();
 }
 
 
-void UBaseWeapon::Fire()
+void ABaseWeapon::Fire()
 {
 	if (!CanFire())
 	{
 		return;
 	}
 
-	USkeletalMeshSocket* Socket = SkeletalMesh->FindSocket(MuzzleSocketName);
+	USkeletalMeshSocket* Socket = MeshComponent->SkeletalMesh->FindSocket(MuzzleSocketName);
 	if (Socket == nullptr)
 	{
 		return;
 	}
 
-	FVector SocketLocation = Socket->GetSocketLocation(this);
+	FVector SocketLocation = Socket->GetSocketLocation(MeshComponent);
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, SocketLocation.ToString());
 
-	FVector TraceEndLocation = SocketLocation + (GetOwner()->GetActorForwardVector() * Range);
+	FVector TraceEndLocation = SocketLocation + (GetActorForwardVector() * Range);
 	WeaponTrace(SocketLocation, TraceEndLocation);
+	
 	UseAmmo();
 }
 
-bool UBaseWeapon::CanReload() const
+bool ABaseWeapon::CanReload() const
 {
 	return !bIsReloading && AmmoInClip < MaxAmmoInClip && AmmoTotal > 0;
 }
 
-bool UBaseWeapon::CanFire() const
+bool ABaseWeapon::CanFire() const
 {
 	return AmmoInClip > 0 && !bIsReloading;
 }
 
-void UBaseWeapon::RestoreAmmo()
+void ABaseWeapon::RestoreAmmo()
 {
 	int32 Restore = MaxAmmoInClip > AmmoTotal ? AmmoTotal : MaxAmmoInClip;
 	Restore -= AmmoInClip;
@@ -53,7 +62,7 @@ void UBaseWeapon::RestoreAmmo()
 	AmmoTotal -= Restore;
 }
 
-void UBaseWeapon::Reload()
+void ABaseWeapon::Reload()
 {
 	if (!CanReload() || bIsReloading)
 	{
@@ -72,23 +81,23 @@ void UBaseWeapon::Reload()
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Reloaded"));
 	});
 
-	GetOwner()->GetWorldTimerManager().SetTimer(UnusedHandle, TimerCallback, ReloadDuration, false);
+	GetWorldTimerManager().SetTimer(UnusedHandle, TimerCallback, ReloadDuration, false);
 }
 
-void UBaseWeapon::UseAmmo()
+void ABaseWeapon::UseAmmo()
 {
 	AmmoInClip--;
 }
 
-void UBaseWeapon::WeaponTrace(FVector& From, FVector& To)
+void ABaseWeapon::WeaponTrace(FVector& From, FVector& To)
 {
 	FHitResult RV_Hit(ForceInit);
 
 	const FName TraceTag("DebugTraceTag");
-	FCollisionQueryParams CollisionTraceParams = FCollisionQueryParams(TraceTag, true, GetOwner());
-	GetOwner()->GetWorld()->DebugDrawTraceTag = TraceTag;
+	FCollisionQueryParams CollisionTraceParams = FCollisionQueryParams(TraceTag, true, this);
+	GetWorld()->DebugDrawTraceTag = TraceTag;
 
-	GetOwner()->GetWorld()->LineTraceSingleByChannel(
+	GetWorld()->LineTraceSingleByChannel(
 		RV_Hit,
 		From,
 		To,
