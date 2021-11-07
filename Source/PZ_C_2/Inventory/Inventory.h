@@ -24,7 +24,7 @@ public:
 	int32 Slots = 10;
 
 	UFUNCTION(BlueprintCallable)
-	TArray<UInventoryItem*> GetItems() const;
+	TArray<UInventoryItem*>& GetItems();
 
 	UFUNCTION(BlueprintCallable)
 	UInventoryItem* GetItem(const int32 Index) const;

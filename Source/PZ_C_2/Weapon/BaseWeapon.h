@@ -8,16 +8,19 @@
 #include "BaseWeapon.generated.h"
 
 UCLASS(Blueprintable)
-class PZ_C_2_API UBaseWeapon : public USkeletalMeshComponent, public IReloadable
+class PZ_C_2_API ABaseWeapon : public AActor, public IReloadable
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
-	UBaseWeapon();
-
 protected:
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	USkeletalMeshComponent* MeshComponent;
 public:
+	ABaseWeapon();
+
+	virtual void BeginPlay() override;
+	
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int32 MaxAmmoTotal;
 
@@ -63,5 +66,5 @@ public:
 
 	void UseAmmo();
 
-	void WeaponTrace(FVector& from, FVector& to);
+	void WeaponTrace(FVector& From, FVector& To);
 };

@@ -28,7 +28,7 @@ public:
 	float BaseLookUpRate;
 
 	UPROPERTY(BlueprintReadOnly)
-	UBaseWeapon* Weapon;
+	ABaseWeapon* Weapon;
 
 	virtual void BeginPlay() override;
 
