@@ -14,6 +14,11 @@ UInventory* APlayerCharacter::GetInventory()
 	return InventoryComponent;
 }
 
+void APlayerCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
 void APlayerCharacter::InitInventory()
 {
 	InventoryComponent = CreateDefaultSubobject<UInventory>(TEXT("Inventory"));
