@@ -5,9 +5,10 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Inventory/IContainer.h"
-#include "Items/BaseItem.h"
-#include "Weapon/BaseWeapon.h"
 #include "BaseCharacter.generated.h"
+
+class ABaseItem;
+class ABaseWeapon;
 
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnDeath, const float, Health);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam (FOnHealthChangeMulticastDelegate, const float, Health);

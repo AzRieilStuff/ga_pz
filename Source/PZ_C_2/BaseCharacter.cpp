@@ -7,6 +7,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Items/BaseItem.h"
+#include "Weapon/BaseWeapon.h"
 
 ABaseCharacter::ABaseCharacter()
 {
