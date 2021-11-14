@@ -28,6 +28,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual UInventory* GetInventory() override;
 
+	virtual void BeginPlay() override;
+
 	virtual void InitInventory() override;
 	//
 };
