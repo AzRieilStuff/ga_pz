@@ -5,7 +5,7 @@
 #include "EngineUtils.h"
 #include "PlayerControllerMain.h"
 #include "PlayerStateMain.h"
-#include "PZ_C_2/BaseCharacter.h"
+#include "PZ_C_2/Characters/BaseCharacter.h"
 #include "PZ_C_2/Items/BaseItem.h"
 #include "PlayerControllerMain.h"
 #include "UObject/ConstructorHelpers.h"

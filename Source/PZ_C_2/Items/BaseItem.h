@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "PZ_C_2/BaseCharacter.h"
 #include "BaseItem.generated.h"
+
+class ABaseItem;
+class ABaseCharacter;
 
 DECLARE_DELEGATE_TwoParams(FCharacterItemInteraction, class ABaseItem*, ABaseCharacter* );	
 UCLASS()
