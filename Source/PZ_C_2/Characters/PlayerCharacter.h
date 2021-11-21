@@ -7,7 +7,7 @@
 #include "PZ_C_2/Inventory/IContainer.h"
 #include "PlayerCharacter.generated.h"
 
-class UBasicMovement;
+class UBaseMovementComponent;
 class UInventory;
 
 /**
@@ -18,11 +18,23 @@ class PZ_C_2_API APlayerCharacter : public ABaseCharacter, public IContainer
 {
 	GENERATED_BODY()
 
+	UFUNCTION()
+	void OnSpyDetected();
+
+	UFUNCTION()
+	void OnSpyForget();
+	
 protected:
 	UPROPERTY(BlueprintReadWrite)
 	float Stamina;
 
 public:
+	UPROPERTY(EditAnywhere)
+	UMaterialInstance* DefaultMaterial;
+	
+	UPROPERTY(EditAnywhere)
+	UMaterialInstance* DetectedMaterial;
+	
 	UPROPERTY(Category=Character, VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	UInventory* InventoryComponent;
 	
@@ -35,9 +47,11 @@ public:
 	class UCameraComponent* CameraComp;
 
 	UPROPERTY(EditAnywhere)
-	UBasicMovement* MovementComp;
+	UBaseMovementComponent* MovementComp;
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
+	virtual UPawnMovementComponent* GetMovementComponent() const override;
 	
 	// IContainer
 	UFUNCTION(BlueprintCallable)

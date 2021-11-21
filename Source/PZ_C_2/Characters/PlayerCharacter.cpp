@@ -2,10 +2,25 @@
 
 
 #include "PlayerCharacter.h"
+
+#include "EngineUtils.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "PZ_C_2/Controllers/BasicMovement.h"
+#include "PZ_C_2/Environment/SpyCamera.h"
 #include "PZ_C_2/Inventory/Inventory.h"
+#include "PZ_C_2/Movement/BaseMovementComponent.h"
+
+void APlayerCharacter::OnSpyDetected()
+{
+	GEngine->AddOnScreenDebugMessage(-1,3.f, FColor::Red, TEXT("Found"));
+	MeshComp->SetMaterial(0, DetectedMaterial);
+}
+
+void APlayerCharacter::OnSpyForget()
+{
+	GEngine->AddOnScreenDebugMessage(-1,3.f, FColor::Red, TEXT("Lost"));
+	MeshComp->SetMaterial(0, DefaultMaterial);
+}
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -21,23 +36,25 @@ APlayerCharacter::APlayerCharacter()
 	SpringArmComp->TargetArmLength = 400.f;
 	SpringArmComp->bEnableCameraLag = true;
 	SpringArmComp->CameraLagSpeed = 3.0f;
-	//SpringArmComp->bUsePawnControlRotation = true; 
 
 	// Setup camera
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	CameraComp->SetupAttachment(SpringArmComp, USpringArmComponent::SocketName);
-	//ameraComp->bUsePawnControlRotation = true;
 
 	// Setup movement
-	MovementComp = CreateDefaultSubobject<UBasicMovement>("Movement");
-	MovementComp->PossessedCamera = CameraComp;
-	MovementComp->PossessedMesh = MeshComp;
-	MovementComp->PossessedCameraArm = SpringArmComp;
+	MovementComp = CreateDefaultSubobject<UBaseMovementComponent>("Movement");
+	MovementComp->SetUpdatedComponent(MeshComp);
+	
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = true;
+	bUseControllerRotationRoll = false;
 
 	// Setup inventory
 	InventoryComponent = CreateDefaultSubobject<UInventory>(TEXT("Inventory"));
 
-	// Setup input
+	// Setup material
+	MeshComp->SetMaterial(0, DefaultMaterial);
+	
 }
 
 
@@ -45,14 +62,15 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	InputComponent->BindAction("ZoomIn", IE_Pressed, MovementComp, &UBasicMovement::ZoomIn);
-	InputComponent->BindAction("ZoomOut", IE_Released, MovementComp, &UBasicMovement::ZoomOut);
-	InputComponent->BindAction("Jump", IE_Pressed, MovementComp, &UBasicMovement::Jump);
+	InputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
+	InputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
+	InputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	InputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+}
 
-	InputComponent->BindAxis("MoveForward", MovementComp, &UBasicMovement::MoveForward);
-	InputComponent->BindAxis("MoveRight", MovementComp, &UBasicMovement::MoveRight);
-	InputComponent->BindAxis("LookUp", MovementComp, &UBasicMovement::PitchCamera);
-	InputComponent->BindAxis("Turn", MovementComp, &UBasicMovement::YawCamera);
+UPawnMovementComponent* APlayerCharacter::GetMovementComponent() const
+{
+	return MovementComp;
 }
 
 UInventory* APlayerCharacter::GetInventory() const
@@ -63,4 +81,11 @@ UInventory* APlayerCharacter::GetInventory() const
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// SpyCamera
+	for (TActorIterator<ASpyCamera> It(GetWorld()); It; ++It)
+	{
+		(*It)->OnCharacterFound.BindUFunction(this, "OnSpyDetected");
+		(*It)->OnCharacterLost.BindUFunction(this, "OnSpyForget");
+	}
 }

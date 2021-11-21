@@ -20,7 +20,6 @@ class ABaseCharacter : public APawn
 private:
 	GENERATED_BODY()
 
-
 	FTimerHandle RegenerationTimerHandle;
 	int32 RegenerationTicks;
 public:
