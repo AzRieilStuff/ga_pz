@@ -6,6 +6,8 @@
 #include "BaseItem.h"
 #include "MedicalKit.generated.h"
 
+class ABaseCharacter;
+
 /**
  * 
  */

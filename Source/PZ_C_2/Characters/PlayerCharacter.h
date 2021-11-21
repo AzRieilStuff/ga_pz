@@ -4,7 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "BaseCharacter.h"
+#include "PZ_C_2/Inventory/IContainer.h"
 #include "PlayerCharacter.generated.h"
+
+class UBasicMovement;
+class UInventory;
 
 /**
  * 
@@ -24,12 +28,21 @@ public:
 	
 	APlayerCharacter();
 
+	UPROPERTY(EditAnywhere)
+	class USpringArmComponent* SpringArmComp;
+
+	UPROPERTY(EditAnywhere)
+	class UCameraComponent* CameraComp;
+
+	UPROPERTY(EditAnywhere)
+	UBasicMovement* MovementComp;
+
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	
 	// IContainer
 	UFUNCTION(BlueprintCallable)
-	virtual UInventory* GetInventory() override;
+	virtual UInventory* GetInventory() const override;
 
+	// IContainer end
 	virtual void BeginPlay() override;
-
-	virtual void InitInventory() override;
-	//
 };

@@ -6,6 +6,8 @@
 #include "BaseItem.h"
 #include "PoisionKit.generated.h"
 
+class ABaseCharacter;
+
 /**
  * 
  */

@@ -1,0 +1,45 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "CoreMinimal.h"
+#include "PlayerCharacter.h"
+
+#include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+
+APlayerCharacter::APlayerCharacter()
+{
+	// Don't rotate when the controller rotates. Let that just affect the camera.
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationRoll = false;	
+
+	// Setup arm component
+	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	SpringArmComp->SetupAttachment(RootComponent);
+	SpringArmComp->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
+	SpringArmComp->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+
+	// Setup camera
+	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	CameraComp->SetupAttachment(SpringArmComp, USpringArmComponent::SocketName);
+	CameraComp->bUsePawnControlRotation = false;
+	
+	APlayerCharacter::InitInventory();
+}
+
+
+UInventory* APlayerCharacter::GetInventory() const
+{
+	return InventoryComponent;
+}
+
+void APlayerCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void APlayerCharacter::InitInventory()
+{
+	InventoryComponent = CreateDefaultSubobject<UInventory>(TEXT("Inventory"));
+}

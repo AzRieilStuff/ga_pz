@@ -2,6 +2,8 @@
 
 #include "BaseItem.h"
 
+#include "PZ_C_2/Characters/BaseCharacter.h"
+
 // Sets default values
 ABaseItem::ABaseItem()
 {

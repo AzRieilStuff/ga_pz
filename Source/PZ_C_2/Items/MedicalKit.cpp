@@ -2,6 +2,7 @@
 
 
 #include "MedicalKit.h"
+#include "PZ_C_2/Characters/BaseCharacter.h"
 
 bool AMedicalKit::CanUseBy(ABaseCharacter* Character)
 {
