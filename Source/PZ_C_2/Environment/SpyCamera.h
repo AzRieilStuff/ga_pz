@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Camera/CameraActor.h"
 #include "SpyCamera.generated.h"
 
 DECLARE_DYNAMIC_DELEGATE(FOnCharacterFound);
 DECLARE_DYNAMIC_DELEGATE(FOnCharacterLost);
 
 class UBoxComponent;
+class UCameraComponent;
 /**
  * 
  */
@@ -47,6 +47,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* BoxTrigger;
+	
+	UPROPERTY(EditAnywhere)
+	UCameraComponent* Camera;
 
 	UFUNCTION()
 	void BoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

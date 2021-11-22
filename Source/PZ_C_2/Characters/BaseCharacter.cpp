@@ -101,6 +101,8 @@ void ABaseCharacter::BeginPlay()
 	TArray<AActor*> Childs;
 	GetAllChildActors(Childs, true);
 	Childs.FindItemByClass<ABaseWeapon>(&Weapon);
+
+	GetMovementComponent()->SetUpdatedComponent(MeshComp);
 }
 
 bool ABaseCharacter::PickItem(ABaseItem* Item)

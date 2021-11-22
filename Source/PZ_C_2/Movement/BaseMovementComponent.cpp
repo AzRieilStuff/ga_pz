@@ -3,14 +3,21 @@
 
 #include "BaseMovementComponent.h"
 
+#include "GameFramework/FloatingPawnMovement.h"
+
 void UBaseMovementComponent::TickComponent(float DeltaTime, ELevelTick Tick,
-	FActorComponentTickFunction* ThisTickFunction)
+                                           FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, Tick, ThisTickFunction);
 
-	if (!GetPendingInputVector().IsZero())
+	// calculate velocity
+	Velocity = GetPendingInputVector().GetClampedToMaxSize(1.f) * DeltaTime * Speed;
+	
+	if (!GetPendingInputVector().IsNearlyZero())
 	{
-		FVector NewLocation = GetActorLocation() + (ConsumeInputVector() * DeltaTime * Speed);
-		PawnOwner->SetActorLocation(NewLocation);
+		UpdatedComponent->ComponentVelocity = Velocity;
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::White, Velocity.ToString());
 	}
+
+	ConsumeInputVector();
 }

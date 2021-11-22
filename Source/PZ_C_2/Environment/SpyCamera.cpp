@@ -3,6 +3,7 @@
 
 #include "SpyCamera.h"
 
+#include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 
 void ASpyCamera::RememberPawn(APawn* Pawn)
@@ -22,6 +23,11 @@ void ASpyCamera::BoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActo
                                  const FHitResult& SweepResult)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("In"));
+
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	FViewTargetTransitionParams TransitionParams;
+	TransitionParams.BlendTime = 2.f;
+	PC->SetViewTarget(this, TransitionParams);
 
 	APawn* Target = Cast<APawn, AActor>(OtherActor);
 	if (Target == nullptr)
@@ -46,7 +52,12 @@ void ASpyCamera::BoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
                                UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("Out"));
-
+	
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	FViewTargetTransitionParams TransitionParams;
+	TransitionParams.BlendTime = 2.f;
+	PC->SetViewTarget(PC->GetPawn(), TransitionParams);
+	
 	APawn* Target = Cast<APawn, AActor>(OtherActor);
 	if (Target == nullptr)
 	{
@@ -78,4 +89,6 @@ ASpyCamera::ASpyCamera()
 	BoxTrigger->SetCollisionResponseToAllChannels(ECR_Ignore);
 	BoxTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	BoxTrigger->SetupAttachment(GetRootComponent());
+
+	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
 }
