@@ -18,12 +18,6 @@ class PZ_C_2_API APlayerCharacter : public ABaseCharacter, public IContainer
 {
 	GENERATED_BODY()
 
-	UFUNCTION()
-	void OnSpyDetected();
-
-	UFUNCTION()
-	void OnSpyForget();
-	
 protected:
 	UPROPERTY(BlueprintReadWrite)
 	float Stamina;
@@ -32,13 +26,10 @@ public:
 	UPROPERTY(EditAnywhere)
 	UMaterialInstance* DefaultMaterial;
 	
-	UPROPERTY(EditAnywhere)
-	UMaterialInstance* DetectedMaterial;
-	
 	UPROPERTY(Category=Character, VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	UInventory* InventoryComponent;
 	
-	APlayerCharacter();
+	APlayerCharacter(const FObjectInitializer& OI);
 
 	UPROPERTY(EditAnywhere)
 	class USpringArmComponent* SpringArmComp;

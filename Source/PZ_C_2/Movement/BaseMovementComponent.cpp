@@ -3,8 +3,6 @@
 
 #include "BaseMovementComponent.h"
 
-#include "GameFramework/FloatingPawnMovement.h"
-
 void UBaseMovementComponent::TickComponent(float DeltaTime, ELevelTick Tick,
                                            FActorComponentTickFunction* ThisTickFunction)
 {
@@ -15,8 +13,15 @@ void UBaseMovementComponent::TickComponent(float DeltaTime, ELevelTick Tick,
 	
 	if (!GetPendingInputVector().IsNearlyZero())
 	{
-		UpdatedComponent->ComponentVelocity = Velocity;
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::White, Velocity.ToString());
+		UpdateComponentVelocity();
+		
+		FRotator DesiredRotation = GetWorld()->GetFirstPlayerController()->GetViewTarget()->GetActorRotation();
+     
+		// Interp to desired rotation
+		//FRotator NewRotation = UpdatedComponent->GetComponentRotation();
+		//NewRotation.Yaw = FMath::FixedTurn(UpdatedComponent->GetComponentRotation().Yaw, DesiredRotation.Yaw, 0.1f * DeltaTime);
+
+		MoveUpdatedComponent(Velocity, UpdatedComponent->GetComponentRotation(), false);
 	}
 
 	ConsumeInputVector();

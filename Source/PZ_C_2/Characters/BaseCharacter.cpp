@@ -10,12 +10,17 @@
 #include "GameFramework/Controller.h"
 
 
-ABaseCharacter::ABaseCharacter()
+ABaseCharacter::ABaseCharacter(const FObjectInitializer& OI) : Super(OI)
 {
-	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
+	MeshComp = OI.CreateDefaultSubobject<UStaticMeshComponent>(this, "Mesh");
 	MeshComp->SetSimulatePhysics(true);
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	MeshComp->SetCollisionProfileName(FName("Pawn"));
+
+	SetRootComponent(MeshComp);
+	
+	Health = 0.f;
+	MaxHealth = 100.f;
 }
 
 void ABaseCharacter::RestoreFullHealth()
@@ -42,6 +47,20 @@ void ABaseCharacter::SetHealth(const float HealthAmount)
 		OnDeathDelegate.ExecuteIfBound(UpdateValue);
 		Kill();
 	}
+}
+
+void ABaseCharacter::SetMaxHealth(const float HealthAmount){
+	MaxHealth = HealthAmount;
+}
+
+float ABaseCharacter::GetHealth() const
+{
+	return Health;
+}
+
+float ABaseCharacter::GetMaxHealth() const
+{
+	return MaxHealth;
 }
 
 void ABaseCharacter::Kill()
@@ -102,7 +121,7 @@ void ABaseCharacter::BeginPlay()
 	GetAllChildActors(Childs, true);
 	Childs.FindItemByClass<ABaseWeapon>(&Weapon);
 
-	GetMovementComponent()->SetUpdatedComponent(MeshComp);
+	//GetMovementComponent()->SetUpdatedComponent(MeshComp);
 }
 
 bool ABaseCharacter::PickItem(ABaseItem* Item)

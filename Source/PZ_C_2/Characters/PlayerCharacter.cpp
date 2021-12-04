@@ -6,31 +6,13 @@
 #include "EngineUtils.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "PZ_C_2/Environment/SpyCamera.h"
 #include "PZ_C_2/Inventory/Inventory.h"
 #include "PZ_C_2/Movement/BaseMovementComponent.h"
 
-void APlayerCharacter::OnSpyDetected()
+APlayerCharacter::APlayerCharacter(const FObjectInitializer& OI) : Super(OI)
 {
-	GEngine->AddOnScreenDebugMessage(-1,3.f, FColor::Red, TEXT("Found"));
-	MeshComp->SetMaterial(0, DetectedMaterial);
-}
-
-void APlayerCharacter::OnSpyForget()
-{
-	GEngine->AddOnScreenDebugMessage(-1,3.f, FColor::Red, TEXT("Lost"));
-	MeshComp->SetMaterial(0, DefaultMaterial);
-}
-
-APlayerCharacter::APlayerCharacter()
-{
-	// Don't rotate when the controller rotates. Let that just affect the camera.
-	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = false;
-	bUseControllerRotationRoll = false;
-
 	// Setup arm component
-	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	SpringArmComp = OI.CreateDefaultSubobject<USpringArmComponent>(this, TEXT("CameraBoom"));
 	SpringArmComp->SetupAttachment(RootComponent);
 	SpringArmComp->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, 50.0f), FRotator(-60.0f, 0.0f, 0.0f));
 	SpringArmComp->TargetArmLength = 400.f;
@@ -38,23 +20,21 @@ APlayerCharacter::APlayerCharacter()
 	SpringArmComp->CameraLagSpeed = 3.0f;
 
 	// Setup camera
-	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	CameraComp = OI.CreateDefaultSubobject<UCameraComponent>(this, TEXT("FollowCamera"));
 	CameraComp->SetupAttachment(SpringArmComp, USpringArmComponent::SocketName);
 
 	// Setup movement
-	MovementComp = CreateDefaultSubobject<UBaseMovementComponent>("Movement");
-	MovementComp->SetUpdatedComponent(MeshComp);
+	MovementComp = OI.CreateDefaultSubobject<UBaseMovementComponent>(this, "Movement");
 	
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = false;
 
 	// Setup inventory
-	InventoryComponent = CreateDefaultSubobject<UInventory>(TEXT("Inventory"));
+	InventoryComponent = OI.CreateDefaultSubobject<UInventory>(this,TEXT("Inventory"));
 
 	// Setup material
 	MeshComp->SetMaterial(0, DefaultMaterial);
-	
 }
 
 
@@ -81,11 +61,6 @@ UInventory* APlayerCharacter::GetInventory() const
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	GetMovementComponent()->SetUpdatedComponent(RootComponent);
 
-	// SpyCamera
-	for (TActorIterator<ASpyCamera> It(GetWorld()); It; ++It)
-	{
-		(*It)->OnCharacterFound.BindUFunction(this, "OnSpyDetected");
-		(*It)->OnCharacterLost.BindUFunction(this, "OnSpyForget");
-	}
 }
