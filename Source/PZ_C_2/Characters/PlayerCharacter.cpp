@@ -2,42 +2,39 @@
 
 
 #include "PlayerCharacter.h"
+
+#include "EngineUtils.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "PZ_C_2/Controllers/BasicMovement.h"
 #include "PZ_C_2/Inventory/Inventory.h"
+#include "PZ_C_2/Movement/BaseMovementComponent.h"
 
-APlayerCharacter::APlayerCharacter()
+APlayerCharacter::APlayerCharacter(const FObjectInitializer& OI) : Super(OI)
 {
-	// Don't rotate when the controller rotates. Let that just affect the camera.
-	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = false;
-	bUseControllerRotationRoll = false;
-
 	// Setup arm component
-	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	SpringArmComp = OI.CreateDefaultSubobject<USpringArmComponent>(this, TEXT("CameraBoom"));
 	SpringArmComp->SetupAttachment(RootComponent);
 	SpringArmComp->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, 50.0f), FRotator(-60.0f, 0.0f, 0.0f));
 	SpringArmComp->TargetArmLength = 400.f;
 	SpringArmComp->bEnableCameraLag = true;
 	SpringArmComp->CameraLagSpeed = 3.0f;
-	//SpringArmComp->bUsePawnControlRotation = true; 
 
 	// Setup camera
-	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	CameraComp = OI.CreateDefaultSubobject<UCameraComponent>(this, TEXT("FollowCamera"));
 	CameraComp->SetupAttachment(SpringArmComp, USpringArmComponent::SocketName);
-	//ameraComp->bUsePawnControlRotation = true;
 
 	// Setup movement
-	MovementComp = CreateDefaultSubobject<UBasicMovement>("Movement");
-	MovementComp->PossessedCamera = CameraComp;
-	MovementComp->PossessedMesh = MeshComp;
-	MovementComp->PossessedCameraArm = SpringArmComp;
+	MovementComp = OI.CreateDefaultSubobject<UBaseMovementComponent>(this, "Movement");
+	
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = true;
+	bUseControllerRotationRoll = false;
 
 	// Setup inventory
-	InventoryComponent = CreateDefaultSubobject<UInventory>(TEXT("Inventory"));
+	InventoryComponent = OI.CreateDefaultSubobject<UInventory>(this,TEXT("Inventory"));
 
-	// Setup input
+	// Setup material
+	MeshComp->SetMaterial(0, DefaultMaterial);
 }
 
 
@@ -45,14 +42,15 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	InputComponent->BindAction("ZoomIn", IE_Pressed, MovementComp, &UBasicMovement::ZoomIn);
-	InputComponent->BindAction("ZoomOut", IE_Released, MovementComp, &UBasicMovement::ZoomOut);
-	InputComponent->BindAction("Jump", IE_Pressed, MovementComp, &UBasicMovement::Jump);
+	InputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
+	InputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
+	InputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	InputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+}
 
-	InputComponent->BindAxis("MoveForward", MovementComp, &UBasicMovement::MoveForward);
-	InputComponent->BindAxis("MoveRight", MovementComp, &UBasicMovement::MoveRight);
-	InputComponent->BindAxis("LookUp", MovementComp, &UBasicMovement::PitchCamera);
-	InputComponent->BindAxis("Turn", MovementComp, &UBasicMovement::YawCamera);
+UPawnMovementComponent* APlayerCharacter::GetMovementComponent() const
+{
+	return MovementComp;
 }
 
 UInventory* APlayerCharacter::GetInventory() const
@@ -63,4 +61,6 @@ UInventory* APlayerCharacter::GetInventory() const
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	GetMovementComponent()->SetUpdatedComponent(RootComponent);
+
 }

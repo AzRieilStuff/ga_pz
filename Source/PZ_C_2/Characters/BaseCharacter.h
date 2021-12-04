@@ -10,6 +10,15 @@ class ABaseItem;
 class ABaseWeapon;
 class IContainer;
 
+USTRUCT()
+struct FCharacterSTats
+{
+	GENERATED_BODY()
+	float Health;
+	float MaxHealth;
+	
+};
+
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnDeath, const float, Health);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthChangeMulticastDelegate, const float, Health);
@@ -20,11 +29,10 @@ class ABaseCharacter : public APawn
 private:
 	GENERATED_BODY()
 
-
 	FTimerHandle RegenerationTimerHandle;
 	int32 RegenerationTicks;
 public:
-	ABaseCharacter();
+	ABaseCharacter(const FObjectInitializer& OI);
 
 	UPROPERTY(BlueprintReadOnly)
 	ABaseWeapon* Weapon;
@@ -48,12 +56,12 @@ protected:
 	void MoveRight(float Value);
 
 public:
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Health;
-
-	UPROPERTY(BlueprintReadWrite)
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float MaxHealth;
-
+	
 	UFUNCTION(BlueprintCallable)
 	void RestoreFullHealth();
 
@@ -62,7 +70,16 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetHealth(const float HealthAmount);
-
+	
+	UFUNCTION(BlueprintCallable)
+	float GetHealth() const;
+	
+	UFUNCTION(BlueprintCallable)
+	void SetMaxHealth(const float HealthAmount);
+	
+	UFUNCTION(BlueprintCallable)
+	float GetMaxHealth() const;
+	
 	UFUNCTION(BlueprintCallable)
 	void Kill();
 
@@ -71,7 +88,4 @@ public:
 
 	UPROPERTY(BlueprintReadWrite)
 	float RegenerationInterval = 2.f;
-
-	UPROPERTY(EditAnywhere)
-	UStaticMeshComponent* StaticMeshComp;
 };

@@ -7,7 +7,7 @@
 #include "PZ_C_2/Inventory/IContainer.h"
 #include "PlayerCharacter.generated.h"
 
-class UBasicMovement;
+class UBaseMovementComponent;
 class UInventory;
 
 /**
@@ -23,10 +23,13 @@ protected:
 	float Stamina;
 
 public:
+	UPROPERTY(EditAnywhere)
+	UMaterialInstance* DefaultMaterial;
+	
 	UPROPERTY(Category=Character, VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	UInventory* InventoryComponent;
 	
-	APlayerCharacter();
+	APlayerCharacter(const FObjectInitializer& OI);
 
 	UPROPERTY(EditAnywhere)
 	class USpringArmComponent* SpringArmComp;
@@ -35,9 +38,11 @@ public:
 	class UCameraComponent* CameraComp;
 
 	UPROPERTY(EditAnywhere)
-	UBasicMovement* MovementComp;
+	UBaseMovementComponent* MovementComp;
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
+	virtual UPawnMovementComponent* GetMovementComponent() const override;
 	
 	// IContainer
 	UFUNCTION(BlueprintCallable)

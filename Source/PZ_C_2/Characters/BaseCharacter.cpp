@@ -10,12 +10,17 @@
 #include "GameFramework/Controller.h"
 
 
-ABaseCharacter::ABaseCharacter()
+ABaseCharacter::ABaseCharacter(const FObjectInitializer& OI) : Super(OI)
 {
-	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
+	MeshComp = OI.CreateDefaultSubobject<UStaticMeshComponent>(this, "Mesh");
 	MeshComp->SetSimulatePhysics(true);
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	MeshComp->SetCollisionProfileName(FName("Pawn"));
+
+	SetRootComponent(MeshComp);
+	
+	Health = 0.f;
+	MaxHealth = 100.f;
 }
 
 void ABaseCharacter::RestoreFullHealth()
@@ -42,6 +47,20 @@ void ABaseCharacter::SetHealth(const float HealthAmount)
 		OnDeathDelegate.ExecuteIfBound(UpdateValue);
 		Kill();
 	}
+}
+
+void ABaseCharacter::SetMaxHealth(const float HealthAmount){
+	MaxHealth = HealthAmount;
+}
+
+float ABaseCharacter::GetHealth() const
+{
+	return Health;
+}
+
+float ABaseCharacter::GetMaxHealth() const
+{
+	return MaxHealth;
 }
 
 void ABaseCharacter::Kill()
@@ -79,30 +98,17 @@ void ABaseCharacter::SetRegeneration(const float RegenerationRate, const int32 T
 
 void ABaseCharacter::MoveForward(float Value)
 {
-	if ((Controller != nullptr) && (Value != 0.0f))
+	if (Value != 0.f)
 	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		AddMovementInput(Direction, Value);
+		AddMovementInput(GetActorForwardVector(), Value);
 	}
 }
 
 void ABaseCharacter::MoveRight(float Value)
 {
-	if ((Controller != nullptr) && (Value != 0.0f))
+	if (Value != 0.f)
 	{
-		// find out which way is right
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get right vector 
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		// add movement in that direction
-		AddMovementInput(Direction, Value);
+		AddMovementInput(GetActorRightVector(), Value);
 	}
 }
 
@@ -114,6 +120,8 @@ void ABaseCharacter::BeginPlay()
 	TArray<AActor*> Childs;
 	GetAllChildActors(Childs, true);
 	Childs.FindItemByClass<ABaseWeapon>(&Weapon);
+
+	//GetMovementComponent()->SetUpdatedComponent(MeshComp);
 }
 
 bool ABaseCharacter::PickItem(ABaseItem* Item)
