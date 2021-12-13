@@ -20,7 +20,7 @@ public:
 	ABaseWeapon();
 
 	virtual void BeginPlay() override;
-	
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int32 MaxAmmoTotal;
 
@@ -46,7 +46,13 @@ public:
 	FName MuzzleSocketName;
 
 	UFUNCTION(BlueprintCallable)
+	void TryFire();
+
+	UFUNCTION(Server, Reliable)
 	void Fire();
+
+	UPROPERTY(EditDefaultsOnly, Category="Gameplay|Projectile")
+	TSubclassOf<class ABaseProjectile> ProjectileClass;
 
 	UFUNCTION(BlueprintCallable)
 	void RestoreAmmo();
@@ -66,5 +72,5 @@ public:
 
 	void UseAmmo();
 
-	void WeaponTrace(FVector& From, FVector& To);
+	FHitResult WeaponTrace(FVector& From, FVector& To);
 };

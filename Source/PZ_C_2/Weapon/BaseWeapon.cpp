@@ -6,14 +6,19 @@
 #include "CollisionQueryParams.h"
 #include "TimerManager.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "BaseProjectile.h"
 
 ABaseWeapon::ABaseWeapon()
 {
 	Range = 10000;
 	MuzzleSocketName = FName("Muzzle");
-	
+
 	MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>("Body");
 	MeshComponent->SetupAttachment(RootComponent);
+
+	ProjectileClass = ABaseProjectile::StaticClass();
+
+	bReplicates = true;
 }
 
 void ABaseWeapon::BeginPlay()
@@ -22,7 +27,7 @@ void ABaseWeapon::BeginPlay()
 }
 
 
-void ABaseWeapon::Fire()
+void ABaseWeapon::TryFire()
 {
 	if (!CanFire())
 	{
@@ -35,12 +40,32 @@ void ABaseWeapon::Fire()
 		return;
 	}
 
-	FVector SocketLocation = Socket->GetSocketLocation(MeshComponent);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, SocketLocation.ToString());
+	//FVector SocketLocation = Socket->GetSocketLocation(MeshComponent);
+	//FVector TraceEndLocation = SocketLocation + (GetActorForwardVector() * Range);
+	//WeaponTrace(SocketLocation, TraceEndLocation);
 
-	FVector TraceEndLocation = SocketLocation + (GetActorForwardVector() * Range);
-	WeaponTrace(SocketLocation, TraceEndLocation);
-	
+	Fire();
+}
+
+void ABaseWeapon::Fire_Implementation()
+{
+	USkeletalMeshSocket* Socket = MeshComponent->SkeletalMesh->FindSocket(MuzzleSocketName);
+	if (Socket == nullptr)
+	{
+		return;
+	}
+
+	FVector spawnLocation = Socket->GetSocketLocation(MeshComponent) + (Socket->GetSocketTransform(MeshComponent).
+		Rotator().Vector() * 45.0f);
+	FRotator spawnRotation = Socket->GetSocketTransform(MeshComponent).Rotator();
+
+	FActorSpawnParameters spawnParameters;
+	spawnParameters.Instigator = GetParentActor()->GetInstigator();
+	spawnParameters.Owner = this;
+
+	GetWorld()->SpawnActor<ABaseProjectile>(
+		spawnLocation, spawnRotation, spawnParameters);
+
 	UseAmmo();
 }
 
@@ -89,7 +114,7 @@ void ABaseWeapon::UseAmmo()
 	AmmoInClip--;
 }
 
-void ABaseWeapon::WeaponTrace(FVector& From, FVector& To)
+FHitResult ABaseWeapon::WeaponTrace(FVector& From, FVector& To)
 {
 	FHitResult RV_Hit(ForceInit);
 
@@ -104,4 +129,6 @@ void ABaseWeapon::WeaponTrace(FVector& From, FVector& To)
 		ECC_Pawn,
 		CollisionTraceParams
 	);
+
+	return RV_Hit;
 }
