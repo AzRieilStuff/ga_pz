@@ -12,6 +12,8 @@ ATPCharacter::ATPCharacter()
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
+
+	WeaponComponent = CreateDefaultSubobject<UChildActorComponent>("Weapon");
 }
 
 // Called when the game starts or when spawned
@@ -19,13 +21,15 @@ void ATPCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TArray<AActor*> Childs;
-	GetAllChildActors(Childs, true);
-	Childs.FindItemByClass<ABaseWeapon>(&Weapon);
-
 	//Initialize the player's Health
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
+
+	// Init default weapon
+	if ( HasAuthority() && DefaultWeapon)
+	{
+		SetWeaponFromClass(DefaultWeapon);
+	}
 }
 
 void ATPCharacter::SetCurrentHealth(float healthValue)
@@ -95,4 +99,50 @@ void ATPCharacter::Tick(float DeltaTime)
 void ATPCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
+
+void ATPCharacter::SetWeaponFromActor(ABaseWeapon* NewWeapon)
+{
+	if (GetWeapon() != nullptr)
+	{
+		WeaponComponent->DestroyChildActor();
+	}
+	NewWeapon->AttachToComponent(this->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+	                             FName("left_cannon"));
+	NewWeapon->SetOwner(this);
+
+}
+
+void ATPCharacter::SetWeaponFromClass(TSubclassOf<ABaseWeapon> NewWeapon)
+{
+	if (GetWeapon() != nullptr)
+	{
+		WeaponComponent->DestroyChildActor();
+	}
+
+	WeaponComponent->SetChildActorClass(NewWeapon);
+	WeaponComponent->CreateChildActor();
+
+	AActor* Created = WeaponComponent->GetChildActor();
+	if (IsValid(Created))
+	{
+		Created->AttachToComponent(this->GetMesh(),
+		                           FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+		                           FName("left_cannon"));
+		Created->SetOwner(this);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, .3f, FColor::Red, "Failed to create weapon");
+	}
+}
+
+ABaseWeapon* ATPCharacter::GetWeapon() const
+{
+	if (WeaponComponent != nullptr)
+	{
+		return Cast<ABaseWeapon>(WeaponComponent->GetChildActor());
+	}
+
+	return nullptr;
 }

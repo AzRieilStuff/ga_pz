@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "TPCharacter.generated.h"
 
+class ABaseWeapon;
+
 UCLASS()
 class PZ_C_2_API ATPCharacter : public ACharacter
 {
@@ -14,8 +16,11 @@ class PZ_C_2_API ATPCharacter : public ACharacter
 public:
 	ATPCharacter();
 
-	UPROPERTY(BlueprintReadOnly)
-	class ABaseWeapon* Weapon;
+	UPROPERTY()
+	class UChildActorComponent* WeaponComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(AllowPrivateAccess = "true"))
+	TSubclassOf<ABaseWeapon> DefaultWeapon;
 protected:
 	virtual void BeginPlay() override;
 
@@ -24,6 +29,14 @@ public:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION()
+	void SetWeaponFromActor(ABaseWeapon* NewWeapon);
+
+	UFUNCTION()
+	void SetWeaponFromClass(TSubclassOf<ABaseWeapon> NewWeapon);
+
+	UFUNCTION(BlueprintCallable)
+	ABaseWeapon* GetWeapon() const;
 
 	// Health implementation
 	UPROPERTY(EditDefaultsOnly, Category = "Health")

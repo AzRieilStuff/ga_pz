@@ -35,6 +35,9 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& OI) : Super(OI)
 
 	// Setup material
 	MeshComp->SetMaterial(0, DefaultMaterial);
+
+	// Setup weapon
+	
 }
 
 
