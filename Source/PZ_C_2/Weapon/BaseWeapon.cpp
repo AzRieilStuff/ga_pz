@@ -49,7 +49,7 @@ void ABaseWeapon::TryFire()
 
 bool ABaseWeapon::Fire_Validate()
 {
-	return true;
+	return Ammo.InClip > 0; 
 }
 
 void ABaseWeapon::Fire_Implementation()
