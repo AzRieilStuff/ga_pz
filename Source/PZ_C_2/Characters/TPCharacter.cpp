@@ -3,6 +3,7 @@
 
 #include "TPCharacter.h"
 #include "PZ_C_2/Weapon/BaseWeapon.h"
+#include "PZ_C_2/Inventory/Inventory.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
 
@@ -14,6 +15,7 @@ ATPCharacter::ATPCharacter()
 	bReplicates = true;
 
 	WeaponComponent = CreateDefaultSubobject<UChildActorComponent>("Weapon");
+	InventoryComponent = CreateDefaultSubobject<UInventory>("Inventory");
 }
 
 // Called when the game starts or when spawned
@@ -34,10 +36,11 @@ void ATPCharacter::BeginPlay()
 
 void ATPCharacter::SetCurrentHealth(float healthValue)
 {
+	// Update server value
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		CurrentHealth = FMath::Clamp(healthValue, 0.f, MaxHealth);
-		OnHealthUpdate();
+		OnHealthUpdate(); // calls everywhere?
 	}
 }
 
@@ -64,7 +67,7 @@ void ATPCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 
 void ATPCharacter::OnHealthUpdate()
 {
-	if (IsLocallyControlled())
+	if (IsLocallyControlled()) // update local
 	{
 		FString healthMessage = FString::Printf(TEXT("IsLocallyControlled HP %f"), CurrentHealth);
 		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, healthMessage);

@@ -5,6 +5,7 @@
 
 UInventory::UInventory()
 {
+	SetIsReplicated(false);
 }
 
 TArray<UInventoryItem*>& UInventory::GetItems()

@@ -47,6 +47,11 @@ void ABaseWeapon::TryFire()
 	Fire();
 }
 
+bool ABaseWeapon::Fire_Validate()
+{
+	return true;
+}
+
 void ABaseWeapon::Fire_Implementation()
 {
 	USkeletalMeshSocket* Socket = MeshComponent->SkeletalMesh->FindSocket(MuzzleSocketName);
@@ -71,20 +76,20 @@ void ABaseWeapon::Fire_Implementation()
 
 bool ABaseWeapon::CanReload() const
 {
-	return !bIsReloading && AmmoInClip < MaxAmmoInClip && AmmoTotal > 0;
+	return !bIsReloading && Ammo.InClip < MaxAmmoInClip && Ammo.Total > 0;
 }
 
 bool ABaseWeapon::CanFire() const
 {
-	return AmmoInClip > 0 && !bIsReloading;
+	return Ammo.InClip > 0 && !bIsReloading;
 }
 
 void ABaseWeapon::RestoreAmmo()
 {
-	int32 Restore = MaxAmmoInClip > AmmoTotal ? AmmoTotal : MaxAmmoInClip;
-	Restore -= AmmoInClip;
-	AmmoInClip += Restore;
-	AmmoTotal -= Restore;
+	int32 Restore = MaxAmmoInClip > Ammo.Total ? Ammo.Total : MaxAmmoInClip;
+	Restore -= Ammo.InClip;
+	Ammo.InClip += Restore;
+	Ammo.Total -= Restore;
 }
 
 void ABaseWeapon::Reload()
@@ -109,9 +114,9 @@ void ABaseWeapon::Reload()
 	GetWorldTimerManager().SetTimer(UnusedHandle, TimerCallback, ReloadDuration, false);
 }
 
-void ABaseWeapon::UseAmmo()
+void ABaseWeapon::UseAmmo_Implementation()
 {
-	AmmoInClip--;
+	Ammo.InClip--;
 }
 
 FHitResult ABaseWeapon::WeaponTrace(FVector& From, FVector& To)

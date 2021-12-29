@@ -38,6 +38,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	ABaseWeapon* GetWeapon() const;
 
+	UPROPERTY(BlueprintReadOnly)
+	class UInventory* InventoryComponent;
+
 	// Health implementation
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
 	float MaxHealth;

@@ -7,6 +7,18 @@
 #include "GameFramework/Actor.h"
 #include "BaseWeapon.generated.h"
 
+USTRUCT(BlueprintType)
+struct FAmmoData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
+	int32 InClip;
+
+	UPROPERTY(BlueprintReadWrite)
+	int32 Total;
+};
+
 UCLASS(Blueprintable)
 class PZ_C_2_API ABaseWeapon : public AActor, public IReloadable
 {
@@ -24,14 +36,11 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int32 MaxAmmoTotal;
 
-	UPROPERTY(BlueprintReadWrite)
-	int32 AmmoTotal;
-
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int32 MaxAmmoInClip;
 
 	UPROPERTY(BlueprintReadWrite)
-	int32 AmmoInClip;
+	FAmmoData Ammo;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int32 Damage;
@@ -48,7 +57,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void TryFire();
 
-	UFUNCTION(Server, Reliable)
+	UFUNCTION(Server, Reliable, WithValidation)
 	void Fire();
 
 	UPROPERTY(EditDefaultsOnly, Category="Gameplay|Projectile")
@@ -70,6 +79,7 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsReloading = false;
 
+	UFUNCTION(Client, Reliable)
 	void UseAmmo();
 
 	FHitResult WeaponTrace(FVector& From, FVector& To);
