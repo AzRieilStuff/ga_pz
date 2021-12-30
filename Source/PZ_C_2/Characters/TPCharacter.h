@@ -38,7 +38,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	ABaseWeapon* GetWeapon() const;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly,EditAnywhere)
 	class UInventory* InventoryComponent;
 
 	// Health implementation

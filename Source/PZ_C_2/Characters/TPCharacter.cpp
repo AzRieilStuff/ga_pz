@@ -16,6 +16,8 @@ ATPCharacter::ATPCharacter()
 
 	WeaponComponent = CreateDefaultSubobject<UChildActorComponent>("Weapon");
 	InventoryComponent = CreateDefaultSubobject<UInventory>("Inventory");
+
+	InventoryComponent->SetIsReplicated(true);
 }
 
 // Called when the game starts or when spawned
@@ -40,7 +42,7 @@ void ATPCharacter::SetCurrentHealth(float healthValue)
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		CurrentHealth = FMath::Clamp(healthValue, 0.f, MaxHealth);
-		OnHealthUpdate(); // calls everywhere?
+		OnHealthUpdate(); // if server changes value, repNotify wont call
 	}
 }
 
