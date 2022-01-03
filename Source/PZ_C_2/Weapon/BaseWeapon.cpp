@@ -6,14 +6,19 @@
 #include "CollisionQueryParams.h"
 #include "TimerManager.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "BaseProjectile.h"
 
 ABaseWeapon::ABaseWeapon()
 {
 	Range = 10000;
 	MuzzleSocketName = FName("Muzzle");
-	
+
 	MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>("Body");
 	MeshComponent->SetupAttachment(RootComponent);
+
+	ProjectileClass = ABaseProjectile::StaticClass();
+
+	bReplicates = true;
 }
 
 void ABaseWeapon::BeginPlay()
@@ -22,7 +27,7 @@ void ABaseWeapon::BeginPlay()
 }
 
 
-void ABaseWeapon::Fire()
+void ABaseWeapon::TryFire()
 {
 	if (!CanFire())
 	{
@@ -35,31 +40,56 @@ void ABaseWeapon::Fire()
 		return;
 	}
 
-	FVector SocketLocation = Socket->GetSocketLocation(MeshComponent);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, SocketLocation.ToString());
+	//FVector SocketLocation = Socket->GetSocketLocation(MeshComponent);
+	//FVector TraceEndLocation = SocketLocation + (GetActorForwardVector() * Range);
+	//WeaponTrace(SocketLocation, TraceEndLocation);
 
-	FVector TraceEndLocation = SocketLocation + (GetActorForwardVector() * Range);
-	WeaponTrace(SocketLocation, TraceEndLocation);
-	
+	Fire();
+}
+
+bool ABaseWeapon::Fire_Validate()
+{
+	return Ammo.InClip > 0; 
+}
+
+void ABaseWeapon::Fire_Implementation()
+{
+	USkeletalMeshSocket* Socket = MeshComponent->SkeletalMesh->FindSocket(MuzzleSocketName);
+	if (Socket == nullptr)
+	{
+		return;
+	}
+
+	FVector spawnLocation = Socket->GetSocketLocation(MeshComponent) + (Socket->GetSocketTransform(MeshComponent).
+		Rotator().Vector() * 45.0f);
+	FRotator spawnRotation = Socket->GetSocketTransform(MeshComponent).Rotator();
+
+	FActorSpawnParameters spawnParameters;
+	spawnParameters.Instigator = GetParentActor()->GetInstigator();
+	spawnParameters.Owner = this;
+
+	GetWorld()->SpawnActor<ABaseProjectile>(
+		spawnLocation, spawnRotation, spawnParameters);
+
 	UseAmmo();
 }
 
 bool ABaseWeapon::CanReload() const
 {
-	return !bIsReloading && AmmoInClip < MaxAmmoInClip && AmmoTotal > 0;
+	return !bIsReloading && Ammo.InClip < MaxAmmoInClip && Ammo.Total > 0;
 }
 
 bool ABaseWeapon::CanFire() const
 {
-	return AmmoInClip > 0 && !bIsReloading;
+	return Ammo.InClip > 0 && !bIsReloading;
 }
 
 void ABaseWeapon::RestoreAmmo()
 {
-	int32 Restore = MaxAmmoInClip > AmmoTotal ? AmmoTotal : MaxAmmoInClip;
-	Restore -= AmmoInClip;
-	AmmoInClip += Restore;
-	AmmoTotal -= Restore;
+	int32 Restore = MaxAmmoInClip > Ammo.Total ? Ammo.Total : MaxAmmoInClip;
+	Restore -= Ammo.InClip;
+	Ammo.InClip += Restore;
+	Ammo.Total -= Restore;
 }
 
 void ABaseWeapon::Reload()
@@ -84,12 +114,12 @@ void ABaseWeapon::Reload()
 	GetWorldTimerManager().SetTimer(UnusedHandle, TimerCallback, ReloadDuration, false);
 }
 
-void ABaseWeapon::UseAmmo()
+void ABaseWeapon::UseAmmo_Implementation()
 {
-	AmmoInClip--;
+	Ammo.InClip--;
 }
 
-void ABaseWeapon::WeaponTrace(FVector& From, FVector& To)
+FHitResult ABaseWeapon::WeaponTrace(FVector& From, FVector& To)
 {
 	FHitResult RV_Hit(ForceInit);
 
@@ -104,4 +134,6 @@ void ABaseWeapon::WeaponTrace(FVector& From, FVector& To)
 		ECC_Pawn,
 		CollisionTraceParams
 	);
+
+	return RV_Hit;
 }

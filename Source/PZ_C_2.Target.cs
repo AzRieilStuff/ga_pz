@@ -7,7 +7,7 @@ public class PZ_C_2Target : TargetRules
 {
 	public PZ_C_2Target(TargetInfo Target) : base(Target)
 	{
-		Type = TargetType.Game;
+		Type = TargetType.Server;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
 		ExtraModuleNames.Add("PZ_C_2");
 	}

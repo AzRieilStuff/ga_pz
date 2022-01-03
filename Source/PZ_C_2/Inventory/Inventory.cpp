@@ -2,25 +2,37 @@
 
 
 #include "Inventory.h"
+#include "Net/UnrealNetwork.h"
+#include "Engine/ActorChannel.h"
+
+void UInventory::AddItemClient_Implementation(FInventoryItem NewItem)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("Add item client"));
+	Items.Add(NewItem);
+}
 
 UInventory::UInventory()
 {
 }
 
-TArray<UInventoryItem*>& UInventory::GetItems()
+TArray<FInventoryItem>& UInventory::GetItems()
 {
 	return Items;
 }
 
-UInventoryItem* UInventory::GetItem(const int32 Index) const
+bool UInventory::GetItem(const int32 Index, FInventoryItem& Out) const
 {
-	return Index >= Items.Num() ? nullptr : Items[Index];
+	if (Index >= Items.Num())
+	{
+		Out = Items[Index];
+		return true;
+	}
+	return false;
 }
 
-bool UInventory::AddItem(UInventoryItem* Item)
+void UInventory::AddItemServer_Implementation(FInventoryItem Item)
 {
-	Items.Add(Item);
-	return true;
+	AddItemClient(Item);
 }
 
 bool UInventory::HasFreeSlot()
