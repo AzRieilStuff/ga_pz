@@ -8,6 +8,8 @@
 
 class ABaseWeapon;
 
+DECLARE_MULTICAST_DELEGATE(FOnHealthChangeDelegate)
+
 UCLASS()
 class PZ_C_2_API ATPCharacter : public ACharacter
 {
@@ -42,6 +44,8 @@ public:
 	class UInventory* InventoryComponent;
 
 	// Health implementation
+	FOnHealthChangeDelegate OnHealthChange;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
 	float MaxHealth;
 

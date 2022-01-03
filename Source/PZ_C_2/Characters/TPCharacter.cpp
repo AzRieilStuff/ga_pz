@@ -85,6 +85,8 @@ void ATPCharacter::OnHealthUpdate()
 			TEXT("%s now has %f HP ( ROLE_Authority )"), *GetFName().ToString(), CurrentHealth);
 		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Blue, healthMessage);
 	}
+	
+	OnHealthChange.Broadcast();
 }
 
 void ATPCharacter::OnRep_CurrentHealth()
