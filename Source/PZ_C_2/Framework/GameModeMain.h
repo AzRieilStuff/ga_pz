@@ -15,7 +15,4 @@ public:
 	AGameModeMain();
 
 	virtual void BeginPlay() override;
-
-	UFUNCTION(BlueprintCallable)
-	void ClearLevel() const;
 };

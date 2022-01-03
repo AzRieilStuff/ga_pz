@@ -7,9 +7,9 @@
 #include "BaseItem.generated.h"
 
 class ABaseItem;
-class ABaseCharacter;
+class ATPCharacter;
 
-DECLARE_DELEGATE_TwoParams(FCharacterItemInteraction, class ABaseItem*, ABaseCharacter* );	
+DECLARE_DELEGATE_TwoParams(FCharacterItemInteraction, class ABaseItem*, ATPCharacter* );	
 UCLASS()
 class PZ_C_2_API ABaseItem : public AActor
 {
@@ -30,13 +30,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void UseItem(ABaseCharacter* Character);
+	virtual void UseItem(ATPCharacter* Character);
 
 	UPROPERTY(BlueprintReadWrite)
 	bool bPickable = true;
 
 	UFUNCTION(BlueprintCallable)
-	virtual bool CanUseBy(ABaseCharacter* Character);
+	virtual bool CanUseBy(ATPCharacter* Character);
 
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 	FCharacterItemInteraction FOnItemPicked;

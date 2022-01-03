@@ -2,7 +2,7 @@
 
 #include "BaseItem.h"
 
-#include "PZ_C_2/Characters/BaseCharacter.h"
+#include "PZ_C_2/Characters/TPCharacter.h"
 
 // Sets default values
 ABaseItem::ABaseItem()
@@ -28,12 +28,12 @@ void ABaseItem::Tick(float DeltaTime)
 
 }
 
-void ABaseItem::UseItem(ABaseCharacter* Character)
+void ABaseItem::UseItem(ATPCharacter* Character)
 {
 	Destroy();
 }
 
-bool ABaseItem::CanUseBy(ABaseCharacter* Character)
+bool ABaseItem::CanUseBy(ATPCharacter* Character)
 {
 	return true;
 }
@@ -43,11 +43,11 @@ void ABaseItem::NotifyActorBeginOverlap(AActor* OtherActor)
 	Super::NotifyActorBeginOverlap(OtherActor);
 
 	if( bPickable ){
-		ABaseCharacter* Character = Cast<ABaseCharacter>(OtherActor);
+		ATPCharacter* Character = Cast<ATPCharacter>(OtherActor);
 
 		if( Character && CanUseBy(Character) ){
 			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("Picking"));
-		    Character->PickItem(this);
+		    //Character->PickItem(this);
 			FOnItemPicked.ExecuteIfBound(this, Character);
 		}
 	}

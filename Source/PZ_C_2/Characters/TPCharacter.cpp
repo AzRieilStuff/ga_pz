@@ -18,16 +18,16 @@ ATPCharacter::ATPCharacter()
 	InventoryComponent = CreateDefaultSubobject<UInventory>("Inventory");
 
 	InventoryComponent->SetIsReplicated(true);
+	
+	//Initialize the player's Health
+	MaxHealth = 100.0f;
+	CurrentHealth = MaxHealth;
 }
 
 // Called when the game starts or when spawned
 void ATPCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//Initialize the player's Health
-	MaxHealth = 100.0f;
-	CurrentHealth = MaxHealth;
 
 	// Init default weapon
 	if ( HasAuthority() && DefaultWeapon)
@@ -49,6 +49,8 @@ void ATPCharacter::SetCurrentHealth(float healthValue)
 float ATPCharacter::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator,
                                AActor* DamageCauser)
 {
+	Super::TakeDamage(DamageTaken, DamageEvent, EventInstigator, DamageCauser);
+	
 	// FString msg = FString::Printf(TEXT("%s receive damage %f"), *GetFName().ToString(),
 	//                               DamageTaken);
 	//
@@ -71,14 +73,10 @@ void ATPCharacter::OnHealthUpdate()
 {
 	if (IsLocallyControlled()) // update local
 	{
-		FString healthMessage = FString::Printf(TEXT("IsLocallyControlled HP %f"), CurrentHealth);
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, healthMessage);
-
-		if (CurrentHealth <= 0)
-		{
-			FString deathMessage = FString::Printf(TEXT("%s killed"), *GetFName().ToString());
-			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, deathMessage);
-		}
+		FString healthMessage = FString::Printf(TEXT("Player %s now has %f HP"), *GetFName().ToString(), CurrentHealth);
+        
+		auto PC = GetWorld()->GetFirstPlayerController();
+		PC->ClientMessage(healthMessage);
 	}
 
 	if (GetLocalRole() == ROLE_Authority)
