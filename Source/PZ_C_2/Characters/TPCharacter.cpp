@@ -109,6 +109,7 @@ void ATPCharacter::OnHealthUpdate()
 	}
 
 	OnHealthChange.Broadcast();
+	OnHealthChangeDynamic.Broadcast();
 }
 
 void ATPCharacter::OnRep_CurrentHealth()
@@ -187,7 +188,7 @@ void ATPCharacter::Climb()
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("Climb"));
 	if (ClimbingMontage == nullptr || !GetMesh()->HasValidAnimationInstance())
 	{
-		return;	
+		return;
 	}
 
 	ClimbServer();
@@ -196,12 +197,12 @@ void ATPCharacter::Climb()
 
 void ATPCharacter::ClimbServer_Implementation()
 {
-	if( IsClimbing )
+	if (IsClimbing)
 	{
 		return;
 	}
-	
-	
+
+
 	// debug
 	const FName TraceTag("Debug");
 	GetWorld()->DebugDrawTraceTag = TraceTag;
@@ -237,13 +238,13 @@ void ATPCharacter::ClimbServer_Implementation()
 	}
 
 	FVector WallTopHitLocation = HeightTrace.Location;
-	//GEngine->AddOnScreenDebugMessage(-1,3.f,FColor::Red, FString::FromInt(WallTopHitLocation.Z));
-
 	FVector PelvisLocation = GetMesh()->GetSocketLocation("pelvisSocket");
-	if (PelvisLocation.Z - WallTopHitLocation.Z > 50) // too high	
-		{
+	
+	GEngine->AddOnScreenDebugMessage(-1,3.f,FColor::Red, FString::FromInt(WallTopHitLocation.Z - PelvisLocation.Z));
+	if (WallTopHitLocation.Z - PelvisLocation.Z > 150) // too high	
+	{
 		return;
-		}
+	}
 	// all is ok
 
 	IsClimbing = true;
@@ -270,7 +271,7 @@ void ATPCharacter::ClimbServer_Implementation()
 		WallTopHitLocation.Z - GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 19
 	);
 	GetCapsuleComponent()->SetRelativeLocation(ClimbLocation + (WallNormal * 32));
-	
+
 	FRotator ClimbRotation = UKismetMathLibrary::MakeRotFromX(WallNormal * -1);
 	GetCapsuleComponent()->SetRelativeRotation(ClimbRotation);
 }

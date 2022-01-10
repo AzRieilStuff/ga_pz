@@ -8,7 +8,8 @@
 
 class ABaseWeapon;
 
-DECLARE_MULTICAST_DELEGATE(FOnHealthChangeDelegate)
+DECLARE_MULTICAST_DELEGATE(FOnHealthChangeDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthChangeDynamicDelegate);
 
 USTRUCT()
 struct FCharacterSaveData
@@ -75,7 +76,10 @@ public:
 
 	// Health implementation
 	FOnHealthChangeDelegate OnHealthChange;
-	
+
+	UPROPERTY(BlueprintAssignable)
+	FOnHealthChangeDynamicDelegate OnHealthChangeDynamic;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
 	float MaxHealth;
 
