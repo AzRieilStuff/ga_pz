@@ -8,7 +8,23 @@
 
 class ABaseWeapon;
 
-DECLARE_MULTICAST_DELEGATE(FOnHealthChangeDelegate)
+DECLARE_MULTICAST_DELEGATE(FOnHealthChangeDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthChangeDynamicDelegate);
+
+USTRUCT()
+struct FCharacterSaveData
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	float Health;
+
+	UPROPERTY()
+	FVector Location;
+	
+	UPROPERTY()
+	FQuat Rotation;
+};
 
 UCLASS()
 class PZ_C_2_API ATPCharacter : public ACharacter
@@ -43,9 +59,27 @@ public:
 	UPROPERTY(BlueprintReadOnly,EditAnywhere)
 	class UInventory* InventoryComponent;
 
+	UFUNCTION()
+	void Climb();
+
+	UFUNCTION(Server, Unreliable)
+	void ClimbServer();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void PlayClimbAnimationMulticast();
+
+	UPROPERTY(BlueprintReadOnly)
+	bool IsClimbing;
+
+	UPROPERTY(EditDefaultsOnly)
+	UAnimMontage* ClimbingMontage;
+
 	// Health implementation
 	FOnHealthChangeDelegate OnHealthChange;
-	
+
+	UPROPERTY(BlueprintAssignable)
+	FOnHealthChangeDynamicDelegate OnHealthChangeDynamic;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
 	float MaxHealth;
 
@@ -73,4 +107,10 @@ public:
 	                 AActor* DamageCauser) override;
 
 	// ~Health implementation
+
+	// Saving
+	FCharacterSaveData GetSaveData() const;
+
+	void InitFromSaveData(const FCharacterSaveData Data);
+	// ~Saving
 };
