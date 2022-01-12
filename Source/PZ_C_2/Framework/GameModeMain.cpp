@@ -5,7 +5,7 @@
 #include "EngineUtils.h"
 #include "PlayerControllerMain.h"
 #include "PlayerStateMain.h"
-#include "PZ_C_2/Characters/TPCharacter.h"
+#include "PZ_C_2/Characters/Archer.h"
 #include "PZ_C_2/Items/BaseItem.h"
 #include "PlayerControllerMain.h"
 #include "UObject/ConstructorHelpers.h"
@@ -13,7 +13,7 @@
 AGameModeMain::AGameModeMain()
 {
 	PlayerStateClass = APlayerStateMain::StaticClass();
-	DefaultPawnClass = ATPCharacter::StaticClass();
+	DefaultPawnClass = AArcher::StaticClass();
 	PlayerControllerClass = APlayerControllerMain::StaticClass();
 }
 

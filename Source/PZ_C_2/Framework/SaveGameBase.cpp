@@ -8,9 +8,9 @@
 
 void USaveGameBase::PrepareSaveData(UWorld* World)
 {
-	for (TActorIterator<ATPCharacter> ActorItr(World); ActorItr; ++ActorItr)
+	for (TActorIterator<AArcher> ActorItr(World); ActorItr; ++ActorItr)
 	{
-		const ATPCharacter* Character = *ActorItr;
+		const AArcher* Character = *ActorItr;
 
 		if (IsValid(Character))
 		{
@@ -23,9 +23,9 @@ void USaveGameBase::PrepareSaveData(UWorld* World)
 
 void USaveGameBase::ProcessSaveData(UWorld* World)
 {
-	for (TActorIterator<ATPCharacter> ActorItr(World); ActorItr; ++ActorItr)
+	for (TActorIterator<AArcher> ActorItr(World); ActorItr; ++ActorItr)
 	{
-		ATPCharacter* Character = *ActorItr;
+		AArcher* Character = *ActorItr;
 
 		if (IsValid(Character) && CharactersData.Contains(Character->GetName()))
 		{

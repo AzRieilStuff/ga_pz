@@ -3,42 +3,55 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PickableInterface.h"
 #include "GameFramework/Actor.h"
 #include "BaseItem.generated.h"
 
 class ABaseItem;
-class ATPCharacter;
+class AArcher;
+class UPickBoxComponent;
 
-DECLARE_DELEGATE_TwoParams(FCharacterItemInteraction, class ABaseItem*, ATPCharacter* );	
+DECLARE_DELEGATE_TwoParams(FCharacterItemInteraction, class ABaseItem*, AArcher*);
+
 UCLASS()
-class PZ_C_2_API ABaseItem : public AActor
+class PZ_C_2_API ABaseItem : public AActor, public IPickableInterface
 {
 	GENERATED_BODY()
-		
-public:	
+
+
+public:
 	// Sets default values for this actor's properties
 	ABaseItem();
 
 protected:
+	UPROPERTY(VisibleDefaultsOnly) 
+	bool bDestroyOnPickup;
+		
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(BlueprintReadWrite)
-	UStaticMeshComponent* Mesh;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta=(AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* MeshComponent;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
+	UPickBoxComponent* PickBoxComponent;
 
-	virtual void UseItem(ATPCharacter* Character);
+public:
+	UFUNCTION()
+	virtual void Pickup(AArcher* Character) override;
+
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void PickupMulticast(AArcher* Character);
+	
+	UFUNCTION(Server, Reliable)
+	virtual void PickupServer(AArcher* Character);
+
+	UFUNCTION(BlueprintCallable)
+	virtual bool CanPickupBy(AArcher* Character) const override;
 
 	UPROPERTY(BlueprintReadWrite)
 	bool bPickable = true;
 
-	UFUNCTION(BlueprintCallable)
-	virtual bool CanUseBy(ATPCharacter* Character);
-
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 	FCharacterItemInteraction FOnItemPicked;
 };
-

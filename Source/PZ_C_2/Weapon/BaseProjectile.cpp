@@ -25,7 +25,7 @@ ABaseProjectile::ABaseProjectile()
 	}
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> DefaultMesh(
-		TEXT("/Game/StarterContent/Shapes/Shape_Sphere.Shape_Sphere"));
+		TEXT("/Game/Common/SM_Cube.SM_Cube"));
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	MeshComp->SetupAttachment(RootComponent);
 	MeshComp->SetIsReplicated(true);
