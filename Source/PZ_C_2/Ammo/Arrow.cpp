@@ -52,13 +52,13 @@ void AArrow::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* Other
 	if( Character != nullptr )
 	{
 		// todo sticking
-		Destroy();
+		// Destroy();
 	}
 }
 
 // Called when the game starts or when spawned
 void AArrow::BeginPlay()
 {
+	CollisionComponent->IgnoreActorWhenMoving(GetOwner(), true);
 	Super::BeginPlay();
-
 }

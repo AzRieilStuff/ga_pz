@@ -30,7 +30,11 @@ class PZ_C_2_API ABaseRangeWeapon : public ABaseItem, public IReloadable
 
 	virtual class ABaseProjectile* SpawnProjectile();
 protected:
+
+	// [server]
 	virtual void PerformFire();
+
+	virtual void ComputeProjectileTransform(const AArcher* Character, FVector& Location, FRotator& Rotation);
 public:
 	ABaseRangeWeapon();
 
@@ -53,9 +57,6 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int32 Range;
-
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	FName MuzzleSocketName;
 
 	UFUNCTION(BlueprintCallable)
 	virtual void Fire();

@@ -21,14 +21,16 @@ protected:
 
 
 	UFUNCTION()
-	virtual void OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	                        FVector NormalImpulse, const FHitResult& Hit);
+	virtual void OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+	                                UPrimitiveComponent* OtherComp,
+	                                FVector NormalImpulse, const FHitResult& Hit);
 
 	UPROPERTY(EditDefaultsOnly)
 	bool bDestroyOnHit;
 public:
-	virtual void EnableMovement();
-	
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void EnableMovementMulticast();
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Components")
 	class UBoxComponent* CollisionComponent;
 
@@ -46,4 +48,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Damage")
 	float Damage;
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void PlayOnHitVisualsMulticast();
+
+	UFUNCTION()
+	virtual void ApplyDamage(AActor* Actor, FVector Origin, const FHitResult& Hit);
 };

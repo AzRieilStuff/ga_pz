@@ -21,4 +21,6 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	int32 ProjectilesAmount;
+
+	virtual void ComputeProjectileTransform(const AArcher* Character, FVector& Location, FRotator& Rotation) override;
 };

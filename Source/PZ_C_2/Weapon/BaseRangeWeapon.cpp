@@ -28,9 +28,14 @@ void ABaseRangeWeapon::PerformFire()
 	ABaseProjectile* Projectile = SpawnProjectile();
 	if( Projectile != nullptr )
 	{
-		Projectile->EnableMovement();
+		//Projectile->EnableMovementMulticast();
 	}
 }
+
+void ABaseRangeWeapon::ComputeProjectileTransform(const AArcher* Character, FVector& Location, FRotator& Rotation)
+{
+}
+
 
 ABaseProjectile* ABaseRangeWeapon::SpawnProjectile()
 {
@@ -40,7 +45,6 @@ ABaseProjectile* ABaseRangeWeapon::SpawnProjectile()
 ABaseRangeWeapon::ABaseRangeWeapon()
 {
 	Range = 10000;
-	MuzzleSocketName = FName("Muzzle");
 	ProjectileClass = ABaseProjectile::StaticClass();
 
 	bDestroyOnPickup = false;
