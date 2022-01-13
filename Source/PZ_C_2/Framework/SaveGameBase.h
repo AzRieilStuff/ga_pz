@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
-#include "PZ_C_2/Characters/TPCharacter.h"
+#include "PZ_C_2/Characters/Archer.h"
 #include "SaveGameBase.generated.h"
 
 /**
