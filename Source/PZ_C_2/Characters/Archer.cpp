@@ -21,7 +21,7 @@ AArcher::AArcher()
 	bReplicates = true;
 
 	WeaponManagerComponent = CreateDefaultSubobject<UWeaponManagerComponent>("WeaponManager");
-	//WeaponManagerComponent->SetIsReplicated(true);
+	WeaponManagerComponent->SetIsReplicated(true);
 
 	InventoryComponent = CreateDefaultSubobject<UInventory>("InventoryComponent");
 	InventoryComponent->SetIsReplicated(true);

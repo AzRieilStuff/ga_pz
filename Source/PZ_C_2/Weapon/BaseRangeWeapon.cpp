@@ -5,7 +5,7 @@
 
 #include "CollisionQueryParams.h"
 #include "TimerManager.h"
-#include "BaseProjectile.h"
+#include "PZ_C_2/Ammo/BaseProjectile.h"
 
 void ABaseRangeWeapon::SetFireRateTimer()
 {
@@ -15,11 +15,11 @@ void ABaseRangeWeapon::SetFireRateTimer()
 	GetWorldTimerManager().SetTimer(FiringTimerHandle, [this]
 	{
 		bIsFiring = false;
-		Shoot();
+		ShootProjectile();
 	}, FireRate, false);
 }
 
-void ABaseRangeWeapon::Shoot()
+void ABaseRangeWeapon::ShootProjectile()
 {
 }
 

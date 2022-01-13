@@ -27,7 +27,7 @@ class PZ_C_2_API ABaseRangeWeapon : public ABaseItem, public IReloadable
 
 	void SetFireRateTimer();
 
-	virtual void Shoot();
+	virtual void ShootProjectile();
 
 public:
 	ABaseRangeWeapon();
@@ -64,7 +64,7 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void FireMulticast();
 
-	UPROPERTY(EditDefaultsOnly, Category="Gameplay|Projectile")
+	UPROPERTY(EditAnywhere, Category="Gameplay|Projectile")
 	TSubclassOf<class ABaseProjectile> ProjectileClass;
 
 	UFUNCTION(BlueprintCallable)

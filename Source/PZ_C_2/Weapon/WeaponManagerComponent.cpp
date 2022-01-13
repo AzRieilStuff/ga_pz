@@ -3,6 +3,7 @@
 
 #include "WeaponManagerComponent.h"
 
+#include "Net/UnrealNetwork.h"
 #include "PZ_C_2/Characters/Archer.h"
 
 void UWeaponManagerComponent::SetBowMeshVisibility(bool State) const
@@ -60,6 +61,13 @@ void UWeaponManagerComponent::ReloadWeapon()
 	}
 
 	Weapon->Reload();
+}
+
+void UWeaponManagerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(UWeaponManagerComponent, Weapon, COND_InitialOnly);
 }
 
 void UWeaponManagerComponent::BeginPlay()

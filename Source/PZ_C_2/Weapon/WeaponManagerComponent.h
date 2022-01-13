@@ -43,11 +43,13 @@ public:
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 	FORCEINLINE bool IsWeaponEquipped() { return Weapon != nullptr; };
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 	ABaseRangeWeapon* Weapon;
 
 	UPROPERTY()
 	AArcher* Character;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void BeginPlay() override;
 };

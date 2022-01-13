@@ -11,13 +11,10 @@ class ABaseBow : public ABaseRangeWeapon
 
 	const FName ArrowSocketName = FName("ArrowSocket");
 
-	virtual void Shoot() override;
+	virtual void ShootProjectile() override;
 
 public:
 	ABaseBow();
-
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<AArrow> ArrowClass;
 
 	virtual void PickupMulticast_Implementation(AArcher* Character) override;
 };

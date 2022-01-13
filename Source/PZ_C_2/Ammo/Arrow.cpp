@@ -4,28 +4,26 @@
 #include "Arrow.h"
 
 #include "Components/BoxComponent.h"
+#include "PZ_C_2/Characters/Archer.h"
 
 
 // Sets default values
 AArrow::AArrow()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	bDestroyOnHit = false;
 	//bReplicates = true;
 
 	// Init components
-	CollisionComponent = CreateDefaultSubobject<UBoxComponent>("CollisionComponent");
-	CollisionComponent->SetBoxExtent(FVector(1.5f, 1.5f, 24.f));
+	CollisionComponent->SetBoxExtent(FVector(24.f, 1.5f, 24.f));
 	CollisionComponent->SetMobility(EComponentMobility::Movable);
 	SetRootComponent(CollisionComponent);
 
-	MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>("MeshComponent");
 	MeshComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	MeshComponent->SetMobility(EComponentMobility::Movable);
 	//MeshComponent->SetWorldScale3D(FVector(4.f, 5.f, 4.f));
 	MeshComponent->SetRelativeLocation(FVector(-32.0, 0, 0.f));
 	//MeshComponent->SetRelativeRotation(FRotator::MakeFromEuler(FVector(0.f, -90.f, 0.f)));
-
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>("MovementComponent");
 
 	// Init assets from local lib
 	const ConstructorHelpers::FObjectFinder<USkeletalMesh> MeshFinder(
@@ -36,19 +34,31 @@ AArrow::AArrow()
 		MeshComponent->SetSkeletalMesh(MeshFinder.Object);
 	}
 
-	// config
-	ProjectileMovementComponent->InitialSpeed = 1500.0f;
-	ProjectileMovementComponent->MaxSpeed = 1500.0f;
-	ProjectileMovementComponent->bRotationFollowsVelocity = false;
-	ProjectileMovementComponent->ProjectileGravityScale = 0.0f;
-
+	// config collision
 	CollisionComponent->SetGenerateOverlapEvents(false);
+	//CollisionComponent->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CollisionComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	CollisionComponent->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
+	CollisionComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+}
+
+void AArrow::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	FVector NormalImpulse, const FHitResult& Hit)
+{
+	Super::OnProjectileImpact(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
+	
+	AArcher* Character = Cast<AArcher>(OtherActor);
+	if( Character != nullptr )
+	{
+		// todo sticking
+		Destroy();
+	}
 }
 
 // Called when the game starts or when spawned
 void AArrow::BeginPlay()
 {
 	Super::BeginPlay();
+
 }
