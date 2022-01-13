@@ -27,8 +27,10 @@ class PZ_C_2_API ABaseRangeWeapon : public ABaseItem, public IReloadable
 
 	void SetFireRateTimer();
 
-	virtual void ShootProjectile();
 
+	virtual class ABaseProjectile* SpawnProjectile();
+protected:
+	virtual void PerformFire();
 public:
 	ABaseRangeWeapon();
 

@@ -10,8 +10,9 @@ class ABaseBow : public ABaseRangeWeapon
 	GENERATED_BODY()
 
 	const FName ArrowSocketName = FName("ArrowSocket");
-
-	virtual void ShootProjectile() override;
+	
+protected:
+	virtual class ABaseProjectile* SpawnProjectile() override;
 
 public:
 	ABaseBow();

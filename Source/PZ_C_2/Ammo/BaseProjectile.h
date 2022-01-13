@@ -19,6 +19,7 @@ protected:
 
 	virtual void Destroyed() override;
 
+
 	UFUNCTION()
 	virtual void OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	                        FVector NormalImpulse, const FHitResult& Hit);
@@ -26,6 +27,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	bool bDestroyOnHit;
 public:
+	virtual void EnableMovement();
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Components")
 	class UBoxComponent* CollisionComponent;
 

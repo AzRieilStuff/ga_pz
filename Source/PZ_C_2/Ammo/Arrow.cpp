@@ -12,7 +12,7 @@ AArrow::AArrow()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bDestroyOnHit = false;
-	//bReplicates = true;
+	bReplicates = true;
 
 	// Init components
 	CollisionComponent->SetBoxExtent(FVector(24.f, 1.5f, 24.f));
@@ -39,7 +39,7 @@ AArrow::AArrow()
 	//CollisionComponent->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CollisionComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
-	CollisionComponent->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
+	//CollisionComponent->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
 	CollisionComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 }
 

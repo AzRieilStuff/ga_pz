@@ -36,6 +36,8 @@ ABaseProjectile::ABaseProjectile()
 
 	DamageType = UDamageType::StaticClass();
 	Damage = 10.0f;
+
+	MovementComponent->SetAutoActivate(false);
 }
 
 void ABaseProjectile::BeginPlay()
@@ -52,6 +54,12 @@ void ABaseProjectile::Destroyed()
 		UGameplayStatics::SpawnEmitterAtLocation(this, OnHitEffect, SpawnLocation, FRotator::ZeroRotator, true,
 		                                         EPSCPoolMethod::AutoRelease);
 	}
+}
+
+void ABaseProjectile::EnableMovement()
+{
+	MovementComponent->Velocity = GetActorRotation().Vector() * MovementComponent->InitialSpeed;
+	MovementComponent->Activate();
 }
 
 void ABaseProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor,

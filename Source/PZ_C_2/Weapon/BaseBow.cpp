@@ -4,11 +4,11 @@
 #include "PZ_C_2/Characters/Archer.h"
 #include "PZ_C_2/Items/PickBoxComponent.h"
 
-void ABaseBow::ShootProjectile()
+ABaseProjectile* ABaseBow::SpawnProjectile()
 {
 	if (!ProjectileClass)
 	{
-		return;
+		return nullptr;
 	}
 
 	FActorSpawnParameters SpawnParameters;
@@ -19,21 +19,10 @@ void ABaseBow::ShootProjectile()
 	if (Character == nullptr)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, "wat");
-		return;
+		return nullptr;
 	}
 
 	SpawnParameters.Instigator = Character;
-
-	//
-	if(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)->HasAuthority())
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, "shoot - Server");
-	}
-	else if(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)->GetLocalRole() == ROLE_AutonomousProxy)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, "shoot - ROLE_AutonomousProxy");
-	}
-	//
 
 	const FRotator ArrowRotation = Character->GetMesh()->GetSocketRotation(ArrowSocketName);
 	const FVector SocketLocation = Character->GetMesh()->GetSocketLocation(ArrowSocketName);
@@ -45,10 +34,11 @@ void ABaseBow::ShootProjectile()
 
 	if (Arrow == nullptr)
 	{
-		return;
+		return nullptr;
 	}
 
 	Arrow->CollisionComponent->IgnoreActorWhenMoving(Character, true);
+	return Arrow;
 }
 
 ABaseBow::ABaseBow()

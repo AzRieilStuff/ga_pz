@@ -5,6 +5,7 @@
 
 #include "CollisionQueryParams.h"
 #include "TimerManager.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "PZ_C_2/Ammo/BaseProjectile.h"
 
 void ABaseRangeWeapon::SetFireRateTimer()
@@ -15,12 +16,25 @@ void ABaseRangeWeapon::SetFireRateTimer()
 	GetWorldTimerManager().SetTimer(FiringTimerHandle, [this]
 	{
 		bIsFiring = false;
-		ShootProjectile();
+		if (GetOwner()->GetLocalRole() == ROLE_Authority)
+		{
+			PerformFire();
+		}
 	}, FireRate, false);
 }
 
-void ABaseRangeWeapon::ShootProjectile()
+void ABaseRangeWeapon::PerformFire()
 {
+	ABaseProjectile* Projectile = SpawnProjectile();
+	if( Projectile != nullptr )
+	{
+		Projectile->EnableMovement();
+	}
+}
+
+ABaseProjectile* ABaseRangeWeapon::SpawnProjectile()
+{
+	return nullptr;
 }
 
 ABaseRangeWeapon::ABaseRangeWeapon()
