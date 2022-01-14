@@ -24,7 +24,9 @@ AArcher::AArcher()
 	WeaponManagerComponent->SetIsReplicated(true);
 
 	InventoryComponent = CreateDefaultSubobject<UInventory>("InventoryComponent");
-	InventoryComponent->SetIsReplicated(true);
+	InventoryComponent->SetIsReplicated(true); //todo why
+
+	GetMesh()->SetIsReplicated(true); // replicate bone rotation
 	
 	//Initialize the player's Health
 	MaxHealth = 100.0f;
