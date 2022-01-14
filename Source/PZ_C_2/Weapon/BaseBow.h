@@ -18,5 +18,5 @@ virtual void ComputeProjectileTransform(const AArcher* Character, FVector& Locat
 public:
 	ABaseBow();
 
-	virtual void PickupMulticast_Implementation(AArcher* Character) override;
+	virtual void MulticastPickup_Implementation(AArcher* Character) override;
 };

@@ -25,14 +25,14 @@ class PZ_C_2_API ABaseRangeWeapon : public ABaseItem, public IReloadable
 {
 	GENERATED_BODY()
 
-	void SetFireRateTimer();
-
+	// [local + server] run animation & timer
+	void StartFiring();
 
 	virtual class ABaseProjectile* SpawnProjectile();
 protected:
 
-	// [server]
-	virtual void PerformFire();
+	// [server] handle shooting, spawn projectiles, shoot effect
+	virtual void PerformFiring();
 
 	virtual void ComputeProjectileTransform(const AArcher* Character, FVector& Location, FRotator& Rotation);
 public:
@@ -59,13 +59,13 @@ public:
 	int32 Range;
 
 	UFUNCTION(BlueprintCallable)
-	virtual void Fire();
+	virtual void FireAction();
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	virtual void FireServer();
+	virtual void ServerFireAction();
 	
 	UFUNCTION(NetMulticast, Reliable)
-	virtual void FireMulticast();
+	virtual void MulticastFireAction();
 
 	UPROPERTY(EditAnywhere, Category="Gameplay|Projectile")
 	TSubclassOf<class ABaseProjectile> ProjectileClass;

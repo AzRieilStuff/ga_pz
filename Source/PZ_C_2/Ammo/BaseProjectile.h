@@ -19,7 +19,7 @@ protected:
 
 	virtual void Destroyed() override;
 
-
+	// [server] 
 	UFUNCTION()
 	virtual void OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	                                UPrimitiveComponent* OtherComp,
@@ -28,9 +28,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	bool bDestroyOnHit;
 public:
-	UFUNCTION(NetMulticast, Reliable)
-	virtual void EnableMovementMulticast();
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Components")
 	class UBoxComponent* CollisionComponent;
 
@@ -40,17 +37,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Components")
 	class UProjectileMovementComponent* MovementComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Effects")
+	UPROPERTY(EditAnywhere, Category = "ProjectileSettings")
 	class UParticleSystem* OnHitEffect;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ProjectileSettings")
 	TSubclassOf<class UDamageType> DamageType;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Damage")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ProjectileSettings")
 	float Damage;
 
 	UFUNCTION(NetMulticast, Unreliable)
-	void PlayOnHitVisualsMulticast();
+	void MulticastPlayOnHitVisuals();
 
 	UFUNCTION()
 	virtual void ApplyDamage(AActor* Actor, FVector Origin, const FHitResult& Hit);

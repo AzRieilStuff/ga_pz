@@ -3,6 +3,7 @@
 
 #include "GrenadeArrow.h"
 
+#include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 
 AGrenadeArrow::AGrenadeArrow()
@@ -16,6 +17,8 @@ void AGrenadeArrow::ApplyDamage(AActor* Actor, FVector Origin, const FHitResult&
 {
 	UGameplayStatics::ApplyRadialDamage(Actor, Damage, Hit.Location, DamageRadius, DamageType, TArray<AActor*>(),
 	                                    this, GetInstigator()->Controller);
+
+	DrawDebugSphere(GetWorld(), Hit.Location, DamageRadius, 4, FColor::Red, false, 2.f);
 
 	if( !IsActorBeingDestroyed() && bDestroyOnHit)
 	{

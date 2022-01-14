@@ -50,7 +50,7 @@ void UWeaponManagerComponent::InteractWeapon()
 		return;
 	}
 
-	Weapon->Fire();
+	Weapon->FireAction();
 }
 
 void UWeaponManagerComponent::ReloadWeapon()

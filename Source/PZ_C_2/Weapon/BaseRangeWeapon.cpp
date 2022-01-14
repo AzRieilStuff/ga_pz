@@ -8,7 +8,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "PZ_C_2/Ammo/BaseProjectile.h"
 
-void ABaseRangeWeapon::SetFireRateTimer()
+void ABaseRangeWeapon::StartFiring()
 {
 	bIsFiring = true;
 
@@ -18,18 +18,14 @@ void ABaseRangeWeapon::SetFireRateTimer()
 		bIsFiring = false;
 		if (GetOwner()->GetLocalRole() == ROLE_Authority)
 		{
-			PerformFire();
+			PerformFiring();
 		}
 	}, FireRate, false);
 }
 
-void ABaseRangeWeapon::PerformFire()
+void ABaseRangeWeapon::PerformFiring()
 {
-	ABaseProjectile* Projectile = SpawnProjectile();
-	if( Projectile != nullptr )
-	{
-		//Projectile->EnableMovementMulticast();
-	}
+	SpawnProjectile();
 }
 
 void ABaseRangeWeapon::ComputeProjectileTransform(const AArcher* Character, FVector& Location, FRotator& Rotation)
@@ -57,7 +53,7 @@ void ABaseRangeWeapon::BeginPlay()
 }
 
 
-void ABaseRangeWeapon::Fire()
+void ABaseRangeWeapon::FireAction()
 {
 	if (bIsFiring)
 	{
@@ -67,28 +63,28 @@ void ABaseRangeWeapon::Fire()
 	// If calling from client, allow to execute instantly
 	if (GetOwner()->GetLocalRole() == ROLE_AutonomousProxy)
 	{
-		SetFireRateTimer();
+		StartFiring();
 	}
 
-	FireServer();
+	ServerFireAction();
 }
 
-void ABaseRangeWeapon::FireServer_Implementation()
+void ABaseRangeWeapon::ServerFireAction_Implementation()
 {
-	SetFireRateTimer();
-	FireMulticast();
+	StartFiring();
+	MulticastFireAction();
 }
 
-void ABaseRangeWeapon::FireMulticast_Implementation()
+void ABaseRangeWeapon::MulticastFireAction_Implementation()
 {
 	// run visuals for simulated within clients
 	if (GetOwner()->GetLocalRole() == ROLE_SimulatedProxy)
 	{
-		SetFireRateTimer();
+		StartFiring();
 	}
 }
 
-bool ABaseRangeWeapon::FireServer_Validate()
+bool ABaseRangeWeapon::ServerFireAction_Validate()
 {
 	if (bIsFiring)
 	{
