@@ -6,37 +6,27 @@
 void AShortgunBow::PerformFire()
 {
 	// spawn multiple arrows
-	TArray<ABaseProjectile*> Spawned;
+	//TArray<ABaseProjectile*> Spawned;
 	for (int32 i = 0; i < ProjectilesAmount; i++)
 	{
 		if (ABaseProjectile* Arrow = SpawnProjectile())
 		{
-			Spawned.Add(Arrow);
-			Arrow->MovementComponent->StopMovementImmediately();
+			//Arrow->EnableMovement();
 		}
-	}
-
-	// slightly rotate
-	for (int32 i = 0; i < Spawned.Num(); i++)
-	{
-		float Amplitude = 10.f;
-
-		FVector ArrowRotation = FVector(
-			FMath::RandRange(-Amplitude, Amplitude),
-			FMath::RandRange(-Amplitude, Amplitude),
-			FMath::RandRange(-Amplitude, Amplitude)
-		);
-		FRotator Rotation = Spawned[i]->GetActorRotation();
-		Rotation.Pitch += FMath::RandRange(-Amplitude, Amplitude);
-		Rotation.Yaw += FMath::RandRange(-Amplitude, Amplitude);
-		Spawned[i]->SetActorRotation(Rotation);
-		
-		Spawned[i]->EnableMovement();
-
 	}
 }
 
 AShortgunBow::AShortgunBow()
 {
 	ProjectilesAmount = 3;
+}
+
+void AShortgunBow::ComputeProjectileTransform(const AArcher* Character, FVector& Location, FRotator& Rotation)
+{
+	Super::ComputeProjectileTransform(Character, Location, Rotation);
+	
+	// add rotation	
+	const float Amplitude = 10.f;
+	Rotation.Pitch += FMath::RandRange(-Amplitude, Amplitude);
+	Rotation.Yaw += FMath::RandRange(-Amplitude, Amplitude);
 }

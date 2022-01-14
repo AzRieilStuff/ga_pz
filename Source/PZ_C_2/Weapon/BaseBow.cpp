@@ -11,9 +11,6 @@ ABaseProjectile* ABaseBow::SpawnProjectile()
 		return nullptr;
 	}
 
-	FActorSpawnParameters SpawnParameters;
-
-	SpawnParameters.Owner = GetOwner();
 	AArcher* Character = Cast<AArcher>(GetOwner());
 
 	if (Character == nullptr)
@@ -22,11 +19,16 @@ ABaseProjectile* ABaseBow::SpawnProjectile()
 		return nullptr;
 	}
 
+	FActorSpawnParameters SpawnParameters;
+
+	SpawnParameters.Owner = GetOwner();
 	SpawnParameters.Instigator = Character;
 
-	const FRotator ArrowRotation = Character->GetMesh()->GetSocketRotation(ArrowSocketName);
-	const FVector SocketLocation = Character->GetMesh()->GetSocketLocation(ArrowSocketName);
+	FRotator ArrowRotation;
+	FVector SocketLocation;
 
+	ComputeProjectileTransform(Character, SocketLocation, ArrowRotation);
+	
 	AArrow* Arrow = Cast<AArrow>(GetWorld()->SpawnActor(ProjectileClass,
 	                                                    &SocketLocation,
 	                                                    &ArrowRotation,
@@ -37,8 +39,15 @@ ABaseProjectile* ABaseBow::SpawnProjectile()
 		return nullptr;
 	}
 
-	Arrow->CollisionComponent->IgnoreActorWhenMoving(Character, true);
+	//Arrow->CollisionComponent->IgnoreActorWhenMoving(Character, true);
 	return Arrow;
+}
+
+void ABaseBow::ComputeProjectileTransform(const AArcher* Character, FVector& Location, FRotator& Rotation)
+{
+	//Super::ComputeProjectileTransform(Location, Rotation);
+	Location = Character->GetMesh()->GetSocketLocation(ArrowSocketName);
+	Rotation = Character->GetMesh()->GetSocketRotation(ArrowSocketName);
 }
 
 ABaseBow::ABaseBow()

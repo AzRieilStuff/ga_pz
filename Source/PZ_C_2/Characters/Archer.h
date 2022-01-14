@@ -121,6 +121,7 @@ public:
 	virtual float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator,
 	                 AActor* DamageCauser) override;
 
+	
 	// ~Health implementation
 
 	// Saving

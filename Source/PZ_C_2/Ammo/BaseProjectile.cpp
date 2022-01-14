@@ -36,8 +36,6 @@ ABaseProjectile::ABaseProjectile()
 
 	DamageType = UDamageType::StaticClass();
 	Damage = 10.0f;
-
-	MovementComponent->SetAutoActivate(false);
 }
 
 void ABaseProjectile::BeginPlay()
@@ -48,18 +46,33 @@ void ABaseProjectile::BeginPlay()
 void ABaseProjectile::Destroyed()
 {
 	FVector SpawnLocation = GetActorLocation();
-
-	if (OnHitEffect != nullptr)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(this, OnHitEffect, SpawnLocation, FRotator::ZeroRotator, true,
-		                                         EPSCPoolMethod::AutoRelease);
-	}
 }
 
-void ABaseProjectile::EnableMovement()
+void ABaseProjectile::EnableMovementMulticast_Implementation()
 {
 	MovementComponent->Velocity = GetActorRotation().Vector() * MovementComponent->InitialSpeed;
-	MovementComponent->Activate();
+}
+
+void ABaseProjectile::ApplyDamage(AActor* Actor, FVector Origin, const FHitResult& Hit)
+{
+	if( GetInstigator() == nullptr )
+	{
+		return;
+	}
+	
+	UGameplayStatics::ApplyPointDamage(Actor, Damage, Origin, Hit, GetInstigator()->Controller, this,
+									   DamageType);
+}
+
+void ABaseProjectile::PlayOnHitVisualsMulticast_Implementation()
+{
+	if( OnHitEffect == nullptr )
+	{
+		return;
+	}
+
+	UGameplayStatics::SpawnEmitterAtLocation(this, OnHitEffect, GetActorLocation(), FRotator::ZeroRotator, true,
+										 EPSCPoolMethod::AutoRelease);
 }
 
 void ABaseProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor,
@@ -67,10 +80,8 @@ void ABaseProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, AAct
 {
 	if (OtherActor)
 	{
-		UGameplayStatics::ApplyPointDamage(OtherActor, Damage, NormalImpulse, Hit, GetInstigator()->Controller, this,
-		                                   DamageType);
+		ApplyDamage(OtherActor, NormalImpulse, Hit);
 	}
-
 
 	if (bDestroyOnHit)
 	{
@@ -80,5 +91,10 @@ void ABaseProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, AAct
 	{
 		// disable collision
 		CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	if( GetOwner() && GetOwner()->HasAuthority() )
+	{
+		PlayOnHitVisualsMulticast();
 	}
 }

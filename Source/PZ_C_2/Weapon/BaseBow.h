@@ -14,6 +14,7 @@ class ABaseBow : public ABaseRangeWeapon
 protected:
 	virtual class ABaseProjectile* SpawnProjectile() override;
 
+virtual void ComputeProjectileTransform(const AArcher* Character, FVector& Location, FRotator& Rotation) override;
 public:
 	ABaseBow();
 
