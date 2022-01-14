@@ -38,7 +38,7 @@ bool ABaseItem::CanPickupBy(AArcher* Character) const
 
 void ABaseItem::Pickup(AArcher* Character)
 {
-	PickupServer(Character);
+	ServerPickup(Character);
 
 	PickBoxComponent->UnregisterComponent();
 
@@ -48,12 +48,12 @@ void ABaseItem::Pickup(AArcher* Character)
 	}
 }
 
-void ABaseItem::PickupServer_Implementation(AArcher* Character)
+void ABaseItem::ServerPickup_Implementation(AArcher* Character)
 {
-	PickupMulticast(Character);
+	MulticastPickup(Character);
 }
 
-void ABaseItem::PickupMulticast_Implementation(AArcher* Character)
+void ABaseItem::MulticastPickup_Implementation(AArcher* Character)
 {
 	//FString Debug =
 		FString::Printf(TEXT("Multicast on %s"), *UGameplayStatics::GetPlayerPawn(GetWorld(), 0)->GetName());

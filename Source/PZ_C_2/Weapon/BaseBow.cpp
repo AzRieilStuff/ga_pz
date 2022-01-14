@@ -39,13 +39,11 @@ ABaseProjectile* ABaseBow::SpawnProjectile()
 		return nullptr;
 	}
 
-	//Arrow->CollisionComponent->IgnoreActorWhenMoving(Character, true);
 	return Arrow;
 }
 
 void ABaseBow::ComputeProjectileTransform(const AArcher* Character, FVector& Location, FRotator& Rotation)
 {
-	//Super::ComputeProjectileTransform(Location, Rotation);
 	Location = Character->GetMesh()->GetSocketLocation(ArrowSocketName);
 	Rotation = Character->GetMesh()->GetSocketRotation(ArrowSocketName);
 }
@@ -62,7 +60,7 @@ ABaseBow::ABaseBow()
 	FireRate = 1.5f;
 }
 
-void ABaseBow::PickupMulticast_Implementation(AArcher* Character)
+void ABaseBow::MulticastPickup_Implementation(AArcher* Character)
 {
 	if (Character && Character->WeaponManagerComponent)
 	{
@@ -70,5 +68,5 @@ void ABaseBow::PickupMulticast_Implementation(AArcher* Character)
 	}
 
 	// todo replace with weapon equipped multicast
-	Super::PickupMulticast_Implementation(Character);
+	Super::MulticastPickup_Implementation(Character);
 }

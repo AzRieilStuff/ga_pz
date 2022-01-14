@@ -18,7 +18,7 @@ public:
 
 	AGrenadeArrow();
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ProjectileSettings")
 	float DamageRadius;
 	
 	virtual void ApplyDamage(AActor* Actor, FVector Origin, const FHitResult& Hit) override;

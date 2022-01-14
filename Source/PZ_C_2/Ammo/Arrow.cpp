@@ -59,6 +59,8 @@ void AArrow::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* Other
 // Called when the game starts or when spawned
 void AArrow::BeginPlay()
 {
-	CollisionComponent->IgnoreActorWhenMoving(GetOwner(), true);
 	Super::BeginPlay();
+
+	// arrows should ignore character
+	CollisionComponent->IgnoreActorWhenMoving(GetOwner(), true);
 }

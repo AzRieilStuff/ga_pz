@@ -41,10 +41,10 @@ public:
 	virtual void Pickup(AArcher* Character) override;
 
 	UFUNCTION(NetMulticast, Reliable)
-	virtual void PickupMulticast(AArcher* Character);
+	virtual void MulticastPickup(AArcher* Character);
 	
 	UFUNCTION(Server, Reliable)
-	virtual void PickupServer(AArcher* Character);
+	virtual void ServerPickup(AArcher* Character);
 
 	UFUNCTION(BlueprintCallable)
 	virtual bool CanPickupBy(AArcher* Character) const override;

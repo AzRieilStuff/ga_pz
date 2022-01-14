@@ -3,7 +3,7 @@
 
 #include "ShortgunBow.h"
 
-void AShortgunBow::PerformFire()
+void AShortgunBow::PerformFiring()
 {
 	// spawn multiple arrows
 	//TArray<ABaseProjectile*> Spawned;
