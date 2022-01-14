@@ -56,7 +56,7 @@ void ABaseItem::ServerPickup_Implementation(AArcher* Character)
 void ABaseItem::MulticastPickup_Implementation(AArcher* Character)
 {
 	//FString Debug =
-		FString::Printf(TEXT("Multicast on %s"), *UGameplayStatics::GetPlayerPawn(GetWorld(), 0)->GetName());
+	//FString::Printf(TEXT("Multicast on %s"), *UGameplayStatics::GetPlayerPawn(GetWorld(), 0)->GetName());
 	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, Debug);
 
 	if (PickBoxComponent && !Character->IsLocallyControlled())

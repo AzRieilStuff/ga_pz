@@ -3,6 +3,7 @@
 
 #include "WeaponManagerComponent.h"
 
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "PZ_C_2/Characters/Archer.h"
 
@@ -46,6 +47,14 @@ void UWeaponManagerComponent::UnequipWeapon()
 void UWeaponManagerComponent::InteractWeapon()
 {
 	if (Weapon == nullptr || !Weapon->CanFire())
+	{
+		return;
+	}
+
+	UCharacterMovementComponent* MovementComponent = Cast<UCharacterMovementComponent>(
+		Character->GetMovementComponent());
+
+	if( MovementComponent && MovementComponent->IsFalling())
 	{
 		return;
 	}
