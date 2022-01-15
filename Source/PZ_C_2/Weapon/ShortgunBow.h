@@ -14,7 +14,7 @@ class PZ_C_2_API AShortgunBow : public ABaseBow
 {
 	GENERATED_BODY()
 
-	virtual void PerformFiring() override;
+	virtual void ServerPerformFire(FVector AimLocation) override;
 
 public:
 	AShortgunBow();
@@ -22,5 +22,5 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	int32 ProjectilesAmount;
 
-	virtual void ComputeProjectileTransform(const AArcher* Character, FVector& Location, FRotator& Rotation) override;
+	virtual void ComputeProjectileTransform(const AArcher* Character, FVector AimLocation, FVector& Location, FRotator& Rotation) override;
 };

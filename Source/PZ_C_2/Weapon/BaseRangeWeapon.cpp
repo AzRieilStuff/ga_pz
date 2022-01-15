@@ -6,36 +6,71 @@
 #include "CollisionQueryParams.h"
 #include "TimerManager.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "PZ_C_2/Ammo/BaseProjectile.h"
+#include "PZ_C_2/Characters/Archer.h"
 
-void ABaseRangeWeapon::StartFiring()
+void ABaseRangeWeapon::StartShootingTimer()
 {
 	bIsFiring = true;
 
-	FTimerHandle FiringTimerHandle;
-	GetWorldTimerManager().SetTimer(FiringTimerHandle, [this]
-	{
-		bIsFiring = false;
-		if (GetOwner()->GetLocalRole() == ROLE_Authority)
-		{
-			PerformFiring();
-		}
-	}, FireRate, false);
+	FTimerHandle FiringTimerHandle; // todo move to class, shoot cancellation
+	GetWorldTimerManager().SetTimer(FiringTimerHandle, this, &ABaseRangeWeapon::OnShootingTimerEnd, FireRate, false);
 }
 
-void ABaseRangeWeapon::PerformFiring()
+void ABaseRangeWeapon::ServerPerformFire_Implementation(FVector AimLocation)
 {
-	SpawnProjectile();
+	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
+	                                 AimLocation.ToString());
+	ABaseProjectile* Projectile = SpawnProjectile(AimLocation);
 }
 
-void ABaseRangeWeapon::ComputeProjectileTransform(const AArcher* Character, FVector& Location, FRotator& Rotation)
+void ABaseRangeWeapon::ComputeProjectileTransform(const AArcher* Character, FVector AimLocation, FVector& Location,
+                                                  FRotator& Rotation)
 {
+	AimLocation -= Location;
+	AimLocation.Normalize();
+	Rotation = AimLocation.Rotation();
 }
 
+FVector ABaseRangeWeapon::GetAimLocation(const AArcher* Character) const
+{
+	// projectile start position/rotation ( from socket ) can differ from screen center, so need to be adjusted
+	APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
+	FVector CameraStart = CameraManager->GetCameraLocation();
+	FVector TraceEnd = CameraStart + (CameraManager->GetActorForwardVector() * 3000);
 
-ABaseProjectile* ABaseRangeWeapon::SpawnProjectile()
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+
+	const FName TraceTag("Debug");
+
+	Params.TraceTag = TraceTag;
+	Params.AddIgnoredActor(Character);
+	//GetWorld()->DebugDrawTraceTag = TraceTag;
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, CameraStart, TraceEnd, ECC_Visibility, Params);
+	FVector AimTarget = (bHit ? Hit.Location : TraceEnd);
+
+	return AimTarget;
+}
+
+ABaseProjectile* ABaseRangeWeapon::SpawnProjectile(FVector AimLocation)
 {
 	return nullptr;
+}
+
+void ABaseRangeWeapon::OnShootingTimerEnd()
+{
+	bIsFiring = false;
+
+	FVector Aim = GetAimLocation(OwnerManagerComponent->Character);
+
+	// from server or client but only once per shoot
+	if (OwnerManagerComponent->Character->IsLocallyControlled())
+	{
+		ServerPerformFire(Aim);
+	}
 }
 
 ABaseRangeWeapon::ABaseRangeWeapon()
@@ -60,10 +95,9 @@ void ABaseRangeWeapon::FireAction()
 		return;
 	}
 
-	// If calling from client, allow to execute instantly
 	if (GetOwner()->GetLocalRole() == ROLE_AutonomousProxy)
 	{
-		StartFiring();
+		StartShootingTimer();
 	}
 
 	ServerFireAction();
@@ -71,7 +105,7 @@ void ABaseRangeWeapon::FireAction()
 
 void ABaseRangeWeapon::ServerFireAction_Implementation()
 {
-	StartFiring();
+	StartShootingTimer();
 	MulticastFireAction();
 }
 
@@ -80,7 +114,7 @@ void ABaseRangeWeapon::MulticastFireAction_Implementation()
 	// run visuals for simulated within clients
 	if (GetOwner()->GetLocalRole() == ROLE_SimulatedProxy)
 	{
-		StartFiring();
+		StartShootingTimer();
 	}
 }
 

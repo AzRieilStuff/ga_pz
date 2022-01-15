@@ -7,6 +7,8 @@
 #include "PZ_C_2/Items/BaseItem.h"
 #include "BaseRangeWeapon.generated.h"
 
+class UWeaponManagerComponent;
+
 USTRUCT(BlueprintType)
 struct FAmmoData
 {
@@ -26,17 +28,31 @@ class PZ_C_2_API ABaseRangeWeapon : public ABaseItem, public IReloadable
 	GENERATED_BODY()
 
 	// [local + server] run animation & timer
-	void StartFiring();
+	void StartShootingTimer();
 
-	virtual class ABaseProjectile* SpawnProjectile();
 protected:
-
+	// [server] 
+	virtual class ABaseProjectile* SpawnProjectile(FVector AimLocation);
+	
+	// [local + server] runs for each client 
+	virtual void OnShootingTimerEnd();
+	
 	// [server] handle shooting, spawn projectiles, shoot effect
-	virtual void PerformFiring();
+	UFUNCTION(Server, Reliable)
+	virtual void ServerPerformFire(FVector AimLocation);
 
-	virtual void ComputeProjectileTransform(const AArcher* Character, FVector& Location, FRotator& Rotation);
+	// [server] 
+	virtual void ComputeProjectileTransform(const AArcher* Character, FVector AimLocation, FVector& Location,
+	                                        FRotator& Rotation);
+
+	// [local]
+	FVector GetAimLocation(const AArcher* Character) const;
+
 public:
 	ABaseRangeWeapon();
+
+	UPROPERTY()
+	UWeaponManagerComponent* OwnerManagerComponent;
 
 	virtual void BeginPlay() override;
 
@@ -63,7 +79,7 @@ public:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	virtual void ServerFireAction();
-	
+
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastFireAction();
 
@@ -89,13 +105,11 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsFiring = false;
 
-	UPROPERTY(BlueprintReadWrite,EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float FireRate;
 
 	UFUNCTION(Client, Reliable)
 	void UseAmmo();
 
 	FHitResult WeaponTrace(FVector& From, FVector& To);
-
-	
 };

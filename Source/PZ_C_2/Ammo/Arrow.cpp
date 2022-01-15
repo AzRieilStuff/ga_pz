@@ -35,21 +35,22 @@ AArrow::AArrow()
 	}
 
 	// config collision
+	CollisionComponent->SetCollisionProfileName("Projectile");
 	CollisionComponent->SetGenerateOverlapEvents(false);
-	//CollisionComponent->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CollisionComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
-	//CollisionComponent->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
-	CollisionComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+	CollisionComponent->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Block);
+	CollisionComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
 }
 
 void AArrow::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	FVector NormalImpulse, const FHitResult& Hit)
+                                FVector NormalImpulse, const FHitResult& Hit)
 {
 	Super::OnProjectileImpact(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
-	
+
 	AArcher* Character = Cast<AArcher>(OtherActor);
-	if( Character != nullptr )
+	if (Character != nullptr)
 	{
 		// todo sticking
 		// Destroy();
@@ -59,8 +60,6 @@ void AArrow::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* Other
 // Called when the game starts or when spawned
 void AArrow::BeginPlay()
 {
+	
 	Super::BeginPlay();
-
-	// arrows should ignore character
-	CollisionComponent->IgnoreActorWhenMoving(GetOwner(), true);
 }

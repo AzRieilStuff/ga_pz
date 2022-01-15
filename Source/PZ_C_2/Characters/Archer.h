@@ -48,6 +48,7 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess = "true"))
 	UAnimMontage* ClimbingMontage;
+
 protected:
 	virtual void BeginPlay() override;
 

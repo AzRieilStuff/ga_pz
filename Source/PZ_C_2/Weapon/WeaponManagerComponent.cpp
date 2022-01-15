@@ -35,6 +35,7 @@ void UWeaponManagerComponent::EquipWeapon(ABaseRangeWeapon* NewWeapon)
 	NewWeapon->SetOwner(Character);
 
 	Weapon = NewWeapon;
+	Weapon->OwnerManagerComponent = this;
 }
 
 void UWeaponManagerComponent::UnequipWeapon()
@@ -42,6 +43,9 @@ void UWeaponManagerComponent::UnequipWeapon()
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, "Unequip weapon");
 	//SetBowMeshVisibility(false);
 	// #todo
+
+	Weapon->OwnerManagerComponent = nullptr;
+	Weapon = nullptr;
 }
 
 void UWeaponManagerComponent::InteractWeapon()

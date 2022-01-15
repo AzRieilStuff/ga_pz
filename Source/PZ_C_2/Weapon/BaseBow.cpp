@@ -1,11 +1,14 @@
 ﻿#include "BaseBow.h"
 
+#include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "PZ_C_2/Characters/Archer.h"
 #include "PZ_C_2/Items/PickBoxComponent.h"
 
-ABaseProjectile* ABaseBow::SpawnProjectile()
+ABaseProjectile* ABaseBow::SpawnProjectile(FVector AimLocation)
 {
+	Super::SpawnProjectile(AimLocation);
+
 	if (!ProjectileClass)
 	{
 		return nullptr;
@@ -27,8 +30,8 @@ ABaseProjectile* ABaseBow::SpawnProjectile()
 	FRotator ArrowRotation;
 	FVector SocketLocation;
 
-	ComputeProjectileTransform(Character, SocketLocation, ArrowRotation);
-	
+	ComputeProjectileTransform(Character, AimLocation, SocketLocation, ArrowRotation);
+
 	AArrow* Arrow = Cast<AArrow>(GetWorld()->SpawnActor(ProjectileClass,
 	                                                    &SocketLocation,
 	                                                    &ArrowRotation,
@@ -39,13 +42,21 @@ ABaseProjectile* ABaseBow::SpawnProjectile()
 		return nullptr;
 	}
 
+	if (OwnerManagerComponent)
+	{
+		OwnerManagerComponent->Character->MoveIgnoreActorAdd(Arrow);
+	}
+
 	return Arrow;
 }
 
-void ABaseBow::ComputeProjectileTransform(const AArcher* Character, FVector& Location, FRotator& Rotation)
+void ABaseBow::ComputeProjectileTransform(const AArcher* Character, FVector AimLocation, FVector& Location,
+                                          FRotator& Rotation)
 {
 	Location = Character->GetMesh()->GetSocketLocation(ArrowSocketName);
 	Rotation = Character->GetMesh()->GetSocketRotation(ArrowSocketName);
+
+	Super::ComputeProjectileTransform(Character, AimLocation, Location, Rotation);
 }
 
 ABaseBow::ABaseBow()

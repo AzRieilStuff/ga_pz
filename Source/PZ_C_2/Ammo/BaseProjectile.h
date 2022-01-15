@@ -51,4 +51,6 @@ public:
 
 	UFUNCTION()
 	virtual void ApplyDamage(AActor* Actor, FVector Origin, const FHitResult& Hit);
+
+	virtual void PostActorCreated() override;
 };

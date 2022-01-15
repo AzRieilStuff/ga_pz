@@ -27,7 +27,12 @@ AArcher::AArcher()
 	InventoryComponent->SetIsReplicated(true); //todo why
 
 	GetMesh()->SetIsReplicated(true); // replicate bone rotation
-	
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	GetMesh()->SetCollisionResponseToAllChannels(ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Block);
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+
 	//Initialize the player's Health
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
