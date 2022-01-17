@@ -25,7 +25,7 @@ protected:
 	                                UPrimitiveComponent* OtherComp,
 	                                FVector NormalImpulse, const FHitResult& Hit);
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "ProjectileSettings")
 	bool bDestroyOnHit;
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Components")

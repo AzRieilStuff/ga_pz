@@ -36,16 +36,27 @@ void UWeaponManagerComponent::EquipWeapon(ABaseRangeWeapon* NewWeapon)
 
 	Weapon = NewWeapon;
 	Weapon->OwnerManagerComponent = this;
+
+	Character->OnWeaponEquipped.Broadcast(NewWeapon);
 }
 
-void UWeaponManagerComponent::UnequipWeapon()
+ABaseRangeWeapon* UWeaponManagerComponent::UnequipWeapon()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, "Unequip weapon");
 	//SetBowMeshVisibility(false);
 	// #todo
 
+	Character->OnWeaponUnequipped.Broadcast();
+
+	ABaseRangeWeapon* OldWeapon = Weapon;
+	
 	Weapon->OwnerManagerComponent = nullptr;
 	Weapon = nullptr;
+
+	const FDetachmentTransformRules DetachOptions(EDetachmentRule::KeepWorld, true);
+	OldWeapon->DetachFromActor(DetachOptions);
+
+	return OldWeapon;
 }
 
 void UWeaponManagerComponent::InteractWeapon()
@@ -91,4 +102,10 @@ void UWeaponManagerComponent::BeginPlay()
 	check(Character);
 
 	//UnequipWeapon();
+}
+
+bool UWeaponManagerComponent::CanEquipWeapon(const ABaseRangeWeapon* NewWeapon) const
+{
+	// for now allow to equip any if no current weapon
+	return Weapon == nullptr;
 }

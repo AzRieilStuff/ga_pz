@@ -112,4 +112,6 @@ public:
 	void UseAmmo();
 
 	FHitResult WeaponTrace(FVector& From, FVector& To);
+
+	virtual bool CanPickupBy(AArcher* Character) const override;
 };

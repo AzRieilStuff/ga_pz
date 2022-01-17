@@ -29,7 +29,7 @@ public:
 	virtual void EquipWeapon(ABaseRangeWeapon* NewWeapon);
 
 	UFUNCTION()
-	void UnequipWeapon();
+	ABaseRangeWeapon* UnequipWeapon();
 
 	UFUNCTION()
 	void InteractWeapon();
@@ -52,4 +52,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	bool CanEquipWeapon(const ABaseRangeWeapon* NewWeapon) const;
 };

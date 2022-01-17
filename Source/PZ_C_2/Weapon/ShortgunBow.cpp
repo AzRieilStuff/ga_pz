@@ -3,7 +3,7 @@
 
 #include "ShortgunBow.h"
 
-void AShortgunBow::ServerPerformFire(FVector AimLocation)
+void AShortgunBow::ServerPerformFire_Implementation(FVector AimLocation)
 {
 	// spawn multiple arrows
 	//TArray<ABaseProjectile*> Spawned;

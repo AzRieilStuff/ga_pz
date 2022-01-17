@@ -14,7 +14,7 @@ class PZ_C_2_API AShortgunBow : public ABaseBow
 {
 	GENERATED_BODY()
 
-	virtual void ServerPerformFire(FVector AimLocation) override;
+	virtual void ServerPerformFire_Implementation(FVector AimLocation) override;
 
 public:
 	AShortgunBow();

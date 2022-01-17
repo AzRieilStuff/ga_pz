@@ -20,8 +20,6 @@ void ABaseRangeWeapon::StartShootingTimer()
 
 void ABaseRangeWeapon::ServerPerformFire_Implementation(FVector AimLocation)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
-	                                 AimLocation.ToString());
 	ABaseProjectile* Projectile = SpawnProjectile(AimLocation);
 }
 
@@ -190,4 +188,9 @@ FHitResult ABaseRangeWeapon::WeaponTrace(FVector& From, FVector& To)
 	);
 
 	return RV_Hit;
+}
+
+bool ABaseRangeWeapon::CanPickupBy(AArcher* Character) const
+{
+	return Super::CanPickupBy(Character) && Character->WeaponManagerComponent->CanEquipWeapon(this);
 }

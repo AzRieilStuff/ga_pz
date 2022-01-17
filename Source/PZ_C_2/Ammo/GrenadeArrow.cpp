@@ -10,15 +10,15 @@ AGrenadeArrow::AGrenadeArrow()
 {
 	DamageRadius = 250.f;
 	Damage = 5.f;
-	//bDestroyOnHit = true;
+	bDestroyOnHit = true;
 }
 
 void AGrenadeArrow::ApplyDamage(AActor* Actor, FVector Origin, const FHitResult& Hit)
 {
-	UGameplayStatics::ApplyRadialDamage(Actor, Damage, Hit.Location, DamageRadius, DamageType, TArray<AActor*>(),
+	UGameplayStatics::ApplyRadialDamage(Actor, Damage, Origin, DamageRadius, DamageType, TArray<AActor*>(),
 	                                    this, GetInstigator()->Controller);
 
-	DrawDebugSphere(GetWorld(), Hit.Location, DamageRadius, 4, FColor::Red, false, 2.f);
+	DrawDebugSphere(GetWorld(), Origin, DamageRadius, 4, FColor::Red, false, 2.f);
 
 	if( !IsActorBeingDestroyed() && bDestroyOnHit)
 	{

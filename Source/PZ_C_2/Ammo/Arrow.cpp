@@ -17,13 +17,12 @@ AArrow::AArrow()
 	// Init components
 	CollisionComponent->SetBoxExtent(FVector(24.f, 1.5f, 24.f));
 	CollisionComponent->SetMobility(EComponentMobility::Movable);
+	CollisionComponent->SetIsReplicated(true);
 	SetRootComponent(CollisionComponent);
 
 	MeshComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	MeshComponent->SetMobility(EComponentMobility::Movable);
-	//MeshComponent->SetWorldScale3D(FVector(4.f, 5.f, 4.f));
 	MeshComponent->SetRelativeLocation(FVector(-32.0, 0, 0.f));
-	//MeshComponent->SetRelativeRotation(FRotator::MakeFromEuler(FVector(0.f, -90.f, 0.f)));
 
 	// Init assets from local lib
 	const ConstructorHelpers::FObjectFinder<USkeletalMesh> MeshFinder(
