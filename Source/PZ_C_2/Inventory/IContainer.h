@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Inventory.h"
+#include "InventoryManagerComponent.h"
 #include "IContainer.generated.h"
 
 UINTERFACE()
@@ -17,5 +17,5 @@ class PZ_C_2_API IContainer
 {
 	GENERATED_BODY()
 public:
-	virtual UInventory* GetInventory() const = 0;
+	virtual UInventoryManagerComponent* GetInventory() const = 0;
 };

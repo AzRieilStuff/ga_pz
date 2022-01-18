@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "IReloadable.h"
-#include "PZ_C_2/Items/BaseItem.h"
+#include "PZ_C_2/Items/Core/BaseItem.h"
 #include "BaseRangeWeapon.generated.h"
 
 class UWeaponManagerComponent;
@@ -104,14 +104,14 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsFiring = false;
-
+	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float FireRate;
 
 	UFUNCTION(Client, Reliable)
 	void UseAmmo();
 
-	FHitResult WeaponTrace(FVector& From, FVector& To);
-
 	virtual bool CanPickupBy(AArcher* Character) const override;
+
+	virtual void MulticastPickup_Implementation(AArcher* Character) override;
 };

@@ -6,7 +6,7 @@
 #include "PlayerControllerMain.h"
 #include "PlayerStateMain.h"
 #include "PZ_C_2/Characters/Archer.h"
-#include "PZ_C_2/Items/BaseItem.h"
+#include "PZ_C_2/Items/Core/BaseItem.h"
 #include "PlayerControllerMain.h"
 #include "UObject/ConstructorHelpers.h"
 

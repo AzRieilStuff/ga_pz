@@ -17,7 +17,6 @@ UWeaponManagerComponent::UWeaponManagerComponent()
 	if (GetOwner())
 	{
 		Character = Cast<AArcher>(GetOwner());
-		check(Character);
 	}
 	else
 	{

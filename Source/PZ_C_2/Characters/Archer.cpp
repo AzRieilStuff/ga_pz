@@ -5,7 +5,7 @@
 
 #include "Components/CapsuleComponent.h"
 #include "PZ_C_2/Weapon/BaseRangeWeapon.h"
-#include "PZ_C_2/Inventory/Inventory.h"
+#include "PZ_C_2/Inventory/InventoryManagerComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -23,8 +23,8 @@ AArcher::AArcher()
 	WeaponManagerComponent = CreateDefaultSubobject<UWeaponManagerComponent>("WeaponManager");
 	WeaponManagerComponent->SetIsReplicated(true);
 
-	InventoryComponent = CreateDefaultSubobject<UInventory>("InventoryComponent");
-	InventoryComponent->SetIsReplicated(true); //todo why
+	InventoryManagerComponent = CreateDefaultSubobject<UInventoryManagerComponent>("InventoryComponent");
+	InventoryManagerComponent->SetIsReplicated(false); 
 
 	GetMesh()->SetIsReplicated(true); // replicate bone rotation
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -38,12 +38,17 @@ AArcher::AArcher()
 	CurrentHealth = MaxHealth;
 
 	GetCharacterMovement()->JumpZVelocity = 800.f;
+
+	MaxPitchRotation = 40.f;
 }
 
 // Called when the game starts or when spawned
 void AArcher::BeginPlay()
 {
 	Super::BeginPlay();
+
+	UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->ViewPitchMax = MaxPitchRotation;
+	UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->ViewPitchMin = -MaxPitchRotation;
 
 	// Init default weapon
 	if (HasAuthority() && DefaultWeapon)

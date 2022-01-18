@@ -5,6 +5,7 @@
 #include "PickBoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "PZ_C_2/Characters/Archer.h"
+#include "PZ_C_2/Inventory/InventoryManagerComponent.h"
 
 // Sets default values
 ABaseItem::ABaseItem()
@@ -15,12 +16,14 @@ ABaseItem::ABaseItem()
 	PickBoxComponent = CreateDefaultSubobject<UPickBoxComponent>("PickBoxComponent");
 	SetRootComponent(PickBoxComponent);
 
-	MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>("Mesh");
+	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
 	//MeshComponent->SetMobility(EComponentMobility::Static);
 	MeshComponent->SetupAttachment(RootComponent);
 
 	bDestroyOnPickup = false;
 	bReplicates = true;
+
+	
 }
 
 
@@ -31,19 +34,35 @@ void ABaseItem::BeginPlay()
 }
 
 
+bool ABaseItem::ServerPickup_Validate(AArcher* Character)
+{
+	return CanPickupBy(Character);
+}
+
 bool ABaseItem::CanPickupBy(AArcher* Character) const
 {
-	return true;
+	if( bStoreable )
+	{
+		return Character->InventoryManagerComponent->CanPickupItem(this);
+	}
+	
+	return false; // todo autouse? 
+}
+
+void ABaseItem::GenerateInventoryData(FInventoryItem& InventoryData) const
+{
+	InventoryData.Name = GetName();
+	InventoryData.IconLabel = FString("-");
+	InventoryData.Icon = InventoryIcon;
 }
 
 void ABaseItem::Pickup(AArcher* Character)
 {
 	ServerPickup(Character);
 
-	PickBoxComponent->UnregisterComponent();
-
 	if (bDestroyOnPickup)
 	{
+		PickBoxComponent->UnregisterComponent();
 		SetHidden(true); // 'destroy' locally but keep valid for rpc calls
 	}
 }
@@ -55,15 +74,17 @@ void ABaseItem::ServerPickup_Implementation(AArcher* Character)
 
 void ABaseItem::MulticastPickup_Implementation(AArcher* Character)
 {
-	//FString Debug =
-	//FString::Printf(TEXT("Multicast on %s"), *UGameplayStatics::GetPlayerPawn(GetWorld(), 0)->GetName());
-	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, Debug);
-
-	if (PickBoxComponent && !Character->IsLocallyControlled())
+	if (PickBoxComponent)
 	{
-		PickBoxComponent->UnregisterComponent(); // #todo
+		PickBoxComponent->UnregisterComponent(); // todo drop ability
 	}
 
+	// store into inventory for current pawn
+	if( bStoreable && Character->IsLocallyControlled() )
+	{
+		Character->InventoryManagerComponent->ServerStoreItem(this);
+	}
+	
 	if (bDestroyOnPickup && IsValid(this))
 	{
 		Destroy(); // Destroy for all
@@ -76,14 +97,14 @@ void ABaseItem::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
 
-	if (bPickable)
+	if (HasAuthority() && bPickable) // Execute picking only on server
 	{
 		AArcher* Character = Cast<AArcher>(OtherActor);
 
 		if (Character && CanPickupBy(Character))
 		{
 			Pickup(Character);
-			FOnItemPicked.ExecuteIfBound(this, Character);
+			//FOnItemPicked.ExecuteIfBound(this, Character);
 		}
 	}
 }

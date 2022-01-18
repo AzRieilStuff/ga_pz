@@ -56,6 +56,9 @@ protected:
 
 public:
 
+	UPROPERTY(EditDefaultsOnly)
+	float MaxPitchRotation;
+
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -76,7 +79,7 @@ public:
 	// ~Weapon
 
 	UPROPERTY(BlueprintReadOnly,EditAnywhere)
-	class UInventory* InventoryComponent;
+	class UInventoryManagerComponent* InventoryManagerComponent;
 
 	// Climbing
 	UFUNCTION()
