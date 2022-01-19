@@ -3,17 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PlayerControllerMain.generated.h"
+#include "PlayerControllerBase.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PZ_C_2_API APlayerControllerMain : public APlayerController
+class PZ_C_2_API APlayerControllerBase : public APlayerController
 {
 	GENERATED_BODY()
 public:
-	APlayerControllerMain();
+	APlayerControllerBase();
 
 	virtual void BeginPlay() override;
 };

@@ -12,10 +12,6 @@ class ABaseRangeWeapon;
 DECLARE_MULTICAST_DELEGATE(FOnHealthChangeDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthChangeDynamicDelegate);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemPicked, ABaseItem*, Item);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponEquipped, ABaseRangeWeapon*, Item);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponUnequipped);
-
 USTRUCT()
 struct FCharacterSaveData
 {
@@ -141,12 +137,4 @@ public:
 	UPROPERTY()
 	bool bIsFiring;
 
-	UPROPERTY(BlueprintAssignable)
-	FOnItemPicked OnItemPicked;
-	
-	UPROPERTY(BlueprintAssignable)
-	FOnWeaponEquipped OnWeaponEquipped;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnWeaponUnequipped OnWeaponUnequipped;
 };

@@ -59,15 +59,20 @@ public:
 	/**
 	 * @brief Item can be picked
 	 */
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 	bool bPickable = true;
 
 	/**
 	 * @brief Item will be stored into inventory
 	 */
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	bool bStoreable;
 
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
-	//FCharacterItemInteraction FOnItemPicked;
+
+	UFUNCTION(BlueprintCallable)
+	virtual bool UseItem(AArcher* Target);
+
+	UPROPERTY(BlueprintReadOnly)
+	int32 MaxPerStack;
 };

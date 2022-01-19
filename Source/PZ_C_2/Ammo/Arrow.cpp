@@ -23,7 +23,7 @@ AArrow::AArrow()
 	MeshComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	MeshComponent->SetMobility(EComponentMobility::Movable);
 	MeshComponent->SetRelativeLocation(FVector(-32.0, 0, 0.f));
-
+ 
 	// Init assets from local lib
 	const ConstructorHelpers::FObjectFinder<USkeletalMesh> MeshFinder(
 		TEXT("/Game/Ammo/Arrow/SM_Arrow.SM_Arrow"), LOAD_None);

@@ -36,7 +36,7 @@ void UWeaponManagerComponent::EquipWeapon(ABaseRangeWeapon* NewWeapon)
 	Weapon = NewWeapon;
 	Weapon->OwnerManagerComponent = this;
 
-	Character->OnWeaponEquipped.Broadcast(NewWeapon);
+	OnWeaponEquipped.Broadcast(NewWeapon);
 }
 
 ABaseRangeWeapon* UWeaponManagerComponent::UnequipWeapon()
@@ -45,10 +45,10 @@ ABaseRangeWeapon* UWeaponManagerComponent::UnequipWeapon()
 	//SetBowMeshVisibility(false);
 	// #todo
 
-	Character->OnWeaponUnequipped.Broadcast();
-
 	ABaseRangeWeapon* OldWeapon = Weapon;
 	
+	OnWeaponUnequipped.Broadcast(OldWeapon);
+
 	Weapon->OwnerManagerComponent = nullptr;
 	Weapon = nullptr;
 

@@ -9,6 +9,8 @@
 
 class AArcher;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponInteraction, ABaseRangeWeapon*, Item);
+
 /**
  * 
  */
@@ -55,4 +57,10 @@ public:
 
 	UFUNCTION()
 	bool CanEquipWeapon(const ABaseRangeWeapon* NewWeapon) const;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnWeaponInteraction OnWeaponEquipped;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnWeaponInteraction OnWeaponUnequipped;
 };

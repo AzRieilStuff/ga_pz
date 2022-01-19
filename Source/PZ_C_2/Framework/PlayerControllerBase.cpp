@@ -1,18 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "PlayerControllerMain.h"
+#include "PlayerControllerBase.h"
 
 #include "GameInstanceMain.h"
 
-APlayerControllerMain::APlayerControllerMain()
+APlayerControllerBase::APlayerControllerBase()
 {
 	SetShowMouseCursor(true);
-
 }
 
-void APlayerControllerMain::BeginPlay()
+void APlayerControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
-
 }

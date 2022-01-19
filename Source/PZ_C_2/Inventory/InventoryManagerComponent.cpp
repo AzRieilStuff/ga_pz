@@ -2,10 +2,9 @@
 
 
 #include "InventoryManagerComponent.h"
-#include "Net/UnrealNetwork.h"
-#include "Engine/ActorChannel.h"
+#include "Kismet/GameplayStatics.h"
+#include "PZ_C_2/Characters/Archer.h"
 #include "PZ_C_2/Items/Core/BaseItem.h"
-#include "PZ_C_2/Weapon/BaseRangeWeapon.h"
 
 UInventoryManagerComponent::UInventoryManagerComponent()
 {
@@ -16,9 +15,9 @@ TArray<FInventoryItem>& UInventoryManagerComponent::GetItems()
 	return Items;
 }
 
-bool UInventoryManagerComponent::GetItem(const int32 Index, FInventoryItem Out) const
+bool UInventoryManagerComponent::GetItem(const int32 Index, FInventoryItem& Out) const
 {
-	if (Index >= Items.Num())
+	if (Index < Items.Num())
 	{
 		Out = Items[Index];
 		return true;
@@ -26,25 +25,60 @@ bool UInventoryManagerComponent::GetItem(const int32 Index, FInventoryItem Out) 
 	return false;
 }
 
-void UInventoryManagerComponent::ClientStoreItem_Implementation(const FInventoryItem& ItemData)
+bool UInventoryManagerComponent::UseItem(const int32 ItemIndex)
+{
+	FInventoryItem ItemData;
+	if (!GetItem(ItemIndex, ItemData))
+	{
+		return false;
+	}
+	check(ItemData.ItemClass);
+
+	ABaseItem* Spawned = Cast<ABaseItem>(GetWorld()->SpawnActor(ItemData.ItemClass.Get()));
+	if( Spawned == nullptr )	
+	{
+		// ?
+		return false;
+	}
+
+	AArcher* Character = Cast<AArcher>(GetOwner());
+
+	Spawned->SetHidden(true);
+	const bool Result = Spawned->UseItem(Character);
+	
+	if( Result )
+	{
+		ItemData.Amount -= 1;
+
+		if( ItemData.Amount <= 0 )
+		{
+			///
+		}
+	}
+
+	return Result;
+}
+
+void UInventoryManagerComponent::ClientStoreItem_Implementation(const ABaseItem* Item, const FInventoryItem& ItemData)
 {
 	if (GetOwner()->GetLocalRole() == ROLE_AutonomousProxy)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("Add item client"));
 		Items.Add(ItemData);
+		OnItemStored.Broadcast(Item);
 	}
 }
 
-void UInventoryManagerComponent::ServerStoreItem_Implementation(ABaseItem* Item)
+void UInventoryManagerComponent::ServerStoreItem_Implementation(const ABaseItem* Item)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("Add item server"));
+	check(Item);
 
 	FInventoryItem ItemData;
 	Item->GenerateInventoryData(ItemData);
 
 	Items.Add(ItemData);
+	OnItemStored.Broadcast(Item);
 
-	ClientStoreItem(ItemData);
+	ClientStoreItem(Item, ItemData);
 }
 
 bool UInventoryManagerComponent::HasFreeSlot() const

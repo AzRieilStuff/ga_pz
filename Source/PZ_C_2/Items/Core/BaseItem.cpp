@@ -22,8 +22,7 @@ ABaseItem::ABaseItem()
 
 	bDestroyOnPickup = false;
 	bReplicates = true;
-
-	
+	MaxPerStack = 1;
 }
 
 
@@ -51,6 +50,7 @@ bool ABaseItem::CanPickupBy(AArcher* Character) const
 
 void ABaseItem::GenerateInventoryData(FInventoryItem& InventoryData) const
 {
+	InventoryData.ItemClass = GetClass();
 	InventoryData.Name = GetName();
 	InventoryData.IconLabel = FString("-");
 	InventoryData.Icon = InventoryIcon;
@@ -90,21 +90,25 @@ void ABaseItem::MulticastPickup_Implementation(AArcher* Character)
 		Destroy(); // Destroy for all
 	}
 	
-	Character->OnItemPicked.Broadcast(this);
 }
 
 void ABaseItem::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
 
-	if (HasAuthority() && bPickable) // Execute picking only on server
+	if (bPickable)
 	{
 		AArcher* Character = Cast<AArcher>(OtherActor);
 
-		if (Character && CanPickupBy(Character))
+		if (IsValid(Character) && CanPickupBy(Character))
 		{
 			Pickup(Character);
 			//FOnItemPicked.ExecuteIfBound(this, Character);
 		}
 	}
+}
+
+bool ABaseItem::UseItem(AArcher* Target)
+{
+	return false;
 }
