@@ -2,6 +2,7 @@
 
 #include "PZ_C_2/Characters/Archer.h"
 
+
 AHealthKit::AHealthKit()
 {
 	HealAmount = 10;
@@ -10,7 +11,23 @@ AHealthKit::AHealthKit()
 	bPickable = true;
 }
 
-bool AHealthKit::UseItem(AArcher* Target)
+bool AHealthKit::CanPickupBy(AArcher* Character) const
+{
+	return Super::CanPickupBy(Character);
+}
+
+UHealthKitInventoryItem* AHealthKit::GenerateInventoryData(UBaseInventoryItem* Target) const
+{
+	UHealthKitInventoryItem *KitItem = NewObject<UHealthKitInventoryItem>();
+	Super::GenerateInventoryData(KitItem);
+
+	KitItem->HealAmount = HealAmount;
+
+	return KitItem;
+}
+
+ 
+bool UHealthKitInventoryItem::UseItem(AArcher* Target) 
 {
 	Super::UseItem(Target);
 
@@ -24,9 +41,4 @@ bool AHealthKit::UseItem(AArcher* Target)
 	Target->SetCurrentHealth(Target->CurrentHealth + HealAmount);
 
 	return true;
-}			
-
-bool AHealthKit::CanPickupBy(AArcher* Character) const
-{
-	return Super::CanPickupBy(Character);
 }

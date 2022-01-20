@@ -3,15 +3,17 @@
 #include "PZ_C_2/Items/Core/BaseItem.h"
 #include  "AHealthKit.generated.h"
 
-/*
-*
-USTRUCT()
-struct FHealthKitInventoryItem : public FInventoryItem
+class UBaseInventoryItem;
+
+UCLASS()
+class UHealthKitInventoryItem : public UBaseInventoryItem
 {
-GENERATED_BODY()
+	GENERATED_BODY()
+public :
+	virtual bool UseItem(AArcher* Target) override;
 	
+	int32 HealAmount;
 };
-*/
 
 UCLASS()
 class AHealthKit : public ABaseItem
@@ -24,7 +26,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 HealAmount;
 
-	virtual bool UseItem(AArcher* Target) override;
-
 	virtual bool CanPickupBy(AArcher* Character) const override;
+
+	virtual UHealthKitInventoryItem* GenerateInventoryData(UBaseInventoryItem* Target = nullptr) const override;
 };

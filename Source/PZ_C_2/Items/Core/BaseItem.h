@@ -12,7 +12,27 @@ class ABaseItem;
 class AArcher;
 class UPickBoxComponent;
 
-//DECLARE_DELEGATE_TwoParams(FCharacterItemInteraction, class ABaseItem*, AArcher*);
+UCLASS(Blueprintable)
+class UBaseInventoryItem : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadOnly)
+	UTexture* Icon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString Name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString IconLabel;
+
+	UPROPERTY()
+	int32 Amount;
+
+	UFUNCTION(BlueprintCallable)
+	virtual bool UseItem(AArcher* Target);
+};
 
 UCLASS()
 class PZ_C_2_API ABaseItem : public AActor, public IPickableInterface
@@ -39,7 +59,7 @@ protected:
 
 public:
 	UFUNCTION()
-	virtual void GenerateInventoryData(FInventoryItem& InventoryData) const;
+	virtual UBaseInventoryItem* GenerateInventoryData(UBaseInventoryItem* Target = nullptr) const;
 
 	UFUNCTION()
 	virtual void Pickup(AArcher* Character) override;
@@ -52,7 +72,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual bool CanPickupBy(AArcher* Character) const;
-	
+
 	UPROPERTY(EditDefaultsOnly)
 	UTexture* InventoryIcon;
 
@@ -69,9 +89,6 @@ public:
 	bool bStoreable;
 
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
-
-	UFUNCTION(BlueprintCallable)
-	virtual bool UseItem(AArcher* Target);
 
 	UPROPERTY(BlueprintReadOnly)
 	int32 MaxPerStack;

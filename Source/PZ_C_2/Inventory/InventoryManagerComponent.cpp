@@ -10,47 +10,36 @@ UInventoryManagerComponent::UInventoryManagerComponent()
 {
 }
 
-TArray<FInventoryItem>& UInventoryManagerComponent::GetItems()
+TArray<UBaseInventoryItem*> UInventoryManagerComponent::GetItems()
 {
 	return Items;
 }
 
-bool UInventoryManagerComponent::GetItem(const int32 Index, FInventoryItem& Out) const
+UBaseInventoryItem* UInventoryManagerComponent::GetItem(const int32 Index) const
 {
 	if (Index < Items.Num())
 	{
-		Out = Items[Index];
-		return true;
+		return Items[Index];
 	}
-	return false;
+	return nullptr;
 }
 
 bool UInventoryManagerComponent::UseItem(const int32 ItemIndex)
 {
-	FInventoryItem ItemData;
-	if (!GetItem(ItemIndex, ItemData))
+	UBaseInventoryItem* Item = GetItem(ItemIndex);
+	if (Item == nullptr)
 	{
-		return false;
-	}
-	check(ItemData.ItemClass);
-
-	ABaseItem* Spawned = Cast<ABaseItem>(GetWorld()->SpawnActor(ItemData.ItemClass.Get()));
-	if( Spawned == nullptr )	
-	{
-		// ?
 		return false;
 	}
 
 	AArcher* Character = Cast<AArcher>(GetOwner());
-
-	Spawned->SetHidden(true);
-	const bool Result = Spawned->UseItem(Character);
+	const bool Result = Item->UseItem(Character);
 	
 	if( Result )
 	{
-		ItemData.Amount -= 1;
+		Item->Amount -= 1;
 
-		if( ItemData.Amount <= 0 )
+		if( Item->Amount <= 0 )
 		{
 			///
 		}
@@ -59,7 +48,7 @@ bool UInventoryManagerComponent::UseItem(const int32 ItemIndex)
 	return Result;
 }
 
-void UInventoryManagerComponent::ClientStoreItem_Implementation(const ABaseItem* Item, const FInventoryItem& ItemData)
+void UInventoryManagerComponent::ClientStoreItem_Implementation(const ABaseItem* Item, UBaseInventoryItem* ItemData)
 {
 	if (GetOwner()->GetLocalRole() == ROLE_AutonomousProxy)
 	{
@@ -72,8 +61,7 @@ void UInventoryManagerComponent::ServerStoreItem_Implementation(const ABaseItem*
 {
 	check(Item);
 
-	FInventoryItem ItemData;
-	Item->GenerateInventoryData(ItemData);
+	UBaseInventoryItem* ItemData = Item->GenerateInventoryData();
 
 	Items.Add(ItemData);
 	OnItemStored.Broadcast(Item);

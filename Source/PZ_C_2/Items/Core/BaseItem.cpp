@@ -7,6 +7,7 @@
 #include "PZ_C_2/Characters/Archer.h"
 #include "PZ_C_2/Inventory/InventoryManagerComponent.h"
 
+
 // Sets default values
 ABaseItem::ABaseItem()
 {
@@ -40,20 +41,27 @@ bool ABaseItem::ServerPickup_Validate(AArcher* Character)
 
 bool ABaseItem::CanPickupBy(AArcher* Character) const
 {
-	if( bStoreable )
+	if (bStoreable)
 	{
 		return Character->InventoryManagerComponent->CanPickupItem(this);
 	}
-	
+
 	return false; // todo autouse? 
 }
 
-void ABaseItem::GenerateInventoryData(FInventoryItem& InventoryData) const
+UBaseInventoryItem* ABaseItem::GenerateInventoryData(UBaseInventoryItem* Target) const
 {
-	InventoryData.ItemClass = GetClass();
-	InventoryData.Name = GetName();
-	InventoryData.IconLabel = FString("-");
-	InventoryData.Icon = InventoryIcon;
+	if (Target == nullptr)
+	{
+		Target = NewObject<UBaseInventoryItem>();
+	}
+	
+	Target->Name = GetName();
+	Target->IconLabel = FString("");
+	Target->Icon = InventoryIcon;
+	Target->Amount = 1;
+
+	return Target;
 }
 
 void ABaseItem::Pickup(AArcher* Character)
@@ -80,16 +88,15 @@ void ABaseItem::MulticastPickup_Implementation(AArcher* Character)
 	}
 
 	// store into inventory for current pawn
-	if( bStoreable && Character->IsLocallyControlled() )
+	if (bStoreable && Character->IsLocallyControlled())
 	{
 		Character->InventoryManagerComponent->ServerStoreItem(this);
 	}
-	
+
 	if (bDestroyOnPickup && IsValid(this))
 	{
 		Destroy(); // Destroy for all
 	}
-	
 }
 
 void ABaseItem::NotifyActorBeginOverlap(AActor* OtherActor)
@@ -108,7 +115,7 @@ void ABaseItem::NotifyActorBeginOverlap(AActor* OtherActor)
 	}
 }
 
-bool ABaseItem::UseItem(AArcher* Target)
+bool UBaseInventoryItem::UseItem(AArcher* Target)
 {
 	return false;
 }

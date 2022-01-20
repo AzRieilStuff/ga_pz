@@ -5,24 +5,32 @@
 #include "CoreMinimal.h"
 #include "../Core/BaseItem.h"
 #include "PZ_C_2/Inventory/InventoryManagerComponent.h"
-#include "AmmoBoxBase.generated.h"
+#include "AmmoBox.generated.h"
+
+UCLASS()
+class UAmmoBoxInventoryItem : public UBaseInventoryItem
+{
+	GENERATED_BODY()
+public:
+	virtual bool UseItem(AArcher* Target) override;
+};
 
 /**
  * 
  */
 UCLASS()
-class PZ_C_2_API AAmmoBoxBase : public ABaseItem
+class PZ_C_2_API AAmmoBox : public ABaseItem
 {
 	GENERATED_BODY()
-	
+
 public:
-AAmmoBoxBase();
-	
+	AAmmoBox();
+
 	UPROPERTY(EditDefaultsOnly, Category="Gameplay|Projectile")
 	TSubclassOf<class ABaseProjectile> ProjectileType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 AmmoAmount;
 
-virtual void GenerateInventoryData(FInventoryItem& InventoryData) const override;
+	virtual UAmmoBoxInventoryItem* GenerateInventoryData(UBaseInventoryItem* Target = nullptr) const override;
 };
