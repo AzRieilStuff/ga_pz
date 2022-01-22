@@ -72,7 +72,7 @@ void ABaseItem::Pickup(AArcher* Character)
 	{ 
 		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, Character->GetName());
 	}
-	return;
+	
 	ServerPickup(Character);
 
 	if (bDestroyOnPickup)
@@ -124,7 +124,7 @@ void ABaseItem::NotifyActorBeginOverlap(AActor* OtherActor)
 	{
 		AArcher* Character = Cast<AArcher>(OtherActor);
 
-		if (Character->IsLocallyControlled() && CanPickupBy(Character))
+		if (CanPickupBy(Character))
 		{
 			Pickup(Character);
 			//FOnItemPicked.ExecuteIfBound(this, Character);
