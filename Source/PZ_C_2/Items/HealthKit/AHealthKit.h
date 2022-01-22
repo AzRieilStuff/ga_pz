@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "PZ_C_2/Items/Core/BaseInventoryItem.h"
 #include "PZ_C_2/Items/Core/BaseItem.h"
 #include  "AHealthKit.generated.h"
 
@@ -11,8 +12,13 @@ class UHealthKitInventoryItem : public UBaseInventoryItem
 	GENERATED_BODY()
 public :
 	virtual bool UseItem(AArcher* Target) override;
+
+	UFUNCTION(Server, Reliable)
+	void ServerUseHealthKit(AArcher* Target, int32 RestoreAmount) const;
 	
 	int32 HealAmount;
+
+	UHealthKitInventoryItem();
 };
 
 UCLASS()

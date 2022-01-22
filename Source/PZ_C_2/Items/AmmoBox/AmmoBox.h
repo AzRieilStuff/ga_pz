@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "../Core/BaseItem.h"
 #include "PZ_C_2/Inventory/InventoryManagerComponent.h"
+#include "PZ_C_2/Items/Core/BaseInventoryItem.h"
 #include "AmmoBox.generated.h"
 
 UCLASS()
@@ -13,6 +14,8 @@ class UAmmoBoxInventoryItem : public UBaseInventoryItem
 	GENERATED_BODY()
 public:
 	virtual bool UseItem(AArcher* Target) override;
+
+	UAmmoBoxInventoryItem();
 };
 
 /**

@@ -7,6 +7,7 @@
 
 class ABaseItem;
 class UBaseInventoryItem;
+class AArcher;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemInteraction, const ABaseItem*, Item);
 
@@ -18,10 +19,12 @@ class PZ_C_2_API UInventoryManagerComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-	UFUNCTION(Client, Reliable)
-	void ClientStoreItem(const ABaseItem* Item, UBaseInventoryItem* ItemData);
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastStoreItem(ABaseItem* Item);
 public:
 	UInventoryManagerComponent();
+
+	virtual void BeginPlay() override;
 
 	UPROPERTY()
 	TArray<UBaseInventoryItem*> Items;
@@ -39,7 +42,7 @@ public:
 	bool UseItem(const int32 ItemIndex);
 
 	UFUNCTION(Server, BlueprintCallable, Reliable)
-	void ServerStoreItem(const ABaseItem* Item);
+	void ServerStoreItem(ABaseItem* Item);
 
 	UFUNCTION(BlueprintCallable)
 	bool HasFreeSlot() const;

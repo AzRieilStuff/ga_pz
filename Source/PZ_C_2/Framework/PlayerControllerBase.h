@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "PlayerControllerBase.generated.h"
 
+class AArcher;
+
 /**
  * 
  */
@@ -16,4 +18,9 @@ public:
 	APlayerControllerBase();
 
 	virtual void BeginPlay() override;
+
+	virtual void OnPossess(APawn* InPawn) override;
+
+	UPROPERTY(BlueprintReadOnly)
+	AArcher* PlayerCharacter;
 };

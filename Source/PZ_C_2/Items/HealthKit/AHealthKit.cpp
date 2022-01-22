@@ -3,6 +3,11 @@
 #include "PZ_C_2/Characters/Archer.h"
 
 
+UHealthKitInventoryItem::UHealthKitInventoryItem()
+{
+	VisualActorClass = AHealthKit::StaticClass();
+}
+
 AHealthKit::AHealthKit()
 {
 	HealAmount = 10;
@@ -18,7 +23,7 @@ bool AHealthKit::CanPickupBy(AArcher* Character) const
 
 UHealthKitInventoryItem* AHealthKit::GenerateInventoryData(UBaseInventoryItem* Target) const
 {
-	UHealthKitInventoryItem *KitItem = NewObject<UHealthKitInventoryItem>();
+	UHealthKitInventoryItem* KitItem = NewObject<UHealthKitInventoryItem>();
 	Super::GenerateInventoryData(KitItem);
 
 	KitItem->HealAmount = HealAmount;
@@ -26,19 +31,22 @@ UHealthKitInventoryItem* AHealthKit::GenerateInventoryData(UBaseInventoryItem* T
 	return KitItem;
 }
 
- 
-bool UHealthKitInventoryItem::UseItem(AArcher* Target) 
+
+bool UHealthKitInventoryItem::UseItem(AArcher* Target)
 {
 	Super::UseItem(Target);
 
-	/*
 	if (HealAmount >= 0 && Target->CurrentHealth >= Target->MaxHealth)
 	{
 		return false;
 	}
-	*/
 
-	Target->SetCurrentHealth(Target->CurrentHealth + HealAmount);
+	ServerUseHealthKit(Target, HealAmount);
 
 	return true;
 }
+
+void UHealthKitInventoryItem::ServerUseHealthKit_Implementation(AArcher* Target, int32 RestoreAmount) const
+{
+	Target->SetCurrentHealth(Target->CurrentHealth + RestoreAmount);
+}	

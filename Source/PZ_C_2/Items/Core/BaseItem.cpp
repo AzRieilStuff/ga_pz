@@ -2,7 +2,9 @@
 
 #include "BaseItem.h"
 
+#include "BaseInventoryItem.h"
 #include "PickBoxComponent.h"
+#include "GameFramework/GameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "PZ_C_2/Characters/Archer.h"
 #include "PZ_C_2/Inventory/InventoryManagerComponent.h"
@@ -55,7 +57,7 @@ UBaseInventoryItem* ABaseItem::GenerateInventoryData(UBaseInventoryItem* Target)
 	{
 		Target = NewObject<UBaseInventoryItem>();
 	}
-	
+
 	Target->Name = GetName();
 	Target->IconLabel = FString("");
 	Target->Icon = InventoryIcon;
@@ -66,6 +68,11 @@ UBaseInventoryItem* ABaseItem::GenerateInventoryData(UBaseInventoryItem* Target)
 
 void ABaseItem::Pickup(AArcher* Character)
 {
+	if (Character->GetLocalRole() > ROLE_SimulatedProxy)
+	{ 
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, Character->GetName());
+	}
+	return;
 	ServerPickup(Character);
 
 	if (bDestroyOnPickup)
@@ -73,6 +80,8 @@ void ABaseItem::Pickup(AArcher* Character)
 		PickBoxComponent->UnregisterComponent();
 		SetHidden(true); // 'destroy' locally but keep valid for rpc calls
 	}
+	
+	
 }
 
 void ABaseItem::ServerPickup_Implementation(AArcher* Character)
@@ -88,14 +97,20 @@ void ABaseItem::MulticastPickup_Implementation(AArcher* Character)
 	}
 
 	// store into inventory for current pawn
-	if (bStoreable && Character->IsLocallyControlled())
+	if (bStoreable)
 	{
-		Character->InventoryManagerComponent->ServerStoreItem(this);
+		if (Character->IsLocallyControlled())
+		{
+			Character->InventoryManagerComponent->ServerStoreItem(this);
+			SetHidden(true); // we cant destroy object yet as we need valid Actor for RPC
+		}
 	}
-
-	if (bDestroyOnPickup && IsValid(this))
+	else
 	{
-		Destroy(); // Destroy for all
+		if (bDestroyOnPickup)
+		{
+			MarkPendingKill(); // Destroy for all
+		}
 	}
 }
 
@@ -103,11 +118,13 @@ void ABaseItem::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
 
+	check(OtherActor);
+
 	if (bPickable)
 	{
 		AArcher* Character = Cast<AArcher>(OtherActor);
 
-		if (IsValid(Character) && CanPickupBy(Character))
+		if (Character->IsLocallyControlled() && CanPickupBy(Character))
 		{
 			Pickup(Character);
 			//FOnItemPicked.ExecuteIfBound(this, Character);
@@ -115,7 +132,10 @@ void ABaseItem::NotifyActorBeginOverlap(AActor* OtherActor)
 	}
 }
 
-bool UBaseInventoryItem::UseItem(AArcher* Target)
+void ABaseItem::OnStored()
 {
-	return false;
+	if (bDestroyOnPickup)
+	{
+		Destroy();
+	}
 }

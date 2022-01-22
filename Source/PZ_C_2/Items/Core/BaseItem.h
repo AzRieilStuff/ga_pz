@@ -8,31 +8,9 @@
 #include "PZ_C_2/Inventory/InventoryManagerComponent.h"
 #include "BaseItem.generated.h"
 
-class ABaseItem;
 class AArcher;
 class UPickBoxComponent;
-
-UCLASS(Blueprintable)
-class UBaseInventoryItem : public UObject
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(BlueprintReadOnly)
-	UTexture* Icon;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FString Name;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FString IconLabel;
-
-	UPROPERTY()
-	int32 Amount;
-
-	UFUNCTION(BlueprintCallable)
-	virtual bool UseItem(AArcher* Target);
-};
+class UBaseInventoryItem;
 
 UCLASS()
 class PZ_C_2_API ABaseItem : public AActor, public IPickableInterface
@@ -92,4 +70,6 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	int32 MaxPerStack;
+
+	void OnStored();
 };

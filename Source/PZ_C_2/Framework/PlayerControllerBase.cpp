@@ -4,6 +4,7 @@
 #include "PlayerControllerBase.h"
 
 #include "GameInstanceMain.h"
+#include "PZ_C_2/Characters/Archer.h"
 
 APlayerControllerBase::APlayerControllerBase()
 {
@@ -13,4 +14,9 @@ APlayerControllerBase::APlayerControllerBase()
 void APlayerControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void APlayerControllerBase::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
 }

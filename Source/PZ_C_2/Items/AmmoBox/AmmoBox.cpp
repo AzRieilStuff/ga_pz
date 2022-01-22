@@ -11,6 +11,11 @@ bool UAmmoBoxInventoryItem::UseItem(AArcher* Target)
 	return Super::UseItem(Target);
 }
 
+UAmmoBoxInventoryItem::UAmmoBoxInventoryItem()
+{
+	VisualActorClass = AAmmoBox::StaticClass();
+}
+
 AAmmoBox::AAmmoBox()
 {
 	bDestroyOnPickup = true;

@@ -4,10 +4,21 @@
 #include "InventoryManagerComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "PZ_C_2/Characters/Archer.h"
+#include "PZ_C_2/Items/Core/BaseInventoryItem.h"
 #include "PZ_C_2/Items/Core/BaseItem.h"
 
 UInventoryManagerComponent::UInventoryManagerComponent()
 {
+}
+
+void UInventoryManagerComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (GetOwner()->GetLocalRole() > ROLE_SimulatedProxy)
+	{
+		//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, GetOwner()->GetName());
+	}
 }
 
 TArray<UBaseInventoryItem*> UInventoryManagerComponent::GetItems()
@@ -33,31 +44,32 @@ bool UInventoryManagerComponent::UseItem(const int32 ItemIndex)
 	}
 
 	AArcher* Character = Cast<AArcher>(GetOwner());
-	const bool Result = Item->UseItem(Character);
-	
-	if( Result )
-	{
-		Item->Amount -= 1;
 
-		if( Item->Amount <= 0 )
-		{
-			///
-		}
+	if (!Item->CanUsedBy(Character) || !Item->CanUsedOn(Character))
+	{
+		return false;
 	}
 
-	return Result;
+	Item->UseItem(Character);
+	return true;
 }
 
-void UInventoryManagerComponent::ClientStoreItem_Implementation(const ABaseItem* Item, UBaseInventoryItem* ItemData)
+void UInventoryManagerComponent::MulticastStoreItem_Implementation(ABaseItem* Item)
 {
-	if (GetOwner()->GetLocalRole() == ROLE_AutonomousProxy)
+	check(Item);
+
+	if (GetOwner()->GetLocalRole() == ROLE_AutonomousProxy) // avoid duplication on listen server
 	{
+		UBaseInventoryItem* ItemData = Item->GenerateInventoryData();
+
 		Items.Add(ItemData);
 		OnItemStored.Broadcast(Item);
 	}
+
+	Item->OnStored();
 }
 
-void UInventoryManagerComponent::ServerStoreItem_Implementation(const ABaseItem* Item)
+void UInventoryManagerComponent::ServerStoreItem_Implementation(ABaseItem* Item)
 {
 	check(Item);
 
@@ -66,7 +78,7 @@ void UInventoryManagerComponent::ServerStoreItem_Implementation(const ABaseItem*
 	Items.Add(ItemData);
 	OnItemStored.Broadcast(Item);
 
-	ClientStoreItem(Item, ItemData);
+	MulticastStoreItem(Item);
 }
 
 bool UInventoryManagerComponent::HasFreeSlot() const
