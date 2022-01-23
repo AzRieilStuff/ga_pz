@@ -33,6 +33,9 @@ ABaseItem::ABaseItem()
 void ABaseItem::BeginPlay()
 {
 	Super::BeginPlay();
+
+	PickBoxComponent->OnComponentHit.AddDynamic(this, &ABaseItem::OnHit);
+	OnDropped();
 }
 
 
@@ -72,10 +75,10 @@ UBaseInventoryItem* ABaseItem::GenerateInventoryData(UBaseInventoryItem* Target)
 void ABaseItem::Pickup(AArcher* Character)
 {
 	if (Character->GetLocalRole() > ROLE_SimulatedProxy)
-	{ 
+	{
 		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, Character->GetName());
 	}
-	
+
 	ServerPickup(Character);
 
 	if (bDestroyOnPickup)
@@ -83,8 +86,6 @@ void ABaseItem::Pickup(AArcher* Character)
 		PickBoxComponent->UnregisterComponent();
 		SetHidden(true); // 'destroy' locally but keep valid for rpc calls
 	}
-	
-	
 }
 
 void ABaseItem::ServerPickup_Implementation(AArcher* Character)
@@ -141,4 +142,15 @@ void ABaseItem::OnStored()
 	{
 		Destroy();
 	}
+}
+
+void ABaseItem::OnDropped()
+{
+	PickBoxComponent->EnablePhysics();
+}
+
+void ABaseItem::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+                      UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	PickBoxComponent->DisablePhysics();
 }

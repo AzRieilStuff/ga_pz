@@ -32,7 +32,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta=(AllowPrivateAccess = "true"))
 	UStaticMeshComponent* MeshComponent;
 
-	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	UPickBoxComponent* PickBoxComponent;
 
 public:
@@ -75,6 +75,12 @@ public:
 
 	void OnStored();
 
+	void OnDropped();
+
 	// [server]
 	//virtual void InitFromInventory(UBaseInventoryItem* Item);
+
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+			   UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 };

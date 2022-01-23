@@ -154,7 +154,7 @@ void UInventoryManagerComponent::ServerDropItem_Implementation(const int32 ItemI
 
 	// location is valid, spawn item
 	FTransform SpawnTransform;
-	SpawnTransform.SetLocation(FVector::ZeroVector);
+	SpawnTransform.SetLocation(LandTraceStart);
 	SpawnTransform.SetRotation(FRotator::ZeroRotator.Quaternion());
 
 	ABaseItem* SpawnedItem = GetWorld()->SpawnActorDeferred<ABaseItem>(
@@ -168,10 +168,12 @@ void UInventoryManagerComponent::ServerDropItem_Implementation(const int32 ItemI
 	if (SpawnedItem == nullptr)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, "Failed to spawn");
+		return;
 	}
 
-	FVector AdjustedLocation = LandTrace.Location + SpawnedItem->GetPickBoxComponent()->GetScaledBoxExtent().Y / 2.f;
-	SpawnTransform.SetLocation(AdjustedLocation);
-	
+	//FVector AdjustedLocation = LandTrace.Location + SpawnedItem->GetPickBoxComponent()->GetScaledBoxExtent().Y / 2.f;
+	//SpawnTransform.SetLocation(AdjustedLocation);
+
+	SpawnedItem->OnDropped();
 	SpawnedItem->FinishSpawning(SpawnTransform);
 }
