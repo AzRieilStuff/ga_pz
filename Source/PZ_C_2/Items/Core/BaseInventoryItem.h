@@ -32,8 +32,8 @@ public:
 	virtual bool UseItem(AArcher* Target);
 
 	UFUNCTION()
-	virtual bool CanUsedBy(AArcher* Character);
+	virtual bool CanUsedBy(AArcher* Character) const;
 
 	UFUNCTION()
-	virtual bool CanUsedOn(AActor* Target);
+	virtual bool CanUsedOn(AActor* Target) const;
 };

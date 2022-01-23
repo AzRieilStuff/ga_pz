@@ -153,6 +153,12 @@ void AArcher::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 			PlayerInputComponent->BindAction("Reload", IE_Pressed, WeaponManagerComponent,
 			                                 &UWeaponManagerComponent::ReloadWeapon);
 		}
+
+		if (InventoryManagerComponent)
+		{
+			PlayerInputComponent->BindAction("DropFromInventory", IE_Pressed, InventoryManagerComponent,
+			                                 &UInventoryManagerComponent::OnDropItemAction);
+		}
 	}
 }
 

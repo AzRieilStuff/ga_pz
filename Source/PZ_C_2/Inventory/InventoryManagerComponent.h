@@ -42,6 +42,9 @@ public:
 	bool UseItem(const int32 ItemIndex);
 
 	UFUNCTION(Server, BlueprintCallable, Reliable)
+	void ServerUseItem(const int32 ItemIndex);
+
+	UFUNCTION(Server, BlueprintCallable, Reliable)
 	void ServerStoreItem(ABaseItem* Item);
 
 	UFUNCTION(BlueprintCallable)
@@ -54,4 +57,13 @@ public:
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnItemInteraction OnItemStored;
+
+	// [local] changes from local ui`
+	UPROPERTY(BlueprintReadWrite)
+	int32 FocusItemIndex;
+
+	void OnDropItemAction();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerDropItem(const int ItemIndex);
 };

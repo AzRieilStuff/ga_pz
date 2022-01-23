@@ -36,6 +36,8 @@ protected:
 	UPickBoxComponent* PickBoxComponent;
 
 public:
+	inline UPickBoxComponent* GetPickBoxComponent() const { return PickBoxComponent; };
+
 	UFUNCTION()
 	virtual UBaseInventoryItem* GenerateInventoryData(UBaseInventoryItem* Target = nullptr) const;
 
@@ -72,4 +74,7 @@ public:
 	int32 MaxPerStack;
 
 	void OnStored();
+
+	// [server]
+	//virtual void InitFromInventory(UBaseInventoryItem* Item);
 };

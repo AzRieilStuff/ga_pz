@@ -63,6 +63,9 @@ UBaseInventoryItem* ABaseItem::GenerateInventoryData(UBaseInventoryItem* Target)
 	Target->Icon = InventoryIcon;
 	Target->Amount = 1;
 
+	Target->VisualActorClass = GetClass();
+
+
 	return Target;
 }
 

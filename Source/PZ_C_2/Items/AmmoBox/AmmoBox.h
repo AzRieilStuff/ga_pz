@@ -8,16 +8,7 @@
 #include "PZ_C_2/Items/Core/BaseInventoryItem.h"
 #include "AmmoBox.generated.h"
 
-UCLASS()
-class UAmmoBoxInventoryItem : public UBaseInventoryItem
-{
-	GENERATED_BODY()
-public:
-	virtual bool UseItem(AArcher* Target) override;
-
-	UAmmoBoxInventoryItem();
-};
-
+class UAmmoBoxInventoryItem;
 /**
  * 
  */
@@ -35,5 +26,5 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 AmmoAmount;
 
-	virtual UAmmoBoxInventoryItem* GenerateInventoryData(UBaseInventoryItem* Target = nullptr) const override;
+	virtual UBaseInventoryItem* GenerateInventoryData(UBaseInventoryItem* Target = nullptr) const override;
 };

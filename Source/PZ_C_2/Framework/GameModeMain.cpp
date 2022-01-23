@@ -20,6 +20,8 @@ AGameModeMain::AGameModeMain()
 void AGameModeMain::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	
+
+	const FName TraceTag("Debug");
+	GetWorld()->DebugDrawTraceTag = TraceTag;
+
 }

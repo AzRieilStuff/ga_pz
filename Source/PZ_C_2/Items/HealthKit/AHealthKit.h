@@ -5,21 +5,7 @@
 #include  "AHealthKit.generated.h"
 
 class UBaseInventoryItem;
-
-UCLASS()
-class UHealthKitInventoryItem : public UBaseInventoryItem
-{
-	GENERATED_BODY()
-public :
-	virtual bool UseItem(AArcher* Target) override;
-
-	UFUNCTION(Server, Reliable)
-	void ServerUseHealthKit(AArcher* Target, int32 RestoreAmount) const;
-	
-	int32 HealAmount;
-
-	UHealthKitInventoryItem();
-};
+class UHealthKitInventoryItem;
 
 UCLASS()
 class AHealthKit : public ABaseItem
@@ -34,5 +20,5 @@ public:
 
 	virtual bool CanPickupBy(AArcher* Character) const override;
 
-	virtual UHealthKitInventoryItem* GenerateInventoryData(UBaseInventoryItem* Target = nullptr) const override;
+	virtual UBaseInventoryItem* GenerateInventoryData(UBaseInventoryItem* Target = nullptr) const override;
 };

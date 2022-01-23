@@ -6,6 +6,7 @@
 #include "PZ_C_2/Characters/Archer.h"
 #include "PZ_C_2/Items/Core/BaseInventoryItem.h"
 #include "PZ_C_2/Items/Core/BaseItem.h"
+#include "PZ_C_2/Items/Core/PickBoxComponent.h"
 
 UInventoryManagerComponent::UInventoryManagerComponent()
 {
@@ -37,21 +38,25 @@ UBaseInventoryItem* UInventoryManagerComponent::GetItem(const int32 Index) const
 
 bool UInventoryManagerComponent::UseItem(const int32 ItemIndex)
 {
+	return true;
+}
+
+void UInventoryManagerComponent::ServerUseItem_Implementation(const int32 ItemIndex)
+{
 	UBaseInventoryItem* Item = GetItem(ItemIndex);
 	if (Item == nullptr)
 	{
-		return false;
+		return;
 	}
 
 	AArcher* Character = Cast<AArcher>(GetOwner());
 
 	if (!Item->CanUsedBy(Character) || !Item->CanUsedOn(Character))
 	{
-		return false;
+		return;
 	}
 
 	Item->UseItem(Character);
-	return true;
 }
 
 void UInventoryManagerComponent::MulticastStoreItem_Implementation(ABaseItem* Item)
@@ -89,4 +94,84 @@ bool UInventoryManagerComponent::HasFreeSlot() const
 bool UInventoryManagerComponent::CanPickupItem(const ABaseItem* Item) const
 {
 	return HasFreeSlot();
+}
+
+void UInventoryManagerComponent::OnDropItemAction()
+{
+	if (FocusItemIndex >= 0) // some item in hover
+	{
+		ServerDropItem(FocusItemIndex);
+	}
+}
+
+bool UInventoryManagerComponent::ServerDropItem_Validate(const int32 ItemIndex)
+{
+	return ItemIndex >= 0 && ItemIndex < Items.Num(); // index valid
+}
+
+void UInventoryManagerComponent::ServerDropItem_Implementation(const int32 ItemIndex)
+{
+	UBaseInventoryItem* Item = GetItem(ItemIndex);
+	check(Item);
+
+	// check valid position
+	FHitResult DirectTrace, LandTrace;
+	FCollisionQueryParams TraceParams;
+
+	TraceParams.AddIgnoredActor(GetOwner()); // ignore self
+	TraceParams.TraceTag = FName("Debug");
+
+	GetWorld()->LineTraceSingleByChannel(
+		DirectTrace,
+		GetOwner()->GetActorLocation(),
+		GetOwner()->GetActorLocation() + (GetOwner()->GetActorForwardVector() * 150.f),
+		ECC_Visibility,
+		TraceParams
+	);
+
+	if (DirectTrace.bBlockingHit) // blocked by smth
+	{
+		return;
+	}
+
+	FVector LandTraceStart = DirectTrace.bBlockingHit ? DirectTrace.Location : DirectTrace.TraceEnd;
+
+	GetWorld()->LineTraceSingleByChannel(
+		LandTrace,
+		LandTraceStart,
+		LandTraceStart + (FVector::DownVector * 200.f),
+		ECC_Visibility,
+		TraceParams
+	);
+
+	if (!LandTrace.bBlockingHit) // too deep
+	{
+		return;
+	}
+
+	AArcher* Character = Cast<AArcher>(GetOwner());
+	check(Character);
+
+	// location is valid, spawn item
+	FTransform SpawnTransform;
+	SpawnTransform.SetLocation(FVector::ZeroVector);
+	SpawnTransform.SetRotation(FRotator::ZeroRotator.Quaternion());
+
+	ABaseItem* SpawnedItem = GetWorld()->SpawnActorDeferred<ABaseItem>(
+		Item->VisualActorClass,
+		SpawnTransform,
+		GetOwner(),
+		Character,
+		ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn
+	);
+
+	if (SpawnedItem == nullptr)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, "Failed to spawn");
+	}
+
+	FVector AdjustedLocation = LandTrace.Location + SpawnedItem->GetPickBoxComponent()->GetScaledBoxExtent().Y / 2.f;
+	SpawnTransform.SetLocation(AdjustedLocation);
+	
+	SpawnedItem->FinishSpawning(SpawnTransform);
 }

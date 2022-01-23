@@ -3,18 +3,8 @@
 
 #include "AmmoBox.h"
 
+#include "AmmoBoxInventoryItem.h"
 #include "PZ_C_2/Ammo/Arrow.h"
-
-
-bool UAmmoBoxInventoryItem::UseItem(AArcher* Target)
-{
-	return Super::UseItem(Target);
-}
-
-UAmmoBoxInventoryItem::UAmmoBoxInventoryItem()
-{
-	VisualActorClass = AAmmoBox::StaticClass();
-}
 
 AAmmoBox::AAmmoBox()
 {
@@ -25,7 +15,7 @@ AAmmoBox::AAmmoBox()
 	AmmoAmount = 50;
 }
 
-UAmmoBoxInventoryItem* AAmmoBox::GenerateInventoryData(UBaseInventoryItem* Target) const
+UBaseInventoryItem* AAmmoBox::GenerateInventoryData(UBaseInventoryItem* Target) const
 {
 	UAmmoBoxInventoryItem* AmmoItem = NewObject<UAmmoBoxInventoryItem>();
 	Super::GenerateInventoryData(AmmoItem);
