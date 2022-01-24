@@ -42,7 +42,6 @@ void UWeaponManagerComponent::EquipWeapon(ABaseRangeWeapon* NewWeapon)
 ABaseRangeWeapon* UWeaponManagerComponent::UnequipWeapon()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, "Unequip weapon");
-	//SetBowMeshVisibility(false);
 	// #todo
 
 	ABaseRangeWeapon* OldWeapon = Weapon;

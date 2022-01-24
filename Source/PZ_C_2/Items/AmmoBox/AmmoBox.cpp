@@ -18,6 +18,7 @@ AAmmoBox::AAmmoBox()
 UBaseInventoryItem* AAmmoBox::GenerateInventoryData(UBaseInventoryItem* Target) const
 {
 	UAmmoBoxInventoryItem* AmmoItem = NewObject<UAmmoBoxInventoryItem>();
+	
 	Super::GenerateInventoryData(AmmoItem);
 
 	AmmoItem->IconLabel = FString::FromInt(AmmoAmount);

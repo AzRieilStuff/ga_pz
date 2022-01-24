@@ -36,9 +36,29 @@ UBaseInventoryItem* UInventoryManagerComponent::GetItem(const int32 Index) const
 	return nullptr;
 }
 
-bool UInventoryManagerComponent::UseItem(const int32 ItemIndex)
+void UInventoryManagerComponent::SetItemAmount(const int32 ItemIndex, const int32 Amount)
 {
-	return true;
+	UBaseInventoryItem* Item = GetItem(ItemIndex);
+	check(Item);
+	Item->Amount = Amount;
+
+	if (Item->Amount <= 0)
+	{
+		Items.RemoveAt(ItemIndex);
+		OnItemRemoved.Broadcast(Item);
+	}
+}
+
+void UInventoryManagerComponent::OnUseItemAction(const int32 ItemIndex)
+{
+	UBaseInventoryItem* Item = GetItem(ItemIndex);
+	if (Item == nullptr || Item->IsLocked())
+	{
+		return;
+	}
+
+	Item->Lock();
+	ServerUseItem(ItemIndex);
 }
 
 void UInventoryManagerComponent::ServerUseItem_Implementation(const int32 ItemIndex)
@@ -56,7 +76,38 @@ void UInventoryManagerComponent::ServerUseItem_Implementation(const int32 ItemIn
 		return;
 	}
 
-	Item->UseItem(Character);
+	const bool Used = Item->UseItem(Character);
+
+	if (Used)
+	{
+		SetItemAmount(ItemIndex, Item->Amount - 1);
+	}
+
+	if (!Character->IsLocallyControlled())
+	{
+		ClientUseItem(ItemIndex, Used);
+	}
+	else
+	{
+		Item->Unlock();
+	}
+}
+
+void UInventoryManagerComponent::ClientUseItem_Implementation(const int32 ItemIndex, const bool Used)
+{
+	UBaseInventoryItem* Item = GetItem(ItemIndex);
+
+	if (Item == nullptr)
+	{
+		return;
+	}
+
+	if (Used)
+	{
+		SetItemAmount(ItemIndex, Item->Amount - 1);
+	}
+
+	Item->Unlock();
 }
 
 void UInventoryManagerComponent::MulticastStoreItem_Implementation(ABaseItem* Item)
@@ -68,7 +119,7 @@ void UInventoryManagerComponent::MulticastStoreItem_Implementation(ABaseItem* It
 		UBaseInventoryItem* ItemData = Item->GenerateInventoryData();
 
 		Items.Add(ItemData);
-		OnItemStored.Broadcast(Item);
+		OnItemStored.Broadcast(ItemData);
 	}
 
 	Item->OnStored();
@@ -81,7 +132,7 @@ void UInventoryManagerComponent::ServerStoreItem_Implementation(ABaseItem* Item)
 	UBaseInventoryItem* ItemData = Item->GenerateInventoryData();
 
 	Items.Add(ItemData);
-	OnItemStored.Broadcast(Item);
+	OnItemStored.Broadcast(ItemData);
 
 	MulticastStoreItem(Item);
 }

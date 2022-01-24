@@ -27,6 +27,7 @@ class PZ_C_2_API UWeaponManagerComponent : public UActorComponent
 public:
 	UWeaponManagerComponent();
 
+	// [client + server]
 	UFUNCTION()
 	virtual void EquipWeapon(ABaseRangeWeapon* NewWeapon);
 

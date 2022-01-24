@@ -9,7 +9,7 @@ class ABaseItem;
 class UBaseInventoryItem;
 class AArcher;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemInteraction, const ABaseItem*, Item);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemInteraction, const UBaseInventoryItem*, Item);
 
 /**
  * 
@@ -38,11 +38,16 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UBaseInventoryItem* GetItem(const int32 Index) const;
 
+	void SetItemAmount(const int32 ItemIndex, const int32 Amount);
+	
 	UFUNCTION(BlueprintCallable)
-	bool UseItem(const int32 ItemIndex);
-
-	UFUNCTION(Server, BlueprintCallable, Reliable)
-	void ServerUseItem(const int32 ItemIndex);
+	void OnUseItemAction(const int32 ItemIndex);
+	
+	UFUNCTION(Server, BlueprintCallable, Reliable) /**/
+	virtual void ServerUseItem(const int32 ItemIndex);
+	
+	UFUNCTION(Client, Reliable)
+	virtual void ClientUseItem(const int32 ItemIndex, const bool Used);
 
 	UFUNCTION(Server, BlueprintCallable, Reliable)
 	void ServerStoreItem(ABaseItem* Item);

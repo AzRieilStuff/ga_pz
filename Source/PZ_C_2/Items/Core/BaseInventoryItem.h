@@ -10,7 +10,21 @@ class UBaseInventoryItem : public UObject
 {
 	GENERATED_BODY()
 
+	/**
+	 * @brief Is currently processing
+	 */
+	bool bLocked = false;
+
+	//friend class UInventoryManagerComponent;
+
+protected:
 public:
+	inline bool IsLocked() const { return bLocked; };
+
+	inline void Lock() { bLocked = true; }
+
+	inline void Unlock() { bLocked = false; }
+
 	UBaseInventoryItem();
 
 	// static fails
@@ -25,9 +39,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FString IconLabel;
 
-	UPROPERTY()
-	int32 Amount;
-
+	// [local]
 	UFUNCTION(BlueprintCallable)
 	virtual bool UseItem(AArcher* Target);
 
@@ -36,4 +48,8 @@ public:
 
 	UFUNCTION()
 	virtual bool CanUsedOn(AActor* Target) const;
+	
+	UPROPERTY()
+	int32 Amount;
+
 };

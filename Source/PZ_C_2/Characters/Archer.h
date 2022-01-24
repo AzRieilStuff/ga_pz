@@ -47,6 +47,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess = "true"))
 	UAnimMontage* ClimbingMontage;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	class UWidgetComponent* TopBar;
+
 protected:
 	virtual void BeginPlay() override;
 

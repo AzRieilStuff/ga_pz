@@ -9,10 +9,11 @@ UCLASS()
 class UHealthKitInventoryItem : public UBaseInventoryItem
 {
 	GENERATED_BODY()
-	public :
-		UFUNCTION(Server, Reliable)
-		void ServerUseHealthKit(AArcher* Target, int32 RestoreAmount) const;
+public :
 	
+	UFUNCTION(Server, Reliable)
+	void ServerUseHealthKit(AArcher* Target, int32 RestoreAmount) const;
+
 	int32 HealAmount;
 
 	UHealthKitInventoryItem();

@@ -4,6 +4,8 @@
 #include "Archer.h"
 
 #include "Components/CapsuleComponent.h"
+#include "Components/Widget.h"
+#include "Components/WidgetComponent.h"
 #include "PZ_C_2/Weapon/BaseRangeWeapon.h"
 #include "PZ_C_2/Inventory/InventoryManagerComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -32,6 +34,11 @@ AArcher::AArcher()
 	GetMesh()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Block);
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+
+	TopBar = CreateDefaultSubobject<UWidgetComponent>("TopBar");
+	TopBar->SetupAttachment(GetMesh());
+	TopBar->SetRelativeLocation(FVector(0, 0, 185.f));
+	TopBar->SetRelativeRotation(FRotator::MakeFromEuler(FVector(0.f, 0.f, -90.f)));
 
 	//Initialize the player's Health
 	MaxHealth = 100.0f;

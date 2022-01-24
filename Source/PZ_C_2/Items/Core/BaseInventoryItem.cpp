@@ -16,8 +16,9 @@ bool UBaseInventoryItem::CanUsedOn(AActor* Target) const
 	return true;
 }
 
-
 UBaseInventoryItem::UBaseInventoryItem()
 {
 	VisualActorClass = ABaseItem::StaticClass();
+	Amount = 1;
+	Icon = nullptr;
 }
