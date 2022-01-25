@@ -17,6 +17,4 @@ protected:
 virtual void ComputeProjectileTransform(const AArcher* Character, FVector AimLocation, FVector& Location, FRotator& Rotation) override;
 public:
 	ABaseBow();
-
-	virtual void MulticastPickup_Implementation(AArcher* Character) override;
 };

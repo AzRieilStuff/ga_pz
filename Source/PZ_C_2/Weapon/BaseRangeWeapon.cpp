@@ -77,6 +77,7 @@ ABaseRangeWeapon::ABaseRangeWeapon()
 	ProjectileClass = ABaseProjectile::StaticClass();
 
 	bDestroyOnPickup = false;
+	bStoreable = false;
 	FireRate = 0.5f;
 }
 
@@ -171,26 +172,18 @@ void ABaseRangeWeapon::UseAmmo_Implementation()
 	Ammo.InClip--;
 }
 
-FHitResult ABaseRangeWeapon::WeaponTrace(FVector& From, FVector& To)
-{
-	FHitResult RV_Hit(ForceInit);
-
-	const FName TraceTag("DebugTraceTag");
-	FCollisionQueryParams CollisionTraceParams = FCollisionQueryParams(TraceTag, true, this);
-	GetWorld()->DebugDrawTraceTag = TraceTag;
-
-	GetWorld()->LineTraceSingleByChannel(
-		RV_Hit,
-		From,
-		To,
-		ECC_Pawn,
-		CollisionTraceParams
-	);
-
-	return RV_Hit;
-}
-
 bool ABaseRangeWeapon::CanPickupBy(AArcher* Character) const
 {
-	return Super::CanPickupBy(Character) && Character->WeaponManagerComponent->CanEquipWeapon(this);
+	return bPickable && Character->WeaponManagerComponent->CanEquipWeapon(this);
+}
+
+void ABaseRangeWeapon::MulticastPickup_Implementation(AArcher* Character)
+{
+	if (Character && Character->WeaponManagerComponent)
+	{
+		Character->WeaponManagerComponent->EquipWeapon(this);
+	}
+
+	// todo replace with weapon equipped multicast
+	Super::MulticastPickup_Implementation(Character);
 }

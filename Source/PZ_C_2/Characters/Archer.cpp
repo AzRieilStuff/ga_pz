@@ -4,8 +4,10 @@
 #include "Archer.h"
 
 #include "Components/CapsuleComponent.h"
+#include "Components/Widget.h"
+#include "Components/WidgetComponent.h"
 #include "PZ_C_2/Weapon/BaseRangeWeapon.h"
-#include "PZ_C_2/Inventory/Inventory.h"
+#include "PZ_C_2/Inventory/InventoryManagerComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -23,8 +25,8 @@ AArcher::AArcher()
 	WeaponManagerComponent = CreateDefaultSubobject<UWeaponManagerComponent>("WeaponManager");
 	WeaponManagerComponent->SetIsReplicated(true);
 
-	InventoryComponent = CreateDefaultSubobject<UInventory>("InventoryComponent");
-	InventoryComponent->SetIsReplicated(true); //todo why
+	InventoryManagerComponent = CreateDefaultSubobject<UInventoryManagerComponent>("InventoryComponent");
+	InventoryManagerComponent->SetIsReplicated(true);
 
 	GetMesh()->SetIsReplicated(true); // replicate bone rotation
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -33,17 +35,27 @@ AArcher::AArcher()
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
 
+	TopBar = CreateDefaultSubobject<UWidgetComponent>("TopBar");
+	TopBar->SetupAttachment(GetMesh());
+	TopBar->SetRelativeLocation(FVector(0, 0, 185.f));
+	TopBar->SetRelativeRotation(FRotator::MakeFromEuler(FVector(0.f, 0.f, -90.f)));
+
 	//Initialize the player's Health
 	MaxHealth = 100.0f;
-	CurrentHealth = MaxHealth;
+	CurrentHealth = 10.f;
 
 	GetCharacterMovement()->JumpZVelocity = 800.f;
+
+	MaxPitchRotation = 40.f;
 }
 
 // Called when the game starts or when spawned
 void AArcher::BeginPlay()
 {
 	Super::BeginPlay();
+
+	UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->ViewPitchMax = MaxPitchRotation;
+	UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->ViewPitchMin = -MaxPitchRotation;
 
 	// Init default weapon
 	if (HasAuthority() && DefaultWeapon)
@@ -147,6 +159,12 @@ void AArcher::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 			                                 &UWeaponManagerComponent::InteractWeapon);
 			PlayerInputComponent->BindAction("Reload", IE_Pressed, WeaponManagerComponent,
 			                                 &UWeaponManagerComponent::ReloadWeapon);
+		}
+
+		if (InventoryManagerComponent)
+		{
+			PlayerInputComponent->BindAction("DropFromInventory", IE_Pressed, InventoryManagerComponent,
+			                                 &UInventoryManagerComponent::OnDropItemAction);
 		}
 	}
 }

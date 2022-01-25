@@ -3,7 +3,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "PZ_C_2/Characters/Archer.h"
-#include "PZ_C_2/Items/PickBoxComponent.h"
+#include "PZ_C_2/Items/Core/PickBoxComponent.h"
 
 ABaseProjectile* ABaseBow::SpawnProjectile(FVector AimLocation)
 {
@@ -61,23 +61,12 @@ void ABaseBow::ComputeProjectileTransform(const AArcher* Character, FVector AimL
 
 ABaseBow::ABaseBow()
 {
-	const ConstructorHelpers::FObjectFinder<USkeletalMesh> BowFinder(TEXT("/Game/Weapons/Bow/SM_Bow.SM_Bow"));
+	const ConstructorHelpers::FObjectFinder<UStaticMesh> BowFinder(TEXT("/Game/Weapons/Bow/SM_Bow.SM_Bow"));
 
 	if (BowFinder.Succeeded())
 	{
-		MeshComponent->SetSkeletalMesh(BowFinder.Object);
+		MeshComponent->SetStaticMesh(BowFinder.Object);
 	}
 
 	FireRate = 1.5f;
-}
-
-void ABaseBow::MulticastPickup_Implementation(AArcher* Character)
-{
-	if (Character && Character->WeaponManagerComponent)
-	{
-		Character->WeaponManagerComponent->EquipWeapon(this);
-	}
-
-	// todo replace with weapon equipped multicast
-	Super::MulticastPickup_Implementation(Character);
 }

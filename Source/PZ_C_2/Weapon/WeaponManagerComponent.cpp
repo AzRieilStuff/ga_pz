@@ -17,7 +17,6 @@ UWeaponManagerComponent::UWeaponManagerComponent()
 	if (GetOwner())
 	{
 		Character = Cast<AArcher>(GetOwner());
-		check(Character);
 	}
 	else
 	{
@@ -37,19 +36,18 @@ void UWeaponManagerComponent::EquipWeapon(ABaseRangeWeapon* NewWeapon)
 	Weapon = NewWeapon;
 	Weapon->OwnerManagerComponent = this;
 
-	Character->OnWeaponEquipped.Broadcast(NewWeapon);
+	OnWeaponEquipped.Broadcast(NewWeapon);
 }
 
 ABaseRangeWeapon* UWeaponManagerComponent::UnequipWeapon()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, "Unequip weapon");
-	//SetBowMeshVisibility(false);
 	// #todo
-
-	Character->OnWeaponUnequipped.Broadcast();
 
 	ABaseRangeWeapon* OldWeapon = Weapon;
 	
+	OnWeaponUnequipped.Broadcast(OldWeapon);
+
 	Weapon->OwnerManagerComponent = nullptr;
 	Weapon = nullptr;
 

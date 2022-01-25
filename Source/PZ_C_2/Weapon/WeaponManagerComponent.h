@@ -9,6 +9,8 @@
 
 class AArcher;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponInteraction, ABaseRangeWeapon*, Item);
+
 /**
  * 
  */
@@ -25,6 +27,7 @@ class PZ_C_2_API UWeaponManagerComponent : public UActorComponent
 public:
 	UWeaponManagerComponent();
 
+	// [client + server]
 	UFUNCTION()
 	virtual void EquipWeapon(ABaseRangeWeapon* NewWeapon);
 
@@ -55,4 +58,10 @@ public:
 
 	UFUNCTION()
 	bool CanEquipWeapon(const ABaseRangeWeapon* NewWeapon) const;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnWeaponInteraction OnWeaponEquipped;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnWeaponInteraction OnWeaponUnequipped;
 };

@@ -34,23 +34,21 @@ void UPickBoxComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetComponentTickEnabled(false);
+	SetComponentTickEnabled(true);
 }
 
-
-/*
-void UPickBoxComponent::OnActorBeginOverlap(
-	UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-	bool bFromSweep, const FHitResult& SweepResult)
+void UPickBoxComponent::EnablePhysics()
 {
-	AArcher* Character = Cast<AArcher>(OtherActor);
-
-	if (Character && Item && Item->CanPickupBy(Character))
-	{
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, OtherActor->GetName());
-		Item->Pickup(Character);
-	}
-
-	DestroyComponent();
+	SetNotifyRigidBodyCollision(true); // "generate hit events"
+	SetSimulatePhysics(true);
+	SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	SetCollisionEnabled(ECollisionEnabled::PhysicsOnly); // do not interact until begin dropped
 }
-*/
+
+void UPickBoxComponent::DisablePhysics()
+{
+	SetNotifyRigidBodyCollision(false); // "generate hit events"
+	SetSimulatePhysics(false);
+	SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);
+	SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+}
