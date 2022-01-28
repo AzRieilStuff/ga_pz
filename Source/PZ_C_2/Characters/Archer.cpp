@@ -50,18 +50,34 @@ AArcher::AArcher()
 }
 
 // Called when the game starts or when spawned
+void AArcher::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
+	
+	if (CameraManager) // will be empty for AI or dedicated
+	{
+		UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->ViewPitchMax = MaxPitchRotation;
+		UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->ViewPitchMin = -MaxPitchRotation;
+	}
+}
+
 void AArcher::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->ViewPitchMax = MaxPitchRotation;
-	UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->ViewPitchMin = -MaxPitchRotation;
-
 	// Init default weapon
 	if (HasAuthority() && DefaultWeapon)
 	{
-		SetWeaponFromClass(DefaultWeapon);
+		GetWorldTimerManager().SetTimerForNextTick(this, &AArcher::EquipDefaultWeapon);
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, "Equip default weapon");
 	}
+}
+
+void AArcher::EquipDefaultWeapon()
+{
+	WeaponManagerComponent->EquipWeaponFromClass(DefaultWeapon);
 }
 
 void AArcher::SetCurrentHealth(float healthValue)
@@ -105,7 +121,9 @@ void AArcher::InitFromSaveData(const FCharacterSaveData Data)
 void AArcher::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
 	DOREPLIFETIME(AArcher, CurrentHealth);
+	//DOREPLIFETIME_CONDITION(AArcher, WeaponManagerComponent, COND_InitialOnly);
 }
 
 void AArcher::OnHealthUpdate()
@@ -167,51 +185,6 @@ void AArcher::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 			                                 &UInventoryManagerComponent::OnDropItemAction);
 		}
 	}
-}
-
-void AArcher::SetWeaponFromActor(ABaseRangeWeapon* NewWeapon)
-{
-	if (GetWeapon() != nullptr)
-	{
-		WeaponComponent->DestroyChildActor();
-	}
-	NewWeapon->AttachToComponent(this->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-	                             FName("left_cannon"));
-	NewWeapon->SetOwner(this);
-}
-
-void AArcher::SetWeaponFromClass(TSubclassOf<ABaseRangeWeapon> NewWeapon)
-{
-	if (GetWeapon() != nullptr)
-	{
-		WeaponComponent->DestroyChildActor();
-	}
-
-	WeaponComponent->SetChildActorClass(NewWeapon);
-	WeaponComponent->CreateChildActor();
-
-	AActor* Created = WeaponComponent->GetChildActor();
-	if (IsValid(Created))
-	{
-		Created->AttachToComponent(this->GetMesh(),
-		                           FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-		                           FName("left_cannon"));
-		Created->SetOwner(this);
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, .3f, FColor::Red, "Failed to create weapon");
-	}
-}
-
-ABaseRangeWeapon* AArcher::GetWeapon() const
-{
-	if (WeaponComponent != nullptr)
-	{
-		return Cast<ABaseRangeWeapon>(WeaponComponent->GetChildActor());
-	}
-
-	return nullptr;
 }
 
 void AArcher::Climb()

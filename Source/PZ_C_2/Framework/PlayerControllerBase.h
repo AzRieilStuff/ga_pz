@@ -23,4 +23,6 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	AArcher* PlayerCharacter;
+	
+	virtual void ClientRestart_Implementation(APawn* NewPawn) override;
 };

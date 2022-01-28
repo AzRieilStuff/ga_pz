@@ -31,5 +31,7 @@ public:
 	void EnablePhysics();
 
 	void DisablePhysics();
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 };

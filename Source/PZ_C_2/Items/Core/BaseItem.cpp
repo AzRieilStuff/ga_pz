@@ -6,6 +6,7 @@
 #include "PickBoxComponent.h"
 #include "GameFramework/GameModeBase.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "PZ_C_2/Characters/Archer.h"
 #include "PZ_C_2/Inventory/InventoryManagerComponent.h"
 
@@ -19,8 +20,9 @@ ABaseItem::ABaseItem()
 	PickBoxComponent = CreateDefaultSubobject<UPickBoxComponent>("PickBoxComponent");
 	SetRootComponent(PickBoxComponent);
 
-	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
+	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("MeshComponent");
 	//MeshComponent->SetMobility(EComponentMobility::Static);
+	MeshComponent->SetIsReplicated(true);
 	MeshComponent->SetupAttachment(RootComponent);
 
 	bDestroyOnPickup = false;
@@ -52,6 +54,13 @@ bool ABaseItem::CanPickupBy(AArcher* Character) const
 	}
 
 	return false; // todo autouse? 
+}
+
+void ABaseItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//DOREPLIFETIME_CONDITION(ABaseItem, PickBoxComponent, COND_None);
 }
 
 UBaseInventoryItem* ABaseItem::GenerateInventoryData(UBaseInventoryItem* Target) const
@@ -128,7 +137,7 @@ void ABaseItem::NotifyActorBeginOverlap(AActor* OtherActor)
 	{
 		AArcher* Character = Cast<AArcher>(OtherActor);
 
-		if (CanPickupBy(Character))
+		if (Character && CanPickupBy(Character))
 		{
 			Pickup(Character);
 			//FOnItemPicked.ExecuteIfBound(this, Character);
