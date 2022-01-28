@@ -35,9 +35,18 @@ void ABaseRangeWeapon::ComputeProjectileTransform(const AArcher* Character, FVec
 FVector ABaseRangeWeapon::GetAimLocation(const AArcher* Character) const
 {
 	// projectile start position/rotation ( from socket ) can differ from screen center, so need to be adjusted
-	APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
-	FVector CameraStart = CameraManager->GetCameraLocation();
-	FVector TraceEnd = CameraStart + (CameraManager->GetActorForwardVector() * 3000);
+	FVector TraceStart, TraceEnd;
+	if( GetInstigatorController() && GetInstigatorController()->IsPlayerController() )
+	{
+		APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
+		TraceStart = CameraManager->GetCameraLocation();
+		TraceEnd = TraceStart + (CameraManager->GetActorForwardVector() * 3000);
+	}
+	else
+	{
+		TraceStart = GetOwner()->GetActorLocation();
+		TraceEnd = TraceStart + (GetOwner()->GetActorForwardVector() * 3000);
+	}
 
 	FHitResult Hit;
 	FCollisionQueryParams Params;
@@ -48,7 +57,7 @@ FVector ABaseRangeWeapon::GetAimLocation(const AArcher* Character) const
 	Params.AddIgnoredActor(Character);
 	//GetWorld()->DebugDrawTraceTag = TraceTag;
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, CameraStart, TraceEnd, ECC_Visibility, Params);
+	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, Params);
 	FVector AimTarget = (bHit ? Hit.Location : TraceEnd);
 
 	return AimTarget;
