@@ -35,14 +35,11 @@ class PZ_C_2_API AArcher : public ACharacter
 public:
 	AArcher();
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
 	class UChildActorComponent* WeaponComponent;
 
 	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess = "true"))
 	TSubclassOf<ABaseRangeWeapon> DefaultWeapon;
-
-	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess = "true"))
-	TSubclassOf<USkeletalMesh> DefaultSkeletalMesh;
 	
 	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess = "true"))
 	UAnimMontage* ClimbingMontage;
@@ -51,8 +48,9 @@ public:
 	class UWidgetComponent* TopBar;
 
 protected:
-	virtual void BeginPlay() override;
+	virtual void PostInitializeComponents() override;
 
+	virtual void BeginPlay() override;
 public:
 
 	UPROPERTY(EditDefaultsOnly)
@@ -63,17 +61,8 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	// Weapon
-	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Replicated)
 	UWeaponManagerComponent* WeaponManagerComponent;
-	
-	UFUNCTION()
-	void SetWeaponFromActor(ABaseRangeWeapon* NewWeapon);
-
-	UFUNCTION()
-	void SetWeaponFromClass(TSubclassOf<ABaseRangeWeapon> NewWeapon);
-
-	UFUNCTION(BlueprintCallable)
-	ABaseRangeWeapon* GetWeapon() const;
 
 	// ~Weapon
 
@@ -140,4 +129,6 @@ public:
 	UPROPERTY()
 	bool bIsFiring;
 
+	UFUNCTION()
+	void EquipDefaultWeapon();
 };

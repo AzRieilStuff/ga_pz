@@ -7,6 +7,7 @@
 #include "TimerManager.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "PZ_C_2/Ammo/BaseProjectile.h"
 #include "PZ_C_2/Characters/Archer.h"
 
@@ -34,9 +35,18 @@ void ABaseRangeWeapon::ComputeProjectileTransform(const AArcher* Character, FVec
 FVector ABaseRangeWeapon::GetAimLocation(const AArcher* Character) const
 {
 	// projectile start position/rotation ( from socket ) can differ from screen center, so need to be adjusted
-	APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
-	FVector CameraStart = CameraManager->GetCameraLocation();
-	FVector TraceEnd = CameraStart + (CameraManager->GetActorForwardVector() * 3000);
+	FVector TraceStart, TraceEnd;
+	if( GetInstigatorController() && GetInstigatorController()->IsPlayerController() )
+	{
+		APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
+		TraceStart = CameraManager->GetCameraLocation();
+		TraceEnd = TraceStart + (CameraManager->GetActorForwardVector() * 3000);
+	}
+	else
+	{
+		TraceStart = GetOwner()->GetActorLocation();
+		TraceEnd = TraceStart + (GetOwner()->GetActorForwardVector() * 3000);
+	}
 
 	FHitResult Hit;
 	FCollisionQueryParams Params;
@@ -47,7 +57,7 @@ FVector ABaseRangeWeapon::GetAimLocation(const AArcher* Character) const
 	Params.AddIgnoredActor(Character);
 	//GetWorld()->DebugDrawTraceTag = TraceTag;
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, CameraStart, TraceEnd, ECC_Visibility, Params);
+	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, Params);
 	FVector AimTarget = (bHit ? Hit.Location : TraceEnd);
 
 	return AimTarget;
@@ -79,6 +89,16 @@ ABaseRangeWeapon::ABaseRangeWeapon()
 	bDestroyOnPickup = false;
 	bStoreable = false;
 	FireRate = 0.5f;
+
+	// should be replicated with weapon owner
+	bNetUseOwnerRelevancy = true;
+}
+
+void ABaseRangeWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ABaseRangeWeapon, OwnerManagerComponent, COND_InitialOnly);
 }
 
 void ABaseRangeWeapon::BeginPlay()
@@ -177,13 +197,9 @@ bool ABaseRangeWeapon::CanPickupBy(AArcher* Character) const
 	return bPickable && Character->WeaponManagerComponent->CanEquipWeapon(this);
 }
 
-void ABaseRangeWeapon::MulticastPickup_Implementation(AArcher* Character)
+void ABaseRangeWeapon::ServerPickup(AArcher* Character)
 {
-	if (Character && Character->WeaponManagerComponent)
-	{
-		Character->WeaponManagerComponent->EquipWeapon(this);
-	}
-
-	// todo replace with weapon equipped multicast
-	Super::MulticastPickup_Implementation(Character);
+	Character->WeaponManagerComponent->CurrentWeapon = this;
+	
+	Super::ServerPickup(Character);
 }

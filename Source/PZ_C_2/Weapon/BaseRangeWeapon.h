@@ -51,7 +51,9 @@ protected:
 public:
 	ABaseRangeWeapon();
 
-	UPROPERTY()
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UPROPERTY(Replicated)
 	UWeaponManagerComponent* OwnerManagerComponent;
 
 	virtual void BeginPlay() override;
@@ -113,5 +115,7 @@ public:
 
 	virtual bool CanPickupBy(AArcher* Character) const override;
 
-	virtual void MulticastPickup_Implementation(AArcher* Character) override;
+	//virtual void MulticastPickup_Implementation(AArcher* Character) override;
+
+	virtual void ServerPickup(AArcher* Character) override;
 };

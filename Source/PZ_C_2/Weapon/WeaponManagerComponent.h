@@ -24,15 +24,29 @@ class PZ_C_2_API UWeaponManagerComponent : public UActorComponent
 
 	GENERATED_BODY()
 
+protected:
+	// [server]
+	void SetCurrentWeapon(ABaseRangeWeapon* Weapon, ABaseRangeWeapon* PrevWeapon);
+
+	UFUNCTION(Server, Reliable)
+	void ServerEquipWeapon(ABaseRangeWeapon* Weapon);
+	
+	UFUNCTION(Server, Reliable)
+	void ServerUnequipWeapon();
 public:
 	UWeaponManagerComponent();
 
-	// [client + server]
+	// [local]
 	UFUNCTION()
 	virtual void EquipWeapon(ABaseRangeWeapon* NewWeapon);
 
+	// [server]
 	UFUNCTION()
-	ABaseRangeWeapon* UnequipWeapon();
+	virtual void EquipWeaponFromClass(TSubclassOf<ABaseRangeWeapon> WeaponClass);
+
+	// [local]
+	UFUNCTION()
+	void UnequipWeapon();
 
 	UFUNCTION()
 	void InteractWeapon();
@@ -41,18 +55,21 @@ public:
 	void ReloadWeapon();
 
 	UFUNCTION(BlueprintPure, BlueprintCallable)
-	FORCEINLINE bool IsFiring() { return Weapon && Weapon->bIsFiring; };
+	FORCEINLINE bool IsFiring() { return CurrentWeapon && CurrentWeapon->bIsFiring; };
 
 	UFUNCTION(BlueprintPure, BlueprintCallable)
-	FORCEINLINE bool IsWeaponEquipped() { return Weapon != nullptr; };
+	FORCEINLINE bool IsWeaponEquipped() { return CurrentWeapon != nullptr; };
 
-	UPROPERTY(BlueprintReadOnly, Replicated)
-	ABaseRangeWeapon* Weapon;
+	UPROPERTY(Transient, BlueprintReadOnly, VisibleAnywhere, ReplicatedUsing=OnRep_CurrentWeapon)
+	ABaseRangeWeapon* CurrentWeapon = nullptr;
 
-	UPROPERTY()
+	UFUNCTION()
+	void OnRep_CurrentWeapon(ABaseRangeWeapon* PrevWeapon);
+
+	UPROPERTY(Replicated)
 	AArcher* Character;
 
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void InitializeComponent() override;
 
 	virtual void BeginPlay() override;
 
@@ -64,4 +81,6 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnWeaponInteraction OnWeaponUnequipped;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };
