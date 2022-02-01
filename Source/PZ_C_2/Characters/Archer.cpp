@@ -42,7 +42,7 @@ AArcher::AArcher()
 
 	//Initialize the player's Health
 	MaxHealth = 100.0f;
-	CurrentHealth = 10.f;
+	CurrentHealth = 90.f;
 
 	GetCharacterMovement()->JumpZVelocity = 800.f;
 

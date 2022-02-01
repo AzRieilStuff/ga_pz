@@ -22,7 +22,7 @@ struct FAmmoData
 };
 
 
-UCLASS(Blueprintable)
+UCLASS(Blueprintable, Config=Weapon, defaultconfig)
 class PZ_C_2_API ABaseRangeWeapon : public ABaseItem, public IReloadable
 {
 	GENERATED_BODY()
@@ -33,10 +33,10 @@ class PZ_C_2_API ABaseRangeWeapon : public ABaseItem, public IReloadable
 protected:
 	// [server] 
 	virtual class ABaseProjectile* SpawnProjectile(FVector AimLocation);
-	
+
 	// [local + server] runs for each client 
 	virtual void OnShootingTimerEnd();
-	
+
 	// [server] handle shooting, spawn projectiles, shoot effect
 	UFUNCTION(Server, Reliable)
 	virtual void ServerPerformFire(FVector AimLocation);
@@ -67,13 +67,13 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	FAmmoData Ammo;
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Config, Category=WeaponStats)
 	int32 Damage;
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Config, Category=WeaponStats)
 	float ReloadDuration;
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Config, Category=WeaponStats)
 	int32 Range;
 
 	UFUNCTION(BlueprintCallable)
@@ -106,8 +106,8 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsFiring = false;
-	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Config, Category=WeaponStats)
 	float FireRate;
 
 	UFUNCTION(Client, Reliable)

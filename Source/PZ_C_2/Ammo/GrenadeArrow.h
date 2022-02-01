@@ -17,7 +17,7 @@ class PZ_C_2_API AGrenadeArrow : public AArrow
 public:
 
 	AGrenadeArrow();
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="ProjectileSettings")
 	float DamageRadius;
 	
