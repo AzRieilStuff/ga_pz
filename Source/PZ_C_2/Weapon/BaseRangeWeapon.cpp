@@ -36,13 +36,14 @@ FVector ABaseRangeWeapon::GetAimLocation(const AArcher* Character) const
 {
 	// projectile start position/rotation ( from socket ) can differ from screen center, so need to be adjusted
 	FVector TraceStart, TraceEnd;
-	if( GetInstigatorController() && GetInstigatorController()->IsPlayerController() )
+
+	if( GetInstigatorController() && GetInstigatorController()->IsPlayerController() ) // player
 	{
 		APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
 		TraceStart = CameraManager->GetCameraLocation();
 		TraceEnd = TraceStart + (CameraManager->GetActorForwardVector() * 3000);
 	}
-	else
+	else // AI
 	{
 		TraceStart = GetOwner()->GetActorLocation();
 		TraceEnd = TraceStart + (GetOwner()->GetActorForwardVector() * 3000);
@@ -83,12 +84,10 @@ void ABaseRangeWeapon::OnShootingTimerEnd()
 
 ABaseRangeWeapon::ABaseRangeWeapon()
 {
-	Range = 10000;
 	ProjectileClass = ABaseProjectile::StaticClass();
 
 	bDestroyOnPickup = false;
 	bStoreable = false;
-	FireRate = 0.5f;
 
 	// should be replicated with weapon owner
 	bNetUseOwnerRelevancy = true;

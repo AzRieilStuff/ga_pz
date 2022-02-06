@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Config=Weapon)
 class PZ_C_2_API AShortgunBow : public ABaseBow
 {
 	GENERATED_BODY()

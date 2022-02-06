@@ -4,7 +4,7 @@
 #include "PZ_C_2/Ammo/Arrow.h"
 #include "BaseBow.generated.h"
 
-UCLASS()
+UCLASS(Config=Weapon, defaultconfig)
 class ABaseBow : public ABaseRangeWeapon
 {
 	GENERATED_BODY()
@@ -17,4 +17,5 @@ protected:
 virtual void ComputeProjectileTransform(const AArcher* Character, FVector AimLocation, FVector& Location, FRotator& Rotation) override;
 public:
 	ABaseBow();
+
 };

@@ -67,6 +67,4 @@ ABaseBow::ABaseBow()
 	{
 		MeshComponent->SetStaticMesh(BowFinder.Object);
 	}
-
-	FireRate = 1.5f;
 }

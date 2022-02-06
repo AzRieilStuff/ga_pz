@@ -42,7 +42,7 @@ AArcher::AArcher()
 
 	//Initialize the player's Health
 	MaxHealth = 100.0f;
-	CurrentHealth = 10.f;
+	CurrentHealth = 90.f;
 
 	GetCharacterMovement()->JumpZVelocity = 800.f;
 
@@ -55,7 +55,7 @@ void AArcher::PostInitializeComponents()
 	Super::PostInitializeComponents();
 
 	APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
-	
+
 	if (CameraManager) // will be empty for AI or dedicated
 	{
 		UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->ViewPitchMax = MaxPitchRotation;
@@ -78,6 +78,17 @@ void AArcher::BeginPlay()
 void AArcher::EquipDefaultWeapon()
 {
 	WeaponManagerComponent->EquipWeaponFromClass(DefaultWeapon);
+}
+
+void AArcher::SetRandomColor()
+{
+	if (Materials.Num() == 0)
+	{
+		return;
+	}
+
+	const int Index = FMath::RandRange(0, Materials.Num() - 1);
+	GetMesh()->SetMaterial(1, Materials[Index]);
 }
 
 void AArcher::SetCurrentHealth(float healthValue)
