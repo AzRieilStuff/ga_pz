@@ -55,10 +55,8 @@ void UWeaponManagerComponent::SetCurrentWeapon(ABaseRangeWeapon* Weapon, ABaseRa
 		//CurrentWeapon = Weapon;
 		Weapon->OwnerManagerComponent = this;
 
-		if (Character->IsLocallyControlled())
-		{
-			OnWeaponEquipped.Broadcast(Weapon);
-		}
+		// as it runs on server only, guarantees 1 run per actor
+		OnWeaponEquipped.Broadcast(Weapon);
 	}
 }
 

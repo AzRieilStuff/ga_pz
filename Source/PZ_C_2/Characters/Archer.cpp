@@ -80,17 +80,6 @@ void AArcher::EquipDefaultWeapon()
 	WeaponManagerComponent->EquipWeaponFromClass(DefaultWeapon);
 }
 
-void AArcher::SetRandomColor()
-{
-	if (Materials.Num() == 0)
-	{
-		return;
-	}
-
-	const int Index = FMath::RandRange(0, Materials.Num() - 1);
-	GetMesh()->SetMaterial(1, Materials[Index]);
-}
-
 void AArcher::SetCurrentHealth(float healthValue)
 {
 	// Update server value
