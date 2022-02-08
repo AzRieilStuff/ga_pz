@@ -132,10 +132,4 @@ public:
 	UFUNCTION()
 	void EquipDefaultWeapon();
 
-	// todo remove
-	UPROPERTY(EditDefaultsOnly)
-	TArray<UMaterialInstance*> Materials;
-
-	UFUNCTION()
-	void SetRandomColor();
 };
