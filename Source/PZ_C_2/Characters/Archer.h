@@ -131,5 +131,4 @@ public:
 
 	UFUNCTION()
 	void EquipDefaultWeapon();
-
 };
