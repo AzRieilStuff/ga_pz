@@ -80,13 +80,14 @@ void AArcher::EquipDefaultWeapon()
 	WeaponManagerComponent->EquipWeaponFromClass(DefaultWeapon);
 }
 
+
 void AArcher::SetCurrentHealth(float healthValue)
 {
 	// Update server value
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		CurrentHealth = FMath::Clamp(healthValue, 0.f, MaxHealth);
-		OnHealthUpdate(); // if server changes value, repNotify wont call
+		OnHealthUpdate(); // if server changes value, RepNotify wont call
 	}
 }
 
@@ -95,10 +96,16 @@ float AArcher::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEv
 {
 	Super::TakeDamage(DamageTaken, DamageEvent, EventInstigator, DamageCauser);
 
-	float damageApplied = CurrentHealth - DamageTaken;
-	SetCurrentHealth(damageApplied);
+	AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, DamageTaken] {
+		float damageApplied = CurrentHealth - DamageTaken;
 
-	return damageApplied;
+		AsyncTask(ENamedThreads::GameThread, [this, damageApplied]
+		{
+			SetCurrentHealth(damageApplied);
+		});
+	});
+
+	return DamageTaken;
 }
 
 FCharacterSaveData AArcher::GetSaveData() const

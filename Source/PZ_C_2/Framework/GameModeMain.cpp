@@ -24,6 +24,8 @@ void AGameModeMain::BeginPlay()
 	const FName TraceTag("Debug");
 	GetWorld()->DebugDrawTraceTag = TraceTag;
 
+
+	return;
 	// load env
 	auto ObjectLib = UObjectLibrary::CreateLibrary(UStaticMesh::StaticClass(), false, GIsEditor);
 	ObjectLib->AddToRoot();
