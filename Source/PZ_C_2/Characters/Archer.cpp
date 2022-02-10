@@ -45,6 +45,7 @@ AArcher::AArcher()
 	CurrentHealth = 90.f;
 
 	GetCharacterMovement()->JumpZVelocity = 800.f;
+	bNetUseOwnerRelevancy = true;
 
 	MaxPitchRotation = 40.f;
 }
@@ -96,16 +97,10 @@ float AArcher::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEv
 {
 	Super::TakeDamage(DamageTaken, DamageEvent, EventInstigator, DamageCauser);
 
-	AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, DamageTaken] {
-		float damageApplied = CurrentHealth - DamageTaken;
-
-		AsyncTask(ENamedThreads::GameThread, [this, damageApplied]
-		{
-			SetCurrentHealth(damageApplied);
-		});
-	});
-
-	return DamageTaken;
+	// todo remove
+	float damageApplied = CurrentHealth - DamageTaken;
+	SetCurrentHealth(damageApplied);
+	return damageApplied;
 }
 
 FCharacterSaveData AArcher::GetSaveData() const
@@ -183,7 +178,7 @@ void AArcher::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 			PlayerInputComponent->BindAction("Fire", IE_Pressed, WeaponManagerComponent,
 			                                 &UWeaponManagerComponent::InteractWeapon);
 			PlayerInputComponent->BindAction("Reload", IE_Pressed, WeaponManagerComponent,
-			                                 &UWeaponManagerComponent::ReloadWeapon);
+			                                 &UWeaponManagerComponent::OnReloadAction);
 		}
 
 		if (InventoryManagerComponent)

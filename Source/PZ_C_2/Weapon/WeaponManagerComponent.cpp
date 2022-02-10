@@ -139,7 +139,12 @@ void UWeaponManagerComponent::InteractWeapon()
 	CurrentWeapon->FireAction();
 }
 
-void UWeaponManagerComponent::ReloadWeapon()
+void UWeaponManagerComponent::OnReloadAction()
+{
+
+}
+
+void UWeaponManagerComponent::ServerReloadCurrentWeapon_Implementation()
 {
 	if (CurrentWeapon == nullptr)
 	{

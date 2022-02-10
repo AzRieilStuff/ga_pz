@@ -64,7 +64,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int32 MaxAmmoInClip;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Replicated)
 	FAmmoData Ammo;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Config, Category=WeaponStats)
@@ -88,6 +88,7 @@ public:
 	UPROPERTY(EditAnywhere, Category="Gameplay|Projectile")
 	TSubclassOf<class ABaseProjectile> ProjectileClass;
 
+	// [server]
 	UFUNCTION(BlueprintCallable)
 	void RestoreAmmo();
 
@@ -97,6 +98,7 @@ public:
 	//~ Begin IReloadable Interface.
 	virtual bool CanReload() const override;
 
+	// [server]
 	UFUNCTION(BlueprintCallable)
 	virtual void Reload() override;
 	//~ End IReloadable Interface

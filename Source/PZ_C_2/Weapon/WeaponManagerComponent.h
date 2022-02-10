@@ -52,7 +52,10 @@ public:
 	void InteractWeapon();
 
 	UFUNCTION(BlueprintCallable)
-	void ReloadWeapon();
+	void OnReloadAction();
+
+	UFUNCTION(Server, Unreliable)
+	void ServerReloadCurrentWeapon();
 
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 	FORCEINLINE bool IsFiring() { return CurrentWeapon && CurrentWeapon->bIsFiring; };

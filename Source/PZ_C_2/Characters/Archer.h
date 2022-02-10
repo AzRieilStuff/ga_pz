@@ -47,6 +47,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	class UWidgetComponent* TopBar;
 
+	UPROPERTY(BlueprintReadOnly)
+	FVector LocalVelocity;
 protected:
 	virtual void PostInitializeComponents() override;
 

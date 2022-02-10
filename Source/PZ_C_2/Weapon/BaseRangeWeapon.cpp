@@ -91,6 +91,9 @@ ABaseRangeWeapon::ABaseRangeWeapon()
 
 	// should be replicated with weapon owner
 	bNetUseOwnerRelevancy = true;
+
+	// update ammo info
+	NetUpdateFrequency = 3.f;
 }
 
 void ABaseRangeWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -98,6 +101,7 @@ void ABaseRangeWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(ABaseRangeWeapon, OwnerManagerComponent, COND_InitialOnly);
+	DOREPLIFETIME_CONDITION(ABaseRangeWeapon, Ammo, COND_OwnerOnly);
 }
 
 void ABaseRangeWeapon::BeginPlay()
@@ -172,7 +176,7 @@ void ABaseRangeWeapon::Reload()
 	}
 
 	bIsReloading = true;
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Reloading"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Reloading"));
 
 	FTimerHandle UnusedHandle;
 	FTimerDelegate TimerCallback;
@@ -180,7 +184,7 @@ void ABaseRangeWeapon::Reload()
 	{
 		RestoreAmmo();
 		bIsReloading = false;
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Reloaded"));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Reloaded"));
 	});
 
 	GetWorldTimerManager().SetTimer(UnusedHandle, TimerCallback, ReloadDuration, false);
