@@ -39,7 +39,7 @@ void ABaseItem::BeginPlay()
 	PickBoxComponent->OnComponentHit.AddDynamic(this, &ABaseItem::OnHit);
 
 	// allow to indicate drop only if item was pickable when spawned
-	if (PickBoxComponent->IsActive())
+	if (PickBoxComponent->IsSimulatingPhysics())
 	{
 		OnDropped();
 	}

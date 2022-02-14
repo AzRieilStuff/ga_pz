@@ -8,6 +8,12 @@
 #include "PZ_C_2/Characters/Archer.h"
 #include "PZ_C_2/Items/Core/PickBoxComponent.h"
 
+
+UWeaponManagerComponent::UWeaponManagerComponent()
+{
+	bIsWeaponArmed = false;
+}
+
 void UWeaponManagerComponent::SetBowMeshVisibility(bool State) const
 {
 	Character->GetMesh()->ShowMaterialSection(0, 0, State, 0);
@@ -44,14 +50,15 @@ void UWeaponManagerComponent::SetCurrentWeapon(ABaseRangeWeapon* Weapon, ABaseRa
 
 		Weapon->SetOwner(GetOwner());
 		Weapon->AttachToComponent(Character->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale,
-		                          BowArmSocket);
+		                          BowBackSocket);
 
 		Weapon->OwnerManagerComponent = this;
 
 		// as it runs on server only, guarantees 1 run per actor
 		OnWeaponEquipped.Broadcast(Weapon);
 
-		UE_LOG(LogTemp, Warning, TEXT("Server: %s equip default weapon, ph %d"), *Character->GetName(), Weapon->GetPickBoxComponent()->IsSimulatingPhysics() ? 1 : 0);
+		UE_LOG(LogTemp, Warning, TEXT("Server: %s equip default weapon, ph %d"), *Character->GetName(),
+		       Weapon->GetPickBoxComponent()->IsSimulatingPhysics() ? 1 : 0);
 	}
 }
 
@@ -63,10 +70,6 @@ void UWeaponManagerComponent::ServerEquipWeapon_Implementation(ABaseRangeWeapon*
 void UWeaponManagerComponent::ServerUnequipWeapon_Implementation()
 {
 	UnequipWeapon();
-}
-
-UWeaponManagerComponent::UWeaponManagerComponent()
-{
 }
 
 void UWeaponManagerComponent::EquipWeapon(ABaseRangeWeapon* NewWeapon)
@@ -187,24 +190,33 @@ void UWeaponManagerComponent::OnToggleArmAction()
 		return; // nothing to arm
 	}
 
-	if (!bIsWeaponArmed) // weapon is unequppied
+	// has conflicting state
+	if (Character->HasState(ECharacterStateFlags::Firing) ||
+		Character->HasState(ECharacterStateFlags::DisarmingBow) ||
+		Character->HasState(ECharacterStateFlags::ArmingBow))
 	{
 		return;
 	}
 
 	if (GetNetMode() != NM_DedicatedServer)
 	{
-		DisarmWeapon(); // run for local pawn
+		bIsWeaponArmed ? DisarmWeapon() : ArmWeapon(); // run for local pawn
 	}
 
 	if (GetOwner()->GetLocalRole() == ROLE_Authority)
 	{
-		MulticastDisarmWeapon();
+		bIsWeaponArmed ? MulticastDisarmWeapon() : MulticastArmWeapon();
 	}
 	else
 	{
-		ServerDisarmWeapon();
+		bIsWeaponArmed ? ServerDisarmWeapon() : ServerArmWeapon();
 	}
+}
+
+void UWeaponManagerComponent::ServerArmWeapon_Implementation()
+{
+	ArmWeapon();
+	MulticastArmWeapon();
 }
 
 void UWeaponManagerComponent::ServerDisarmWeapon_Implementation()
@@ -221,28 +233,53 @@ void UWeaponManagerComponent::MulticastDisarmWeapon_Implementation()
 	}
 }
 
+void UWeaponManagerComponent::MulticastArmWeapon_Implementation()
+{
+	if (GetOwner()->GetLocalRole() == ROLE_SimulatedProxy)
+	{
+		ArmWeapon();
+	}
+}
+
 void UWeaponManagerComponent::DisarmWeapon()
 {
 	Character->SetState(ECharacterStateFlags::DisarmingBow);
 
 	GetWorld()->GetTimerManager().SetTimer(DisarmTimer, this, &ThisClass::OnDisarmTimerEnds, Character->ArmingDuration,
 	                                       false);
-	//const FTransform BowBackTransform = Character->GetMesh()->GetSocketTransform(BowBackSocket);
-	//CurrentWeapon->SetActorTransform(BowBackTransform);
 }
 
 void UWeaponManagerComponent::OnDisarmTimerEnds()
 {
 	Character->ClearState(ECharacterStateFlags::DisarmingBow);
+	bIsWeaponArmed = false;
 }
 
 void UWeaponManagerComponent::ArmWeapon()
 {
+	Character->SetState(ECharacterStateFlags::ArmingBow);
+
+	GetWorld()->GetTimerManager().SetTimer(ArmTimer, this, &ThisClass::OnArmTimerEnds, Character->ArmingDuration,
+	                                       false);
+}
+
+void UWeaponManagerComponent::OnArmTimerEnds()
+{
+	Character->ClearState(ECharacterStateFlags::ArmingBow);
+	bIsWeaponArmed = true;
 }
 
 void UWeaponManagerComponent::OnDisarmWeaponPlaced()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Green, "OnDisarmWeaponPlaced");
 	// reattach weapon from hand to back component
 	CurrentWeapon->AttachToComponent(Character->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale,
 	                                 BowBackSocket);
+}
+
+void UWeaponManagerComponent::OnArmWeaponPlaced()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Green, "OnArmWeaponPlaced");
+	CurrentWeapon->AttachToComponent(Character->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale,
+	                                 BowArmSocket);
 }

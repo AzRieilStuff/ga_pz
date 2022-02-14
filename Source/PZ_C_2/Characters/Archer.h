@@ -32,7 +32,7 @@ enum class ECharacterStateFlags : uint8
 {
 	Firing = 0,
 	DisarmingBow,
-	EquippingBow
+	ArmingBow
 };
 
 ENUM_CLASS_FLAGS(ECharacterStateFlags);
@@ -149,7 +149,7 @@ public:
 	void EquipDefaultWeapon();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float ArmingDuration = 2.f;
+	float ArmingDuration;
 	// ~Weapon interaction
 
 	// States

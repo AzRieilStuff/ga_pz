@@ -25,10 +25,6 @@ UPickBoxComponent::UPickBoxComponent()
 	SetCollisionResponseToAllChannels(ECR_Ignore);
 	SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-
-	//bHiddenInGame = false;
-
-	//OnComponentBeginOverlap.AddDynamic(this, &UPickBoxComponent::OnActorBeginOverlap);
 }
 
 void UPickBoxComponent::BeginPlay()

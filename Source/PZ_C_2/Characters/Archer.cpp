@@ -40,12 +40,13 @@ AArcher::AArcher()
 	TopBar->SetRelativeLocation(FVector(0, 0, 185.f));
 	TopBar->SetRelativeRotation(FRotator::MakeFromEuler(FVector(0.f, 0.f, -90.f)));
 
-	//Initialize the player's Health
+	// Stats defaults
 	MaxHealth = 100.0f;
 	CurrentHealth = 90.f;
-
+	ArmingDuration = 1.f;
+	
 	GetCharacterMovement()->JumpZVelocity = 800.f;
-	bNetUseOwnerRelevancy = true;
+	//bNetUseOwnerRelevancy = true;
 
 	MaxPitchRotation = 40.f;
 }

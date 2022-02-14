@@ -20,8 +20,6 @@ class PZ_C_2_API UWeaponManagerComponent : public UActorComponent
 	// temporary solution
 	void SetBowMeshVisibility(bool State) const;
 
-	const FName BowSocketName = FName("BowSocket");
-
 	GENERATED_BODY()
 
 protected:
@@ -90,31 +88,48 @@ public:
 	// arming & disarming
 private:
 	FTimerHandle DisarmTimer;
+	FTimerHandle ArmTimer;
+
+	UPROPERTY(VisibleAnywhere, meta=(AllowPrivateAccess="true"))
+	bool bIsWeaponArmed;
 public:
 	const FName BowArmSocket = FName("BowSocket");
 
 	const FName BowBackSocket = FName("SpineBowSocket");
 
 	const FName QuiverBackSocket = FName("SpineQuiverSocket");
-	
-	bool bIsWeaponArmed = true;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	inline bool IsWeaponArmed() const { return bIsWeaponArmed; } 
 
 	void OnToggleArmAction();
 
 	UFUNCTION(Server, Unreliable)
 	void ServerDisarmWeapon();
+	
+	UFUNCTION(Server, Unreliable)
+	void ServerArmWeapon();
 
 	UFUNCTION(NetMulticast, Unreliable)
 	void MulticastDisarmWeapon();
+	
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastArmWeapon();
 	
 	void DisarmWeapon();
 
 	void OnDisarmTimerEnds();
 
 	void ArmWeapon();
+	
+	void OnArmTimerEnds();
 
 	// [client] calls from anim notify event
 	UFUNCTION(BlueprintCallable)
 	void OnDisarmWeaponPlaced();
+	
+	// [client] calls from anim notify event
+	UFUNCTION(BlueprintCallable)
+	void OnArmWeaponPlaced();
 	// ~arming & disarming end
 };
