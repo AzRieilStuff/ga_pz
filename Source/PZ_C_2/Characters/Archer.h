@@ -22,10 +22,21 @@ struct FCharacterSaveData
 
 	UPROPERTY()
 	FVector Location;
-	
+
 	UPROPERTY()
 	FQuat Rotation;
 };
+
+UENUM(Blueprintable, Meta = (Bitflags))
+enum class ECharacterStateFlags : uint8
+{
+	Firing = 0,
+	DisarmingBow,
+	EquippingBow
+};
+
+ENUM_CLASS_FLAGS(ECharacterStateFlags);
+
 
 UCLASS()
 class PZ_C_2_API AArcher : public ACharacter
@@ -40,7 +51,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess = "true"))
 	TSubclassOf<ABaseRangeWeapon> DefaultWeapon;
-	
+
 	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess = "true"))
 	UAnimMontage* ClimbingMontage;
 
@@ -54,7 +65,6 @@ protected:
 
 	virtual void BeginPlay() override;
 public:
-
 	UPROPERTY(EditDefaultsOnly)
 	float MaxPitchRotation;
 
@@ -68,7 +78,7 @@ public:
 
 	// ~Weapon
 
-	UPROPERTY(BlueprintReadOnly,EditAnywhere)
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	class UInventoryManagerComponent* InventoryManagerComponent;
 
 	// Climbing
@@ -115,22 +125,48 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Stats")
 	virtual float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator,
-	                 AActor* DamageCauser) override;
+	                         AActor* DamageCauser) override;
 
+	virtual bool CanJumpInternal_Implementation() const override;
+
+	// Movement
+private:
+	UPROPERTY()
+	UCharacterMovementComponent* CharacterMovementComponent;
+public:
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UCharacterMovementComponent* GetCharacterMovementComponent() const;
+	// ~Movement
 	
 	// ~Health implementation
-
-	// Saving
 	FCharacterSaveData GetSaveData() const;
 
 	void InitFromSaveData(const FCharacterSaveData Data);
 	// ~Saving
 
-	// Firing
-
-	UPROPERTY()
-	bool bIsFiring;
-
+	// [server] Weapon interaction
 	UFUNCTION()
 	void EquipDefaultWeapon();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ArmingDuration = 2.f;
+	// ~Weapon interaction
+
+	// States
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,
+		meta = (Bitmask, BitmaskEnum = "ECharacterStateFlags", AllowPrivateAccess="true"))
+	int32 StateFlags;
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void SetState(ECharacterStateFlags Flag);
+
+	UFUNCTION(BlueprintCallable)
+	void ClearState(ECharacterStateFlags Flag);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool HasState(ECharacterStateFlags Flag) const;
+	// ~States
+	
 };

@@ -14,10 +14,10 @@ struct FAmmoData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 InClip;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Total;
 };
 
@@ -58,10 +58,10 @@ public:
 
 	virtual void BeginPlay() override;
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="WeaponStats")
 	int32 MaxAmmoTotal;
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="WeaponStats")
 	int32 MaxAmmoInClip;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Replicated)

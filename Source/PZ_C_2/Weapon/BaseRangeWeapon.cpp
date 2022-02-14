@@ -13,7 +13,7 @@
 
 void ABaseRangeWeapon::StartShootingTimer()
 {
-	bIsFiring = true;
+	OwnerManagerComponent->Character->SetState(ECharacterStateFlags::Firing);
 
 	FTimerHandle FiringTimerHandle; // todo move to class, shoot cancellation
 	GetWorldTimerManager().SetTimer(FiringTimerHandle, this, &ABaseRangeWeapon::OnShootingTimerEnd, FireRate, false);
@@ -71,7 +71,7 @@ ABaseProjectile* ABaseRangeWeapon::SpawnProjectile(FVector AimLocation)
 
 void ABaseRangeWeapon::OnShootingTimerEnd()
 {
-	bIsFiring = false;
+	OwnerManagerComponent->Character->ClearState(ECharacterStateFlags::Firing);
 
 	FVector Aim = GetAimLocation(OwnerManagerComponent->Character);
 
@@ -112,7 +112,7 @@ void ABaseRangeWeapon::BeginPlay()
 
 void ABaseRangeWeapon::FireAction()
 {
-	if (bIsFiring)
+	if (OwnerManagerComponent->Character->HasState(ECharacterStateFlags::Firing))
 	{
 		return;
 	}
@@ -142,7 +142,7 @@ void ABaseRangeWeapon::MulticastFireAction_Implementation()
 
 bool ABaseRangeWeapon::ServerFireAction_Validate()
 {
-	if (bIsFiring)
+	if (OwnerManagerComponent->Character->HasState(ECharacterStateFlags::Firing))
 	{
 		return false;
 	}
@@ -202,7 +202,8 @@ bool ABaseRangeWeapon::CanPickupBy(AArcher* Character) const
 
 void ABaseRangeWeapon::ServerPickup(AArcher* Character)
 {
-	Character->WeaponManagerComponent->CurrentWeapon = this;
+	//Character->WeaponManagerComponent->CurrentWeapon = this;
+	Character->WeaponManagerComponent->EquipWeapon(this);
 	
 	Super::ServerPickup(Character);
 }

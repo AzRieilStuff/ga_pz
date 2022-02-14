@@ -30,13 +30,13 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipWeapon(ABaseRangeWeapon* Weapon);
-	
+
 	UFUNCTION(Server, Reliable)
 	void ServerUnequipWeapon();
 public:
 	UWeaponManagerComponent();
 
-	// [local]
+	// [client]
 	UFUNCTION()
 	virtual void EquipWeapon(ABaseRangeWeapon* NewWeapon);
 
@@ -44,7 +44,7 @@ public:
 	UFUNCTION()
 	virtual void EquipWeaponFromClass(TSubclassOf<ABaseRangeWeapon> WeaponClass);
 
-	// [local]
+	// [client]
 	UFUNCTION()
 	void UnequipWeapon();
 
@@ -86,4 +86,35 @@ public:
 	FOnWeaponInteraction OnWeaponUnequipped;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	// arming & disarming
+private:
+	FTimerHandle DisarmTimer;
+public:
+	const FName BowArmSocket = FName("BowSocket");
+
+	const FName BowBackSocket = FName("SpineBowSocket");
+
+	const FName QuiverBackSocket = FName("SpineQuiverSocket");
+	
+	bool bIsWeaponArmed = true;
+
+	void OnToggleArmAction();
+
+	UFUNCTION(Server, Unreliable)
+	void ServerDisarmWeapon();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastDisarmWeapon();
+	
+	void DisarmWeapon();
+
+	void OnDisarmTimerEnds();
+
+	void ArmWeapon();
+
+	// [client] calls from anim notify event
+	UFUNCTION(BlueprintCallable)
+	void OnDisarmWeaponPlaced();
+	// ~arming & disarming end
 };

@@ -26,7 +26,7 @@ EBTNodeResult::Type UBTTask_Shoot::ExecuteTask(UBehaviorTreeComponent& OwnerComp
 		return EBTNodeResult::Failed;
 	}
 
-	if( Character->bIsFiring )
+	if( Character->HasState(ECharacterStateFlags::Firing) )
 	{
 		return EBTNodeResult::InProgress;
 	}

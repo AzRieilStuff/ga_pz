@@ -72,13 +72,30 @@ void AArcher::BeginPlay()
 	if (HasAuthority() && DefaultWeapon)
 	{
 		GetWorldTimerManager().SetTimerForNextTick(this, &AArcher::EquipDefaultWeapon);
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, "Equip default weapon");
+		//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, "Equip default weapon");
 	}
+
+	CharacterMovementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
 }
 
 void AArcher::EquipDefaultWeapon()
 {
 	WeaponManagerComponent->EquipWeaponFromClass(DefaultWeapon);
+}
+
+void AArcher::SetState(ECharacterStateFlags Flag)
+{
+	StateFlags |= 1 << static_cast<int32>(Flag);
+}
+
+void AArcher::ClearState(ECharacterStateFlags Flag)
+{
+	StateFlags &= ~(1 << static_cast<int32>(Flag));
+}
+
+bool AArcher::HasState(ECharacterStateFlags Flag) const
+{
+	return ((StateFlags) & (1 << static_cast<int32>(Flag))) > 0;
 }
 
 
@@ -97,10 +114,19 @@ float AArcher::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEv
 {
 	Super::TakeDamage(DamageTaken, DamageEvent, EventInstigator, DamageCauser);
 
-	// todo remove
 	float damageApplied = CurrentHealth - DamageTaken;
 	SetCurrentHealth(damageApplied);
 	return damageApplied;
+}
+
+bool AArcher::CanJumpInternal_Implementation() const
+{
+	return Super::CanJumpInternal_Implementation() && !HasState(ECharacterStateFlags::Firing);
+}
+
+UCharacterMovementComponent* AArcher::GetCharacterMovementComponent() const
+{
+	return CharacterMovementComponent;
 }
 
 FCharacterSaveData AArcher::GetSaveData() const
@@ -179,6 +205,8 @@ void AArcher::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 			                                 &UWeaponManagerComponent::InteractWeapon);
 			PlayerInputComponent->BindAction("Reload", IE_Pressed, WeaponManagerComponent,
 			                                 &UWeaponManagerComponent::OnReloadAction);
+			PlayerInputComponent->BindAction("ArmToggle", IE_Pressed, WeaponManagerComponent,
+			                                 &UWeaponManagerComponent::OnToggleArmAction);
 		}
 
 		if (InventoryManagerComponent)
