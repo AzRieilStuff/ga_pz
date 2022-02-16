@@ -44,7 +44,8 @@ ABaseProjectile* ABaseBow::SpawnProjectile(FVector AimLocation)
 
 	if (OwnerManagerComponent)
 	{
-		OwnerManagerComponent->Character->MoveIgnoreActorAdd(Arrow);
+		//OwnerManagerComponent->Character->MoveIgnoreActorAdd(Arrow);
+		Arrow->CollisionComponent->IgnoreActorWhenMoving(OwnerManagerComponent->Character, true);
 	}
 
 	return Arrow;

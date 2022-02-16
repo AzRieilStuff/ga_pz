@@ -30,6 +30,10 @@ class PZ_C_2_API ABaseRangeWeapon : public ABaseItem, public IReloadable
 	// [local + server] run animation & timer
 	void StartShootingTimer();
 
+	void BreakShootingTimer();
+
+	FTimerHandle FiringTimer;
+
 protected:
 	// [server] 
 	virtual class ABaseProjectile* SpawnProjectile(FVector AimLocation);
@@ -45,7 +49,7 @@ protected:
 	virtual void ComputeProjectileTransform(const AArcher* Character, FVector AimLocation, FVector& Location,
 	                                        FRotator& Rotation);
 
-	// [local]
+	// [local] get endpoint of trace from camera view
 	FVector GetAimLocation(const AArcher* Character) const;
 
 public:
@@ -95,13 +99,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool CanFire() const;
 
-	//~ Begin IReloadable Interface.
+	// IReloadable Interface.
 	virtual bool CanReload() const override;
 
 	// [server]
 	UFUNCTION(BlueprintCallable)
 	virtual void Reload() override;
-	//~ End IReloadable Interface
+	// ~IReloadable Interface
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsReloading = false;
@@ -120,4 +124,12 @@ public:
 	//virtual void MulticastPickup_Implementation(AArcher* Character) override;
 
 	virtual void ServerPickup(AArcher* Character) override;
+
+	virtual void InterruptFire();
+
+	UFUNCTION(Server, Unreliable)
+	virtual void ServerInterruptFire();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	virtual void MulticastInterruptFire();
 };

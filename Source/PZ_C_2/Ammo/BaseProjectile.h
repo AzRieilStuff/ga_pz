@@ -14,6 +14,9 @@ class PZ_C_2_API ABaseProjectile : public AActor
 public:
 	ABaseProjectile();
 
+	// [server]
+	virtual void OnShoot();
+
 protected:
 	virtual void BeginPlay() override;
 

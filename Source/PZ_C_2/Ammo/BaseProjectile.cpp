@@ -39,6 +39,10 @@ ABaseProjectile::ABaseProjectile()
 	Damage = 10.0f;
 }
 
+void ABaseProjectile::OnShoot()
+{
+}
+
 void ABaseProjectile::BeginPlay()
 {
 	CollisionComponent->IgnoreActorWhenMoving(GetOwner(), true);
@@ -66,7 +70,6 @@ void ABaseProjectile::ApplyDamage(AActor* Actor, FVector Origin, const FHitResul
 void ABaseProjectile::PostActorCreated()
 {
 	Super::PostActorCreated();
-
 }
 
 void ABaseProjectile::MulticastPlayOnHitVisuals_Implementation()

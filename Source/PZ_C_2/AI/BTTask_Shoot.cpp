@@ -31,7 +31,7 @@ EBTNodeResult::Type UBTTask_Shoot::ExecuteTask(UBehaviorTreeComponent& OwnerComp
 		return EBTNodeResult::InProgress;
 	}
 
-	Character->WeaponManagerComponent->InteractWeapon();
+	Character->WeaponManagerComponent->OnFireAction();
 
 	return EBTNodeResult::Succeeded;
 }

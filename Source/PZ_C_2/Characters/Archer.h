@@ -55,8 +55,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess = "true"))
 	UAnimMontage* ClimbingMontage;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
-	class UWidgetComponent* TopBar;
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	//class UWidgetComponent* TopBar;
 
 	UPROPERTY(BlueprintReadOnly)
 	FVector LocalVelocity;
@@ -72,16 +72,16 @@ public:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	// Weapon
+	// Components & managers
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Replicated)
 	UWeaponManagerComponent* WeaponManagerComponent;
 
-	// ~Weapon
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	class UInventoryManagerComponent* InventoryManagerComponent;
+	// ~Components
 
-	// Climbing
+	// Climbing // todo remove or upgade
 	UFUNCTION()
 	void Climb();
 
@@ -122,6 +122,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Stats")
 	void SetCurrentHealth(float healthValue);
+	// ~Health 
 
 	UFUNCTION(BlueprintCallable, Category = "Stats")
 	virtual float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator,
@@ -139,6 +140,8 @@ public:
 	// ~Movement
 	
 	// ~Health implementation
+
+	// Saving
 	FCharacterSaveData GetSaveData() const;
 
 	void InitFromSaveData(const FCharacterSaveData Data);

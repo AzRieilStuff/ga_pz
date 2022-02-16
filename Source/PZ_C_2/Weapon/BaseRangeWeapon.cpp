@@ -15,13 +15,20 @@ void ABaseRangeWeapon::StartShootingTimer()
 {
 	OwnerManagerComponent->Character->SetState(ECharacterStateFlags::Firing);
 
-	FTimerHandle FiringTimerHandle; // todo move to class, shoot cancellation
-	GetWorldTimerManager().SetTimer(FiringTimerHandle, this, &ABaseRangeWeapon::OnShootingTimerEnd, FireRate, false);
+	GetWorldTimerManager().SetTimer(FiringTimer, this, &ABaseRangeWeapon::OnShootingTimerEnd, FireRate, false);
+}
+
+void ABaseRangeWeapon::BreakShootingTimer()
+{
+	OwnerManagerComponent->Character->ClearState(ECharacterStateFlags::Firing);
+
+	GetWorldTimerManager().ClearTimer(FiringTimer);
 }
 
 void ABaseRangeWeapon::ServerPerformFire_Implementation(FVector AimLocation)
 {
-	ABaseProjectile* Projectile = SpawnProjectile(AimLocation);
+	ABaseProjectile* Arrow = SpawnProjectile(AimLocation);
+	Arrow->OnShoot();
 }
 
 void ABaseRangeWeapon::ComputeProjectileTransform(const AArcher* Character, FVector AimLocation, FVector& Location,
@@ -37,7 +44,8 @@ FVector ABaseRangeWeapon::GetAimLocation(const AArcher* Character) const
 	// projectile start position/rotation ( from socket ) can differ from screen center, so need to be adjusted
 	FVector TraceStart, TraceEnd;
 
-	if( GetInstigatorController() && GetInstigatorController()->IsPlayerController() ) // player
+	// todo improve ai detection?
+	if (GetInstigatorController() && GetInstigatorController()->IsPlayerController()) // player
 	{
 		APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
 		TraceStart = CameraManager->GetCameraLocation();
@@ -55,10 +63,10 @@ FVector ABaseRangeWeapon::GetAimLocation(const AArcher* Character) const
 	const FName TraceTag("Debug");
 
 	Params.TraceTag = TraceTag;
-	Params.AddIgnoredActor(Character);
+	//Params.AddIgnoredActor(Character);
 	//GetWorld()->DebugDrawTraceTag = TraceTag;
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, Params);
+	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, TraceStart, TraceEnd, ECC_WorldStatic, Params);
 	FVector AimTarget = (bHit ? Hit.Location : TraceEnd);
 
 	return AimTarget;
@@ -204,6 +212,35 @@ void ABaseRangeWeapon::ServerPickup(AArcher* Character)
 {
 	//Character->WeaponManagerComponent->CurrentWeapon = this;
 	Character->WeaponManagerComponent->EquipWeapon(this);
-	
+
 	Super::ServerPickup(Character);
+}
+
+void ABaseRangeWeapon::InterruptFire()
+{
+	if (!OwnerManagerComponent->Character->HasState(ECharacterStateFlags::Firing))
+	{
+		return;
+	}
+
+	if (GetOwner() && GetOwner()->GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		BreakShootingTimer();
+	}
+
+	ServerInterruptFire();
+}
+
+void ABaseRangeWeapon::MulticastInterruptFire_Implementation()
+{
+	if (GetOwner()->GetLocalRole() == ROLE_SimulatedProxy)
+	{
+		BreakShootingTimer();
+	}
+}
+
+void ABaseRangeWeapon::ServerInterruptFire_Implementation()
+{
+	BreakShootingTimer();
+	MulticastFireAction();
 }

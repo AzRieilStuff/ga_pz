@@ -13,6 +13,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "PZ_C_2/Ammo/Arrow.h"
 #include "PZ_C_2/Framework/GameInstanceMain.h"
 
 // Sets default values
@@ -35,16 +36,18 @@ AArcher::AArcher()
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
 
+	/*
 	TopBar = CreateDefaultSubobject<UWidgetComponent>("TopBar");
 	TopBar->SetupAttachment(GetMesh());
 	TopBar->SetRelativeLocation(FVector(0, 0, 185.f));
 	TopBar->SetRelativeRotation(FRotator::MakeFromEuler(FVector(0.f, 0.f, -90.f)));
+	*/
 
 	// Stats defaults
 	MaxHealth = 100.0f;
 	CurrentHealth = 90.f;
 	ArmingDuration = 1.f;
-	
+
 	GetCharacterMovement()->JumpZVelocity = 800.f;
 	//bNetUseOwnerRelevancy = true;
 
@@ -110,13 +113,20 @@ void AArcher::SetCurrentHealth(float healthValue)
 	}
 }
 
-float AArcher::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator,
+float AArcher::TakeDamage(float DamageTaken, const struct FDamageEvent& DamageEvent, AController* EventInstigator,
                           AActor* DamageCauser)
 {
 	Super::TakeDamage(DamageTaken, DamageEvent, EventInstigator, DamageCauser);
 
 	float damageApplied = CurrentHealth - DamageTaken;
 	SetCurrentHealth(damageApplied);
+
+	if (DamageCauser->IsA(AArrow::StaticClass()))
+	{
+		// sticking
+		DamageCauser->SetOwner(this);
+		DamageCauser->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepWorldTransform);
+	}
 	return damageApplied;
 }
 
@@ -203,11 +213,13 @@ void AArcher::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		if (WeaponManagerComponent)
 		{
 			PlayerInputComponent->BindAction("Fire", IE_Pressed, WeaponManagerComponent,
-			                                 &UWeaponManagerComponent::InteractWeapon);
+			                                 &UWeaponManagerComponent::OnFireAction);
 			PlayerInputComponent->BindAction("Reload", IE_Pressed, WeaponManagerComponent,
 			                                 &UWeaponManagerComponent::OnReloadAction);
 			PlayerInputComponent->BindAction("ArmToggle", IE_Pressed, WeaponManagerComponent,
 			                                 &UWeaponManagerComponent::OnToggleArmAction);
+			PlayerInputComponent->BindAction("InterruptFire", IE_Pressed, WeaponManagerComponent,
+			                                 &UWeaponManagerComponent::OnInterruptFireAction);
 		}
 
 		if (InventoryManagerComponent)
@@ -287,7 +299,7 @@ void AArcher::ClimbServer_Implementation()
 	FVector WallNormal = FrontTrace.Normal;
 	FVector WallHitLocation = FrontTrace.Location;
 
-	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCharacterMovement()->StopMovementImmediately();
 
 	PlayClimbAnimationMulticast();
@@ -296,7 +308,7 @@ void AArcher::ClimbServer_Implementation()
 	GetWorldTimerManager().SetTimer(RestoreClimbingState, [this]
 	{
 		IsClimbing = false;
-		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, "Test");
 	}, ClimbingMontage->SequenceLength, false);
 

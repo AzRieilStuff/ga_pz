@@ -25,6 +25,7 @@ UPickBoxComponent::UPickBoxComponent()
 	SetCollisionResponseToAllChannels(ECR_Ignore);
 	SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	SetCollisionObjectType(ECC_WorldDynamic);
 }
 
 void UPickBoxComponent::BeginPlay()
@@ -36,8 +37,8 @@ void UPickBoxComponent::BeginPlay()
 
 void UPickBoxComponent::EnablePhysics()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
-	                                 FString::Printf(TEXT("Enable for %s"), *GetOwner()->GetName()));
+	// GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
+	//                                  FString::Printf(TEXT("Enable for %s"), *GetOwner()->GetName()));
 	SetNotifyRigidBodyCollision(true); // "generate hit events"
 	SetSimulatePhysics(true);
 	SetEnableGravity(true);

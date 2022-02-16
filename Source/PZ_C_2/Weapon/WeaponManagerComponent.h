@@ -34,6 +34,16 @@ protected:
 public:
 	UWeaponManagerComponent();
 
+	// Equipping
+
+private:
+	FTimerHandle DisarmTimer;
+	FTimerHandle ArmTimer;
+
+	UPROPERTY(VisibleAnywhere, meta=(AllowPrivateAccess="true"))
+	bool bIsWeaponArmed;
+
+public:
 	// [client]
 	UFUNCTION()
 	virtual void EquipWeapon(ABaseRangeWeapon* NewWeapon);
@@ -46,18 +56,6 @@ public:
 	UFUNCTION()
 	void UnequipWeapon();
 
-	UFUNCTION()
-	void InteractWeapon();
-
-	UFUNCTION(BlueprintCallable)
-	void OnReloadAction();
-
-	UFUNCTION(Server, Unreliable)
-	void ServerReloadCurrentWeapon();
-
-	UFUNCTION(BlueprintPure, BlueprintCallable)
-	FORCEINLINE bool IsFiring() { return CurrentWeapon && CurrentWeapon->bIsFiring; };
-
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 	FORCEINLINE bool IsWeaponEquipped() { return CurrentWeapon != nullptr; };
 
@@ -67,6 +65,71 @@ public:
 	UFUNCTION()
 	void OnRep_CurrentWeapon(ABaseRangeWeapon* PrevWeapon);
 
+	UFUNCTION()
+	bool CanEquipWeapon(const ABaseRangeWeapon* NewWeapon) const;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnWeaponInteraction OnWeaponEquipped;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnWeaponInteraction OnWeaponUnequipped;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool IsWeaponArmed() const { return bIsWeaponArmed; }
+
+	void OnToggleArmAction();
+
+	UFUNCTION(Server, Unreliable)
+	void ServerDisarmWeapon();
+
+	UFUNCTION(Server, Unreliable)
+	void ServerArmWeapon();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastDisarmWeapon();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastArmWeapon();
+
+	void DisarmWeapon();
+
+	void OnDisarmTimerEnds();
+
+	void ArmWeapon();
+
+	void OnArmTimerEnds();
+
+	// [client] calls from anim notify event
+	UFUNCTION(BlueprintCallable)
+	void OnDisarmWeaponPlaced();
+
+	// [client] calls from anim notify event
+	UFUNCTION(BlueprintCallable)
+	void OnArmWeaponPlaced();
+	// ~arming & disarming end
+
+	// ~Equpping
+
+	// Firing
+
+	UFUNCTION()
+	void OnFireAction();
+
+	UFUNCTION()
+	void OnInterruptFireAction();
+	// ~Firing
+
+	// Reloading // todo remove
+	UFUNCTION(BlueprintCallable)
+	void OnReloadAction();
+
+	UFUNCTION(Server, Unreliable)
+	void ServerReloadCurrentWeapon();
+
+	UFUNCTION(BlueprintPure, BlueprintCallable)
+	FORCEINLINE bool IsFiring() { return CurrentWeapon && CurrentWeapon->bIsFiring; };
+	// ~Reloading
+
 	UPROPERTY(Replicated)
 	AArcher* Character;
 
@@ -74,62 +137,14 @@ public:
 
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
-	bool CanEquipWeapon(const ABaseRangeWeapon* NewWeapon) const;
-	
-	UPROPERTY(BlueprintAssignable)
-	FOnWeaponInteraction OnWeaponEquipped;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnWeaponInteraction OnWeaponUnequipped;
-
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	// arming & disarming
-private:
-	FTimerHandle DisarmTimer;
-	FTimerHandle ArmTimer;
 
-	UPROPERTY(VisibleAnywhere, meta=(AllowPrivateAccess="true"))
-	bool bIsWeaponArmed;
 public:
 	const FName BowArmSocket = FName("BowSocket");
 
 	const FName BowBackSocket = FName("SpineBowSocket");
 
 	const FName QuiverBackSocket = FName("SpineQuiverSocket");
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	inline bool IsWeaponArmed() const { return bIsWeaponArmed; } 
-
-	void OnToggleArmAction();
-
-	UFUNCTION(Server, Unreliable)
-	void ServerDisarmWeapon();
-	
-	UFUNCTION(Server, Unreliable)
-	void ServerArmWeapon();
-
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastDisarmWeapon();
-	
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastArmWeapon();
-	
-	void DisarmWeapon();
-
-	void OnDisarmTimerEnds();
-
-	void ArmWeapon();
-	
-	void OnArmTimerEnds();
-
-	// [client] calls from anim notify event
-	UFUNCTION(BlueprintCallable)
-	void OnDisarmWeaponPlaced();
-	
-	// [client] calls from anim notify event
-	UFUNCTION(BlueprintCallable)
-	void OnArmWeaponPlaced();
-	// ~arming & disarming end
 };

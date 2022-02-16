@@ -119,9 +119,9 @@ void UWeaponManagerComponent::UnequipWeapon()
 	}
 }
 
-void UWeaponManagerComponent::InteractWeapon()
+void UWeaponManagerComponent::OnFireAction()
 {
-	if (CurrentWeapon == nullptr || !CurrentWeapon->CanFire())
+	if (CurrentWeapon == nullptr || !CurrentWeapon->CanFire() || !bIsWeaponArmed)
 	{
 		return;
 	}
@@ -135,6 +135,16 @@ void UWeaponManagerComponent::InteractWeapon()
 	}
 
 	CurrentWeapon->FireAction();
+}
+
+void UWeaponManagerComponent::OnInterruptFireAction()
+{
+	if (CurrentWeapon == nullptr)
+	{
+		return;
+	}
+
+	CurrentWeapon->InterruptFire();
 }
 
 void UWeaponManagerComponent::OnReloadAction()
