@@ -11,16 +11,29 @@ class AArcher;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponInteraction, ABaseRangeWeapon*, Item);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnChangeAimState, bool, State);
+
 /**
  * 
  */
 UCLASS()
 class PZ_C_2_API UWeaponManagerComponent : public UActorComponent
 {
-	// temporary solution
-	void SetBowMeshVisibility(bool State) const;
-
 	GENERATED_BODY()
+public:
+	UPROPERTY(Replicated)
+	AArcher* Character;
+
+	virtual void InitializeComponent() override;
+
+	virtual void BeginPlay() override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UWeaponManagerComponent();
+
+	// Equipping
+#pragma region Equipping
 
 protected:
 	// [server]
@@ -31,12 +44,14 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void ServerUnequipWeapon();
-public:
-	UWeaponManagerComponent();
-
-	// Equipping
 
 private:
+	const FName BowArmSocket = FName("BowSocket");
+
+	const FName BowBackSocket = FName("SpineBowSocket");
+
+	const FName QuiverBackSocket = FName("SpineQuiverSocket");
+	
 	FTimerHandle DisarmTimer;
 	FTimerHandle ArmTimer;
 
@@ -108,18 +123,30 @@ public:
 	void OnArmWeaponPlaced();
 	// ~arming & disarming end
 
+#pragma endregion
 	// ~Equpping
 
 	// Firing
-
+#pragma region Firing
+private:
+	UPROPERTY(BlueprintAssignable, meta=(AllowPrivateAccess="true"))
+	FOnChangeAimState OnChangeAimState;
+public:
 	UFUNCTION()
 	void OnFireAction();
 
 	UFUNCTION()
+	void OnFireReleasedAction();
+
+	UFUNCTION()
 	void OnInterruptFireAction();
+
+	void SetAimCamera(const bool IsAim);
+#pragma endregion
 	// ~Firing
 
-	// Reloading // todo remove
+	// Reloading // todo update
+#pragma region Reloading
 	UFUNCTION(BlueprintCallable)
 	void OnReloadAction();
 
@@ -128,23 +155,6 @@ public:
 
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 	FORCEINLINE bool IsFiring() { return CurrentWeapon && CurrentWeapon->bIsFiring; };
+#pragma endregion
 	// ~Reloading
-
-	UPROPERTY(Replicated)
-	AArcher* Character;
-
-	virtual void InitializeComponent() override;
-
-	virtual void BeginPlay() override;
-
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	// arming & disarming
-
-public:
-	const FName BowArmSocket = FName("BowSocket");
-
-	const FName BowBackSocket = FName("SpineBowSocket");
-
-	const FName QuiverBackSocket = FName("SpineQuiverSocket");
 };

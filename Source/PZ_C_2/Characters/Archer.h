@@ -31,8 +31,12 @@ UENUM(Blueprintable, Meta = (Bitflags))
 enum class ECharacterStateFlags : uint8
 {
 	Firing = 0,
+	// old
+
 	DisarmingBow,
-	ArmingBow
+	ArmingBow,
+	Aiming,
+	AimReady
 };
 
 ENUM_CLASS_FLAGS(ECharacterStateFlags);
@@ -55,8 +59,18 @@ public:
 	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess = "true"))
 	UAnimMontage* ClimbingMontage;
 
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
-	//class UWidgetComponent* TopBar;
+private:
+	UPROPERTY(EditAnywhere)
+	class USpringArmComponent* SpringArmComponent;
+
+	UPROPERTY(EditAnywhere)
+	class UCameraComponent* CameraComponent;
+public:
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	inline USpringArmComponent* GetSpringArmComponent() const { return SpringArmComponent; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	inline UCameraComponent* GetCameraComponent() const { return CameraComponent; };
 
 	UPROPERTY(BlueprintReadOnly)
 	FVector LocalVelocity;
@@ -138,7 +152,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	UCharacterMovementComponent* GetCharacterMovementComponent() const;
 	// ~Movement
-	
+
 	// ~Health implementation
 
 	// Saving
@@ -150,7 +164,7 @@ public:
 	// [server] Weapon interaction
 	UFUNCTION()
 	void EquipDefaultWeapon();
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float ArmingDuration;
 	// ~Weapon interaction
@@ -158,9 +172,13 @@ public:
 	// States
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,
-		meta = (Bitmask, BitmaskEnum = "ECharacterStateFlags", AllowPrivateAccess="true"))
+		meta = (Bitmask, BitmaskEnum = "ECharacterStateFlags", AllowPrivateAccess="true"),
+		ReplicatedUsing=OnRep_StateFlags)
 	int32 StateFlags;
 
+
+	UFUNCTION()
+	void OnRep_StateFlags(const int32 PrevValue);
 public:
 	UFUNCTION(BlueprintCallable)
 	void SetState(ECharacterStateFlags Flag);
@@ -170,6 +188,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool HasState(ECharacterStateFlags Flag) const;
+
+	bool HasState(ECharacterStateFlags Flag, int32 BitMask) const;
+
 	// ~States
-	
 };

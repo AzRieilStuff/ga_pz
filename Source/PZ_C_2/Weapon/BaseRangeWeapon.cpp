@@ -11,6 +11,24 @@
 #include "PZ_C_2/Ammo/BaseProjectile.h"
 #include "PZ_C_2/Characters/Archer.h"
 
+void ABaseRangeWeapon::StartAiming()
+{
+	if (OwnerManagerComponent->Character->IsLocallyControlled())
+	{
+		OwnerManagerComponent->Character->SetState(ECharacterStateFlags::Aiming);
+		OwnerManagerComponent->SetAimCamera(true);
+	}
+
+	if (GetOwner()->GetLocalRole() == ROLE_Authority)
+	{
+		OwnerManagerComponent->Character->SetState(ECharacterStateFlags::Aiming);
+	}
+	else
+	{
+		ServerStartAiming();
+	}
+}
+
 void ABaseRangeWeapon::StartShootingTimer()
 {
 	OwnerManagerComponent->Character->SetState(ECharacterStateFlags::Firing);
@@ -120,17 +138,19 @@ void ABaseRangeWeapon::BeginPlay()
 
 void ABaseRangeWeapon::FireAction()
 {
-	if (OwnerManagerComponent->Character->HasState(ECharacterStateFlags::Firing))
+	if (OwnerManagerComponent->Character->HasState(ECharacterStateFlags::Aiming))
 	{
 		return;
 	}
 
+	
 	if (GetOwner()->GetLocalRole() == ROLE_AutonomousProxy)
 	{
 		StartShootingTimer();
 	}
 
-	ServerFireAction();
+	ServerStartAiming();
+	//ServerFireAction();
 }
 
 void ABaseRangeWeapon::ServerFireAction_Implementation()
@@ -229,6 +249,11 @@ void ABaseRangeWeapon::InterruptFire()
 	}
 
 	ServerInterruptFire();
+}
+
+void ABaseRangeWeapon::ServerStartAiming_Implementation()
+{
+	StartAiming();
 }
 
 void ABaseRangeWeapon::MulticastInterruptFire_Implementation()

@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Archer.h"
 
+#include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/Widget.h"
 #include "Components/WidgetComponent.h"
@@ -11,6 +11,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "PZ_C_2/Ammo/Arrow.h"
@@ -28,6 +29,22 @@ AArcher::AArcher()
 
 	InventoryManagerComponent = CreateDefaultSubobject<UInventoryManagerComponent>("InventoryComponent");
 	InventoryManagerComponent->SetIsReplicated(true);
+
+	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArm");
+	SpringArmComponent->SetIsReplicated(false);
+	SpringArmComponent->TargetArmLength = 300.f;
+	SpringArmComponent->SetupAttachment(RootComponent);
+	SpringArmComponent->SetRelativeRotation(FRotator(-45.f, 0.f, 0.f));
+	SpringArmComponent->TargetOffset = FVector(0, 0, 75.f);
+	SpringArmComponent->bEnableCameraLag = false;
+	SpringArmComponent->bUsePawnControlRotation = true;
+	SpringArmComponent->bInheritRoll = false;
+	SpringArmComponent->bInheritPitch = true;
+	SpringArmComponent->bInheritYaw = true;
+	// SpringArmComponent->CameraLagSpeed = 3.0f;/**/
+
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
+	CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName);
 
 	GetMesh()->SetIsReplicated(true); // replicate bone rotation
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -87,6 +104,10 @@ void AArcher::EquipDefaultWeapon()
 	WeaponManagerComponent->EquipWeaponFromClass(DefaultWeapon);
 }
 
+void AArcher::OnRep_StateFlags(const int32 PrevValue)
+{
+}
+
 void AArcher::SetState(ECharacterStateFlags Flag)
 {
 	StateFlags |= 1 << static_cast<int32>(Flag);
@@ -99,7 +120,12 @@ void AArcher::ClearState(ECharacterStateFlags Flag)
 
 bool AArcher::HasState(ECharacterStateFlags Flag) const
 {
-	return ((StateFlags) & (1 << static_cast<int32>(Flag))) > 0;
+	return HasState(Flag, StateFlags);
+}
+
+bool AArcher::HasState(ECharacterStateFlags Flag, int32 BitMask) const
+{
+	return ((BitMask) & (1 << static_cast<int32>(Flag))) > 0;
 }
 
 
@@ -162,7 +188,7 @@ void AArcher::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AArcher, CurrentHealth);
-	//DOREPLIFETIME_CONDITION(AArcher, WeaponManagerComponent, COND_InitialOnly);
+	DOREPLIFETIME_CONDITION(AArcher, StateFlags, COND_SkipOwner);
 }
 
 void AArcher::OnHealthUpdate()

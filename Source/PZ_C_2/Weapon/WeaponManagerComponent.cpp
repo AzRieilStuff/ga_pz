@@ -3,6 +3,7 @@
 #include "WeaponManagerComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "PZ_C_2/Characters/Archer.h"
@@ -12,11 +13,6 @@
 UWeaponManagerComponent::UWeaponManagerComponent()
 {
 	bIsWeaponArmed = false;
-}
-
-void UWeaponManagerComponent::SetBowMeshVisibility(bool State) const
-{
-	Character->GetMesh()->ShowMaterialSection(0, 0, State, 0);
 }
 
 void UWeaponManagerComponent::SetCurrentWeapon(ABaseRangeWeapon* Weapon, ABaseRangeWeapon* PrevWeapon)
@@ -126,15 +122,18 @@ void UWeaponManagerComponent::OnFireAction()
 		return;
 	}
 
-	UCharacterMovementComponent* MovementComponent = Cast<UCharacterMovementComponent>(
-		Character->GetMovementComponent());
-
-	if (MovementComponent && MovementComponent->IsFalling())
+	if (Character->GetCharacterMovementComponent()->IsFalling())
 	{
 		return;
 	}
 
-	CurrentWeapon->FireAction();
+	//CurrentWeapon->FireAction();
+	Character->SetState(ECharacterStateFlags::Aiming);
+	SetAimCamera(true);
+}
+
+void UWeaponManagerComponent::OnFireReleasedAction()
+{
 }
 
 void UWeaponManagerComponent::OnInterruptFireAction()
@@ -144,7 +143,26 @@ void UWeaponManagerComponent::OnInterruptFireAction()
 		return;
 	}
 
-	CurrentWeapon->InterruptFire();
+	if (Character->HasState(ECharacterStateFlags::Aiming))
+	{
+		SetAimCamera(false);
+		Character->ClearState(ECharacterStateFlags::Aiming);
+		Character->ClearState(ECharacterStateFlags::AimReady);
+	}
+
+	//CurrentWeapon->InterruptFire();
+}
+
+void UWeaponManagerComponent::SetAimCamera(const bool IsAim)
+{
+	USpringArmComponent* CharacterCameraArm = Character->GetSpringArmComponent();
+
+	CharacterCameraArm->bEnableCameraLag = true;
+	CharacterCameraArm->TargetArmLength = IsAim ? 50.f : 300.f;
+	CharacterCameraArm->TargetOffset = FVector(0, 0, 50.f);
+	CharacterCameraArm->bEnableCameraLag = false;
+
+	OnChangeAimState.Broadcast(IsAim);
 }
 
 void UWeaponManagerComponent::OnReloadAction()

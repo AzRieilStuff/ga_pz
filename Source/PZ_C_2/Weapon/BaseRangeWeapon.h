@@ -25,14 +25,40 @@ struct FAmmoData
 UCLASS(Blueprintable, Config=Weapon, defaultconfig)
 class PZ_C_2_API ABaseRangeWeapon : public ABaseItem, public IReloadable
 {
+private:
 	GENERATED_BODY()
 
+	friend class UWeaponManagerComponent;
+public:
+	ABaseRangeWeapon();
+
+	UPROPERTY(Replicated)
+	UWeaponManagerComponent* OwnerManagerComponent;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual void BeginPlay() override;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Config, Category=WeaponStats)
+	float FireRate;
+
+#pragma region Aiming
+private:
+	FTimerHandle AimingTimer;
+
+	FTimerHandle FiringTimer;
+
+	UFUNCTION(Server, Unreliable)
+	void ServerStartAiming();
+
+	void StartAiming();
+#pragma endregion
+
+#pragma region Firing
 	// [local + server] run animation & timer
 	void StartShootingTimer();
 
 	void BreakShootingTimer();
-
-	FTimerHandle FiringTimer;
 
 protected:
 	// [server] 
@@ -53,14 +79,6 @@ protected:
 	FVector GetAimLocation(const AArcher* Character) const;
 
 public:
-	ABaseRangeWeapon();
-
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	UPROPERTY(Replicated)
-	UWeaponManagerComponent* OwnerManagerComponent;
-
-	virtual void BeginPlay() override;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="WeaponStats")
 	int32 MaxAmmoTotal;
@@ -92,6 +110,12 @@ public:
 	UPROPERTY(EditAnywhere, Category="Gameplay|Projectile")
 	TSubclassOf<class ABaseProjectile> ProjectileClass;
 
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsFiring = false;
+
+#pragma  endregion
+
+#pragma region Reloading
 	// [server]
 	UFUNCTION(BlueprintCallable)
 	void RestoreAmmo();
@@ -110,26 +134,25 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsReloading = false;
 
-	UPROPERTY(BlueprintReadOnly)
-	bool bIsFiring = false;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Config, Category=WeaponStats)
-	float FireRate;
-
 	UFUNCTION(Client, Reliable)
 	void UseAmmo();
+#pragma endregion
 
-	virtual bool CanPickupBy(AArcher* Character) const override;
-
-	//virtual void MulticastPickup_Implementation(AArcher* Character) override;
-
-	virtual void ServerPickup(AArcher* Character) override;
-
-	virtual void InterruptFire();
-
+#pragma region Fire interrupt
 	UFUNCTION(Server, Unreliable)
 	virtual void ServerInterruptFire();
 
 	UFUNCTION(NetMulticast, Unreliable)
 	virtual void MulticastInterruptFire();
+
+	virtual void InterruptFire();
+#pragma endregion
+
+#pragma region Picking
+	virtual bool CanPickupBy(AArcher* Character) const override;
+
+	//virtual void MulticastPickup_Implementation(AArcher* Character) override;
+
+	virtual void ServerPickup(AArcher* Character) override;
+#pragma endregion
 };
