@@ -13,6 +13,11 @@
 UWeaponManagerComponent::UWeaponManagerComponent()
 {
 	bIsWeaponArmed = false;
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = false;
+	PrimaryComponentTick.SetTickFunctionEnable(false);
+
+	AimingCameraTransitionDuration = 1.f;
 }
 
 void UWeaponManagerComponent::SetCurrentWeapon(ABaseRangeWeapon* Weapon, ABaseRangeWeapon* PrevWeapon)
@@ -115,6 +120,55 @@ void UWeaponManagerComponent::UnequipWeapon()
 	}
 }
 
+void UWeaponManagerComponent::CalcCameraPosition(FVector& Offset, float& Distance, const float Delta,
+                                                 const float InterpSpeed) const
+{
+	const USpringArmComponent* Arm = Character->GetSpringArmComponent();
+
+	Offset = FMath::VInterpTo(
+		Arm->TargetOffset,
+		Character->CameraOffsetCurrent,
+		Delta,
+		InterpSpeed
+	);
+
+	Distance = FMath::FInterpTo(
+		Arm->TargetArmLength,
+		Character->CameraDistanceCurrent,
+		Delta,
+		InterpSpeed
+	);
+}
+
+void UWeaponManagerComponent::UpdateCameraPosition()
+{
+	FTimerManager& TimerManager = GetWorld()->GetTimerManager();
+	const float Delta = TimerManager.GetTimerElapsed(AimingCameraTimer);
+	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, FString::Printf(TEXT("%f"), Delta));
+
+	CameraInterpTime += Delta;
+	{
+		FVector CameraArmOffset;
+		float CameraArmLength;
+
+		CalcCameraPosition(
+			CameraArmOffset,
+			CameraArmLength,
+			Delta,
+			(CameraInterpTime / AimingCameraTransitionDuration) * 10.f // scale speed depends on left distance, 
+		);
+
+		Character->GetSpringArmComponent()->TargetArmLength = CameraArmLength;
+		Character->GetSpringArmComponent()->TargetOffset = CameraArmOffset;
+	}
+
+	if (CameraInterpTime > AimingCameraTransitionDuration)
+	{
+		TimerManager.ClearTimer(AimingCameraTimer);
+		CameraInterpTime = 0;
+	}
+}
+
 void UWeaponManagerComponent::OnFireAction()
 {
 	if (CurrentWeapon == nullptr || !CurrentWeapon->CanFire() || !bIsWeaponArmed)
@@ -134,6 +188,19 @@ void UWeaponManagerComponent::OnFireAction()
 
 void UWeaponManagerComponent::OnFireReleasedAction()
 {
+	if (Character->HasState(ECharacterStateFlags::AimReady))
+	{
+		// shoot
+		Character->ClearState(ECharacterStateFlags::Aiming);
+		Character->ClearState(ECharacterStateFlags::AimReady);
+		SetAimCamera(false);
+	}
+	else if (Character->HasState(ECharacterStateFlags::Aiming))
+	{
+		// break
+		Character->ClearState(ECharacterStateFlags::Aiming);
+		SetAimCamera(false);
+	}
 }
 
 void UWeaponManagerComponent::OnInterruptFireAction()
@@ -155,14 +222,24 @@ void UWeaponManagerComponent::OnInterruptFireAction()
 
 void UWeaponManagerComponent::SetAimCamera(const bool IsAim)
 {
-	USpringArmComponent* CharacterCameraArm = Character->GetSpringArmComponent();
-
-	CharacterCameraArm->bEnableCameraLag = true;
-	CharacterCameraArm->TargetArmLength = IsAim ? 50.f : 300.f;
-	CharacterCameraArm->TargetOffset = FVector(0, 0, 50.f);
-	CharacterCameraArm->bEnableCameraLag = false;
+	Character->CameraDistanceCurrent = IsAim ? Character->CameraDistanceAiming : Character->CameraDistanceDefault;
+	Character->CameraOffsetCurrent = IsAim ? Character->CameraOffsetAiming : Character->CameraOffsetDefault;
 
 	OnChangeAimState.Broadcast(IsAim);
+
+	// start animation
+	const FTimerManager& TimerManager = GetWorld()->GetTimerManager();
+
+	// if we interrupt aiming, reuse current timer, so if we aiming for .7s, return in default state for the same
+	if (TimerManager.IsTimerActive(AimingCameraTimer))
+	{
+		CameraInterpTime = AimingCameraTransitionDuration - CameraInterpTime;
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimer(AimingCameraTimer, this, &ThisClass::UpdateCameraPosition,
+		                                       .025f, true);
+	}
 }
 
 void UWeaponManagerComponent::OnReloadAction()
@@ -209,6 +286,12 @@ void UWeaponManagerComponent::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 
 	DOREPLIFETIME(UWeaponManagerComponent, CurrentWeapon);
 	DOREPLIFETIME_CONDITION(UWeaponManagerComponent, Character, COND_InitialOnly);
+}
+
+void UWeaponManagerComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+                                            FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
 void UWeaponManagerComponent::OnToggleArmAction()

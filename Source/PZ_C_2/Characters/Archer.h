@@ -56,9 +56,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess = "true"))
 	TSubclassOf<ABaseRangeWeapon> DefaultWeapon;
 
-	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess = "true"))
-	UAnimMontage* ClimbingMontage;
-
+#pragma region Camera
 private:
 	UPROPERTY(EditAnywhere)
 	class USpringArmComponent* SpringArmComponent;
@@ -71,6 +69,22 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	inline UCameraComponent* GetCameraComponent() const { return CameraComponent; };
+
+	UPROPERTY(EditDefaultsOnly)
+	float CameraDistanceDefault;
+
+	UPROPERTY(EditDefaultsOnly)
+	float CameraDistanceAiming;
+
+	UPROPERTY(EditDefaultsOnly)
+	FVector CameraOffsetDefault;
+
+	UPROPERTY(EditDefaultsOnly)
+	FVector CameraOffsetAiming;
+
+	float CameraDistanceCurrent;
+	FVector CameraOffsetCurrent;
+#pragma endregion
 
 	UPROPERTY(BlueprintReadOnly)
 	FVector LocalVelocity;
@@ -90,12 +104,18 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Replicated)
 	UWeaponManagerComponent* WeaponManagerComponent;
 
-
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	class UInventoryManagerComponent* InventoryManagerComponent;
 	// ~Components
 
-	// Climbing // todo remove or upgade
+#pragma region Climbing
+public:
+	UPROPERTY(BlueprintReadOnly)
+	bool IsClimbing;
+
+	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess = "true"))
+	UAnimMontage* ClimbingMontage;
+
 	UFUNCTION()
 	void Climb();
 
@@ -105,11 +125,9 @@ public:
 	UFUNCTION(NetMulticast, Unreliable)
 	void PlayClimbAnimationMulticast();
 
-	UPROPERTY(BlueprintReadOnly)
-	bool IsClimbing;
-	// ~Climbing
+#pragma endregion
 
-	// Health implementation
+#pragma region Health
 	FOnHealthChangeDelegate OnHealthChange;
 
 	UPROPERTY(BlueprintAssignable)
@@ -136,40 +154,41 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Stats")
 	void SetCurrentHealth(float healthValue);
-	// ~Health 
+#pragma endregion
 
 	UFUNCTION(BlueprintCallable, Category = "Stats")
 	virtual float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator,
 	                         AActor* DamageCauser) override;
 
-	virtual bool CanJumpInternal_Implementation() const override;
 
-	// Movement
+#pragma region Movement
 private:
 	UPROPERTY()
 	UCharacterMovementComponent* CharacterMovementComponent;
 public:
+	virtual bool CanJumpInternal_Implementation() const override;
+
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	UCharacterMovementComponent* GetCharacterMovementComponent() const;
-	// ~Movement
+#pragma endregion
 
-	// ~Health implementation
 
-	// Saving
+#pragma region Saving
 	FCharacterSaveData GetSaveData() const;
 
 	void InitFromSaveData(const FCharacterSaveData Data);
-	// ~Saving
+#pragma endregion
 
-	// [server] Weapon interaction
+#pragma region Weapon interaction
+	// [server]
 	UFUNCTION()
 	void EquipDefaultWeapon();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float ArmingDuration;
-	// ~Weapon interaction
+#pragma endregion
 
-	// States
+#pragma region Character states
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,
 		meta = (Bitmask, BitmaskEnum = "ECharacterStateFlags", AllowPrivateAccess="true"),
@@ -191,5 +210,5 @@ public:
 
 	bool HasState(ECharacterStateFlags Flag, int32 BitMask) const;
 
-	// ~States
+#pragma endregion
 };

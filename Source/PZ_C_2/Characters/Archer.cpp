@@ -20,7 +20,6 @@
 // Sets default values
 AArcher::AArcher()
 {
-	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 
@@ -41,7 +40,6 @@ AArcher::AArcher()
 	SpringArmComponent->bInheritRoll = false;
 	SpringArmComponent->bInheritPitch = true;
 	SpringArmComponent->bInheritYaw = true;
-	// SpringArmComponent->CameraLagSpeed = 3.0f;/**/
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName);
@@ -53,13 +51,6 @@ AArcher::AArcher()
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
 
-	/*
-	TopBar = CreateDefaultSubobject<UWidgetComponent>("TopBar");
-	TopBar->SetupAttachment(GetMesh());
-	TopBar->SetRelativeLocation(FVector(0, 0, 185.f));
-	TopBar->SetRelativeRotation(FRotator::MakeFromEuler(FVector(0.f, 0.f, -90.f)));
-	*/
-
 	// Stats defaults
 	MaxHealth = 100.0f;
 	CurrentHealth = 90.f;
@@ -67,6 +58,12 @@ AArcher::AArcher()
 
 	GetCharacterMovement()->JumpZVelocity = 800.f;
 	//bNetUseOwnerRelevancy = true;
+
+	// camera default settings
+	CameraDistanceDefault = 300.f;
+	CameraDistanceAiming = 50.f;
+	CameraOffsetDefault = FVector(0, 0, 100.f);
+	CameraOffsetAiming = FVector(0, 30.f, 50.f);
 
 	MaxPitchRotation = 40.f;
 }
@@ -88,6 +85,12 @@ void AArcher::PostInitializeComponents()
 void AArcher::BeginPlay()
 {
 	Super::BeginPlay();
+
+	CameraDistanceCurrent = CameraDistanceDefault;
+	CameraOffsetCurrent = CameraOffsetDefault;
+
+	SpringArmComponent->TargetArmLength = CameraDistanceCurrent;
+	SpringArmComponent->TargetOffset = CameraOffsetCurrent;
 
 	// Init default weapon
 	if (HasAuthority() && DefaultWeapon)
@@ -240,6 +243,8 @@ void AArcher::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		{
 			PlayerInputComponent->BindAction("Fire", IE_Pressed, WeaponManagerComponent,
 			                                 &UWeaponManagerComponent::OnFireAction);
+			PlayerInputComponent->BindAction("Fire", IE_Released, WeaponManagerComponent,
+			                                 &UWeaponManagerComponent::OnFireReleasedAction);
 			PlayerInputComponent->BindAction("Reload", IE_Pressed, WeaponManagerComponent,
 			                                 &UWeaponManagerComponent::OnReloadAction);
 			PlayerInputComponent->BindAction("ArmToggle", IE_Pressed, WeaponManagerComponent,

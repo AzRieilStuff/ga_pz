@@ -30,9 +30,11 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+	                           FActorComponentTickFunction* ThisTickFunction) override;
+
 	UWeaponManagerComponent();
 
-	// Equipping
 #pragma region Equipping
 
 protected:
@@ -124,13 +126,22 @@ public:
 	// ~arming & disarming end
 
 #pragma endregion
-	// ~Equpping
 
-	// Firing
 #pragma region Firing
 private:
 	UPROPERTY(BlueprintAssignable, meta=(AllowPrivateAccess="true"))
 	FOnChangeAimState OnChangeAimState;
+
+	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess="true"))
+	float AimingCameraTransitionDuration;
+
+	FTimerHandle AimingCameraTimer;
+
+	// cumulative value for camera animation time
+	float CameraInterpTime;
+
+	void CalcCameraPosition(FVector& Offset, float& Distance, const float Delta, const float InterpSpeed) const;
+	void UpdateCameraPosition();
 public:
 	UFUNCTION()
 	void OnFireAction();
@@ -143,9 +154,7 @@ public:
 
 	void SetAimCamera(const bool IsAim);
 #pragma endregion
-	// ~Firing
 
-	// Reloading // todo update
 #pragma region Reloading
 	UFUNCTION(BlueprintCallable)
 	void OnReloadAction();
@@ -156,5 +165,4 @@ public:
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 	FORCEINLINE bool IsFiring() { return CurrentWeapon && CurrentWeapon->bIsFiring; };
 #pragma endregion
-	// ~Reloading
 };
