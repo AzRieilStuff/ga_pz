@@ -189,6 +189,10 @@ public:
 #pragma endregion
 
 #pragma region Character states
+	/*
+	 * states are using for animation replication, not qualified to be smth rely on
+	 * will be replicated if changed from server of from owner
+	*/
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,
 		meta = (Bitmask, BitmaskEnum = "ECharacterStateFlags", AllowPrivateAccess="true"),
@@ -202,8 +206,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetState(ECharacterStateFlags Flag);
 
+	UFUNCTION(Server, Unreliable)
+	void ServerSetState(ECharacterStateFlags Flag);
+
 	UFUNCTION(BlueprintCallable)
 	void ClearState(ECharacterStateFlags Flag);
+
+	UFUNCTION(Server, Unreliable)
+	void ServerClearState(ECharacterStateFlags Flag);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool HasState(ECharacterStateFlags Flag) const;

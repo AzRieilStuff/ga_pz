@@ -53,7 +53,7 @@ private:
 	const FName BowBackSocket = FName("SpineBowSocket");
 
 	const FName QuiverBackSocket = FName("SpineQuiverSocket");
-	
+
 	FTimerHandle DisarmTimer;
 	FTimerHandle ArmTimer;
 
@@ -136,6 +136,7 @@ private:
 	float AimingCameraTransitionDuration;
 
 	FTimerHandle AimingCameraTimer;
+	FTimerHandle AimingCompleteTimer;
 
 	// cumulative value for camera animation time
 	float CameraInterpTime;
@@ -152,6 +153,7 @@ public:
 	UFUNCTION()
 	void OnInterruptFireAction();
 
+	// [local]
 	void SetAimCamera(const bool IsAim);
 #pragma endregion
 

@@ -181,25 +181,34 @@ void UWeaponManagerComponent::OnFireAction()
 		return;
 	}
 
-	//CurrentWeapon->FireAction();
+	// start aiming
 	Character->SetState(ECharacterStateFlags::Aiming);
 	SetAimCamera(true);
+
+	GetWorld()->GetTimerManager().SetTimer(AimingCompleteTimer, [this]
+	{
+		Character->SetState(ECharacterStateFlags::AimReady);
+	}, CurrentWeapon->AimingDuration, false);
 }
 
 void UWeaponManagerComponent::OnFireReleasedAction()
 {
+	FTimerManager& TimerManager = GetWorld()->GetTimerManager();
 	if (Character->HasState(ECharacterStateFlags::AimReady))
 	{
 		// shoot
 		Character->ClearState(ECharacterStateFlags::Aiming);
 		Character->ClearState(ECharacterStateFlags::AimReady);
 		SetAimCamera(false);
+
+		CurrentWeapon->Fire();
 	}
 	else if (Character->HasState(ECharacterStateFlags::Aiming))
 	{
 		// break
 		Character->ClearState(ECharacterStateFlags::Aiming);
 		SetAimCamera(false);
+		TimerManager.ClearTimer(AimingCompleteTimer);
 	}
 }
 

@@ -11,37 +11,35 @@
 #include "PZ_C_2/Ammo/BaseProjectile.h"
 #include "PZ_C_2/Characters/Archer.h"
 
-void ABaseRangeWeapon::StartAiming()
-{
-	if (OwnerManagerComponent->Character->IsLocallyControlled())
-	{
-		OwnerManagerComponent->Character->SetState(ECharacterStateFlags::Aiming);
-		OwnerManagerComponent->SetAimCamera(true);
-	}
 
-	if (GetOwner()->GetLocalRole() == ROLE_Authority)
-	{
-		OwnerManagerComponent->Character->SetState(ECharacterStateFlags::Aiming);
-	}
-	else
-	{
-		ServerStartAiming();
-	}
+ABaseRangeWeapon::ABaseRangeWeapon()
+{
+	ProjectileClass = ABaseProjectile::StaticClass();
+
+	bDestroyOnPickup = false;
+	bStoreable = false;
+
+	// should be replicated with weapon owner
+	bNetUseOwnerRelevancy = true;
+
+	// update ammo info
+	NetUpdateFrequency = 3.f;
 }
 
-void ABaseRangeWeapon::StartShootingTimer()
-{
-	OwnerManagerComponent->Character->SetState(ECharacterStateFlags::Firing);
 
-	GetWorldTimerManager().SetTimer(FiringTimer, this, &ABaseRangeWeapon::OnShootingTimerEnd, FireRate, false);
+void ABaseRangeWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ABaseRangeWeapon, OwnerManagerComponent, COND_InitialOnly);
+	DOREPLIFETIME_CONDITION(ABaseRangeWeapon, Ammo, COND_OwnerOnly);
 }
 
-void ABaseRangeWeapon::BreakShootingTimer()
+void ABaseRangeWeapon::BeginPlay()
 {
-	OwnerManagerComponent->Character->ClearState(ECharacterStateFlags::Firing);
-
-	GetWorldTimerManager().ClearTimer(FiringTimer);
+	Super::BeginPlay();
 }
+
 
 void ABaseRangeWeapon::ServerPerformFire_Implementation(FVector AimLocation)
 {
@@ -95,87 +93,14 @@ ABaseProjectile* ABaseRangeWeapon::SpawnProjectile(FVector AimLocation)
 	return nullptr;
 }
 
-void ABaseRangeWeapon::OnShootingTimerEnd()
+void ABaseRangeWeapon::Fire()
 {
-	OwnerManagerComponent->Character->ClearState(ECharacterStateFlags::Firing);
-
-	FVector Aim = GetAimLocation(OwnerManagerComponent->Character);
-
 	// from server or client but only once per shoot
 	if (OwnerManagerComponent->Character->IsLocallyControlled())
 	{
+		FVector Aim = GetAimLocation(OwnerManagerComponent->Character);
 		ServerPerformFire(Aim);
 	}
-}
-
-ABaseRangeWeapon::ABaseRangeWeapon()
-{
-	ProjectileClass = ABaseProjectile::StaticClass();
-
-	bDestroyOnPickup = false;
-	bStoreable = false;
-
-	// should be replicated with weapon owner
-	bNetUseOwnerRelevancy = true;
-
-	// update ammo info
-	NetUpdateFrequency = 3.f;
-}
-
-void ABaseRangeWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME_CONDITION(ABaseRangeWeapon, OwnerManagerComponent, COND_InitialOnly);
-	DOREPLIFETIME_CONDITION(ABaseRangeWeapon, Ammo, COND_OwnerOnly);
-}
-
-void ABaseRangeWeapon::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-
-void ABaseRangeWeapon::FireAction()
-{
-	if (OwnerManagerComponent->Character->HasState(ECharacterStateFlags::Aiming))
-	{
-		return;
-	}
-
-	
-	if (GetOwner()->GetLocalRole() == ROLE_AutonomousProxy)
-	{
-		StartShootingTimer();
-	}
-
-	ServerStartAiming();
-	//ServerFireAction();
-}
-
-void ABaseRangeWeapon::ServerFireAction_Implementation()
-{
-	StartShootingTimer();
-	MulticastFireAction();
-}
-
-void ABaseRangeWeapon::MulticastFireAction_Implementation()
-{
-	// run visuals for simulated within clients
-	if (GetOwner()->GetLocalRole() == ROLE_SimulatedProxy)
-	{
-		StartShootingTimer();
-	}
-}
-
-bool ABaseRangeWeapon::ServerFireAction_Validate()
-{
-	if (OwnerManagerComponent->Character->HasState(ECharacterStateFlags::Firing))
-	{
-		return false;
-	}
-
-	return Ammo.InClip > 0;
 }
 
 bool ABaseRangeWeapon::CanReload() const
@@ -234,38 +159,4 @@ void ABaseRangeWeapon::ServerPickup(AArcher* Character)
 	Character->WeaponManagerComponent->EquipWeapon(this);
 
 	Super::ServerPickup(Character);
-}
-
-void ABaseRangeWeapon::InterruptFire()
-{
-	if (!OwnerManagerComponent->Character->HasState(ECharacterStateFlags::Firing))
-	{
-		return;
-	}
-
-	if (GetOwner() && GetOwner()->GetLocalRole() == ROLE_AutonomousProxy)
-	{
-		BreakShootingTimer();
-	}
-
-	ServerInterruptFire();
-}
-
-void ABaseRangeWeapon::ServerStartAiming_Implementation()
-{
-	StartAiming();
-}
-
-void ABaseRangeWeapon::MulticastInterruptFire_Implementation()
-{
-	if (GetOwner()->GetLocalRole() == ROLE_SimulatedProxy)
-	{
-		BreakShootingTimer();
-	}
-}
-
-void ABaseRangeWeapon::ServerInterruptFire_Implementation()
-{
-	BreakShootingTimer();
-	MulticastFireAction();
 }

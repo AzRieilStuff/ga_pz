@@ -113,10 +113,39 @@ void AArcher::OnRep_StateFlags(const int32 PrevValue)
 
 void AArcher::SetState(ECharacterStateFlags Flag)
 {
+	if (HasState(Flag))
+	{
+		return;
+	}
+
+	StateFlags |= 1 << static_cast<int32>(Flag);
+
+	if (GetLocalRole() != ROLE_Authority && IsLocallyControlled())
+	{
+		ServerSetState(Flag);
+	}
+}
+
+void AArcher::ServerSetState_Implementation(ECharacterStateFlags Flag)
+{
 	StateFlags |= 1 << static_cast<int32>(Flag);
 }
 
 void AArcher::ClearState(ECharacterStateFlags Flag)
+{
+	if (!HasState(Flag))
+	{
+		return;
+	}
+
+	StateFlags &= ~(1 << static_cast<int32>(Flag));
+	if (GetLocalRole() != ROLE_Authority && IsLocallyControlled())
+	{
+		ServerClearState(Flag);
+	}
+}
+
+void AArcher::ServerClearState_Implementation(ECharacterStateFlags Flag)
 {
 	StateFlags &= ~(1 << static_cast<int32>(Flag));
 }

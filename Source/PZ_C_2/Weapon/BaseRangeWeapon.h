@@ -39,33 +39,17 @@ public:
 
 	virtual void BeginPlay() override;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Config, Category=WeaponStats)
-	float FireRate;
-
-#pragma region Aiming
-private:
-	FTimerHandle AimingTimer;
-
-	FTimerHandle FiringTimer;
-
-	UFUNCTION(Server, Unreliable)
-	void ServerStartAiming();
-
-	void StartAiming();
-#pragma endregion
-
 #pragma region Firing
-	// [local + server] run animation & timer
-	void StartShootingTimer();
-
-	void BreakShootingTimer();
-
+public:
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category=WeaponStats)
+	float AimingDuration;
+	
 protected:
 	// [server] 
 	virtual class ABaseProjectile* SpawnProjectile(FVector AimLocation);
 
 	// [local + server] runs for each client 
-	virtual void OnShootingTimerEnd();
+	virtual void Fire();
 
 	// [server] handle shooting, spawn projectiles, shoot effect
 	UFUNCTION(Server, Reliable)
@@ -98,15 +82,6 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Config, Category=WeaponStats)
 	int32 Range;
 
-	UFUNCTION(BlueprintCallable)
-	virtual void FireAction();
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	virtual void ServerFireAction();
-
-	UFUNCTION(NetMulticast, Reliable)
-	virtual void MulticastFireAction();
-
 	UPROPERTY(EditAnywhere, Category="Gameplay|Projectile")
 	TSubclassOf<class ABaseProjectile> ProjectileClass;
 
@@ -136,16 +111,6 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void UseAmmo();
-#pragma endregion
-
-#pragma region Fire interrupt
-	UFUNCTION(Server, Unreliable)
-	virtual void ServerInterruptFire();
-
-	UFUNCTION(NetMulticast, Unreliable)
-	virtual void MulticastInterruptFire();
-
-	virtual void InterruptFire();
 #pragma endregion
 
 #pragma region Picking
