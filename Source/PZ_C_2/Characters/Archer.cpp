@@ -2,6 +2,7 @@
 
 #include "Archer.h"
 
+#include "AbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/Widget.h"
@@ -15,6 +16,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "PZ_C_2/Ammo/Arrow.h"
+#include "PZ_C_2/Attributes/CharacterAttributeSet.h"
 #include "PZ_C_2/Framework/GameInstanceMain.h"
 
 // Sets default values
@@ -51,9 +53,11 @@ AArcher::AArcher()
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
 
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>("AbilitySystemComponent");
+	AbilitySystemComponent->SetIsReplicated(true);
+	Attributes = CreateDefaultSubobject<UCharacterAttributeSet>(TEXT("CharacterAttributeSet"));
+
 	// Stats defaults
-	MaxHealth = 100.0f;
-	CurrentHealth = 90.f;
 	ArmingDuration = 1.f;
 
 	GetCharacterMovement()->JumpZVelocity = 800.f;
@@ -72,7 +76,7 @@ AArcher::AArcher()
 void AArcher::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-
+	
 	APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
 
 	if (CameraManager) // will be empty for AI or dedicated
@@ -160,24 +164,12 @@ bool AArcher::HasState(ECharacterStateFlags Flag, int32 BitMask) const
 	return ((BitMask) & (1 << static_cast<int32>(Flag))) > 0;
 }
 
-
-void AArcher::SetCurrentHealth(float healthValue)
-{
-	// Update server value
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		CurrentHealth = FMath::Clamp(healthValue, 0.f, MaxHealth);
-		OnHealthUpdate(); // if server changes value, RepNotify wont call
-	}
-}
-
 float AArcher::TakeDamage(float DamageTaken, const struct FDamageEvent& DamageEvent, AController* EventInstigator,
                           AActor* DamageCauser)
 {
 	Super::TakeDamage(DamageTaken, DamageEvent, EventInstigator, DamageCauser);
 
-	float damageApplied = CurrentHealth - DamageTaken;
-	SetCurrentHealth(damageApplied);
+	Attributes->SetHealth(Attributes->GetHealth() - DamageTaken);
 
 	if (DamageCauser->IsA(AArrow::StaticClass()))
 	{
@@ -185,7 +177,7 @@ float AArcher::TakeDamage(float DamageTaken, const struct FDamageEvent& DamageEv
 		DamageCauser->SetOwner(this);
 		DamageCauser->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepWorldTransform);
 	}
-	return damageApplied;
+	return DamageTaken;
 }
 
 bool AArcher::CanJumpInternal_Implementation() const
@@ -198,55 +190,12 @@ UCharacterMovementComponent* AArcher::GetCharacterMovementComponent() const
 	return CharacterMovementComponent;
 }
 
-FCharacterSaveData AArcher::GetSaveData() const
-{
-	return FCharacterSaveData{
-		CurrentHealth,
-		GetActorLocation(),
-		GetActorRotation().Quaternion()
-	};
-}
-
-void AArcher::InitFromSaveData(const FCharacterSaveData Data)
-{
-	CurrentHealth = Data.Health;
-	SetActorLocation(Data.Location, false, nullptr, ETeleportType::ResetPhysics);
-	SetActorRotation(Data.Rotation, ETeleportType::ResetPhysics);
-}
-
-
 void AArcher::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AArcher, CurrentHealth);
+	//DOREPLIFETIME(AArcher, CurrentHealth);
 	DOREPLIFETIME_CONDITION(AArcher, StateFlags, COND_SkipOwner);
-}
-
-void AArcher::OnHealthUpdate()
-{
-	if (IsLocallyControlled()) // update local
-	{
-		FString healthMessage = FString::Printf(TEXT("Player %s now has %f HP"), *GetFName().ToString(), CurrentHealth);
-
-		auto PC = GetWorld()->GetFirstPlayerController();
-		PC->ClientMessage(healthMessage);
-	}
-
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		FString healthMessage = FString::Printf(
-			TEXT("%s now has %f HP ( ROLE_Authority )"), *GetFName().ToString(), CurrentHealth);
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Blue, healthMessage);
-	}
-
-	OnHealthChange.Broadcast();
-	OnHealthChangeDynamic.Broadcast();
-}
-
-void AArcher::OnRep_CurrentHealth()
-{
-	OnHealthUpdate();
 }
 
 // Called every frame
@@ -264,8 +213,6 @@ void AArcher::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	if (GameInstance)
 	{
-		PlayerInputComponent->BindAction("QuickSave", IE_Pressed, GameInstance, &UGameInstanceMain::QuickSave);
-		PlayerInputComponent->BindAction("QuickLoad", IE_Pressed, GameInstance, &UGameInstanceMain::QuickLoad);
 		PlayerInputComponent->BindAction("Climb", IE_Pressed, this, &AArcher::Climb);
 
 		if (WeaponManagerComponent)

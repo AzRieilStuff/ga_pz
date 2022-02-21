@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "AbilitySystemInterface.h"
 #include "PZ_C_2/Weapon/WeaponManagerComponent.h"
 #include "Archer.generated.h"
 
@@ -43,21 +44,56 @@ ENUM_CLASS_FLAGS(ECharacterStateFlags);
 
 
 UCLASS()
-class PZ_C_2_API AArcher : public ACharacter
+class PZ_C_2_API AArcher : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
 public:
 	AArcher();
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
-	class UChildActorComponent* WeaponComponent;
+protected:
+	virtual void PostInitializeComponents() override;
 
-	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess = "true"))
-	TSubclassOf<ABaseRangeWeapon> DefaultWeapon;
+	virtual void BeginPlay() override;
+
+public:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
+	virtual void Tick(float DeltaTime) override;
+
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Stats")
+	virtual float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator,
+	                         AActor* DamageCauser) override;
+
+#pragma region Components
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated)
+	UWeaponManagerComponent* WeaponManagerComponent;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	class UInventoryManagerComponent* InventoryManagerComponent;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	class UAbilitySystemComponent* AbilitySystemComponent;
+
+	inline virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override
+	{
+		return AbilitySystemComponent;
+	};
+#pragma endregion
+
+#pragma region GAS
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
+	class UCharacterAttributeSet* Attributes;
+#pragma endregion
 
 #pragma region Camera
 private:
+	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess="true"))
+	float MaxPitchRotation;
+
 	UPROPERTY(EditAnywhere)
 	class USpringArmComponent* SpringArmComponent;
 
@@ -86,28 +122,6 @@ public:
 	FVector CameraOffsetCurrent;
 #pragma endregion
 
-	UPROPERTY(BlueprintReadOnly)
-	FVector LocalVelocity;
-protected:
-	virtual void PostInitializeComponents() override;
-
-	virtual void BeginPlay() override;
-public:
-	UPROPERTY(EditDefaultsOnly)
-	float MaxPitchRotation;
-
-	virtual void Tick(float DeltaTime) override;
-
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	// Components & managers
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Replicated)
-	UWeaponManagerComponent* WeaponManagerComponent;
-
-	UPROPERTY(BlueprintReadOnly, EditAnywhere)
-	class UInventoryManagerComponent* InventoryManagerComponent;
-	// ~Components
-
 #pragma region Climbing
 public:
 	UPROPERTY(BlueprintReadOnly)
@@ -127,40 +141,6 @@ public:
 
 #pragma endregion
 
-#pragma region Health
-	FOnHealthChangeDelegate OnHealthChange;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnHealthChangeDynamicDelegate OnHealthChangeDynamic;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Stats")
-	float MaxHealth;
-
-	UPROPERTY(ReplicatedUsing=OnRep_CurrentHealth)
-	float CurrentHealth;
-
-	UFUNCTION()
-	void OnRep_CurrentHealth();
-
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	void OnHealthUpdate();
-
-	UFUNCTION(BlueprintPure, Category="Stats")
-	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
-
-	UFUNCTION(BlueprintPure, Category="Stats")
-	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
-
-	UFUNCTION(BlueprintCallable, Category="Stats")
-	void SetCurrentHealth(float healthValue);
-#pragma endregion
-
-	UFUNCTION(BlueprintCallable, Category = "Stats")
-	virtual float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator,
-	                         AActor* DamageCauser) override;
-
-
 #pragma region Movement
 private:
 	UPROPERTY()
@@ -172,20 +152,21 @@ public:
 	UCharacterMovementComponent* GetCharacterMovementComponent() const;
 #pragma endregion
 
-
-#pragma region Saving
-	FCharacterSaveData GetSaveData() const;
-
-	void InitFromSaveData(const FCharacterSaveData Data);
-#pragma endregion
-
 #pragma region Weapon interaction
+public:
+	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess = "true"))
+	TSubclassOf<ABaseRangeWeapon> DefaultWeapon;
+
 	// [server]
 	UFUNCTION()
 	void EquipDefaultWeapon();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float ArmingDuration;
+private:
+	UPROPERTY()
+	class UChildActorComponent* WeaponComponent;
+
 #pragma endregion
 
 #pragma region Character states

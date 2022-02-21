@@ -16,20 +16,5 @@ class PZ_C_2_API UGameInstanceMain : public UGameInstance
 public:
 	UGameInstanceMain();
 
-	UPROPERTY()
-	USaveGameBase* SaveGame;
-
-	UFUNCTION()
-	void QuickSave();
-
-	UFUNCTION(Server, Reliable)
-	void QuickSaveServer();
-
-	UFUNCTION()
-	void QuickLoad();
-	
-	UFUNCTION(Server, Reliable)
-	void QuickLoadServer();
-
 	virtual void Init() override;
 };
