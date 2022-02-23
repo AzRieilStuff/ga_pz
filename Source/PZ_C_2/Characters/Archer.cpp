@@ -76,7 +76,7 @@ AArcher::AArcher()
 void AArcher::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	
+
 	APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
 
 	if (CameraManager) // will be empty for AI or dedicated
@@ -104,6 +104,8 @@ void AArcher::BeginPlay()
 	}
 
 	CharacterMovementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
+	GrantDefaultAbilities();
+	ApplyDefaultEffects();
 }
 
 void AArcher::EquipDefaultWeapon()
@@ -178,6 +180,65 @@ float AArcher::TakeDamage(float DamageTaken, const struct FDamageEvent& DamageEv
 		DamageCauser->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepWorldTransform);
 	}
 	return DamageTaken;
+}
+
+void AArcher::GrantDefaultAbilities()
+{
+	if (GetLocalRole() != ROLE_Authority || !IsValid(AbilitySystemComponent))
+	{
+		return;
+	}
+
+	for (auto Ability : DefaultAbilities)
+	{
+		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(
+			Ability.Value,
+			1.0,
+			INDEX_NONE,
+			this
+		);
+
+		AbilitySystemComponent->GiveAbility(Spec);
+
+		AbilitiesMap.Add(
+			Ability.Key, AbilitySystemComponent->GiveAbility(Spec));
+	}
+}
+
+void AArcher::ApplyDefaultEffects()
+{
+	for (auto Effect : ApplyEffectsOnStartup)
+	{
+		AbilitySystemComponent->ApplyGameplayEffectToSelf(Effect.GetDefaultObject(), 1.0,
+		                                                  FGameplayEffectContextHandle());
+	}
+}
+
+FGameplayAbilitySpecHandle* AArcher::GetAbilityHandleByKey(const EAbility Key)
+{
+	return AbilitiesMap.Find(Key);
+}
+
+FGameplayAbilitySpec* AArcher::GetAbilitySpecByKey(const EAbility Key)
+{
+	FGameplayAbilitySpecHandle* Handle = GetAbilityHandleByKey(Key);
+
+	if (Handle == nullptr)
+	{
+		return nullptr;
+	}
+
+	return AbilitySystemComponent->FindAbilitySpecFromHandle(*Handle);
+}
+
+bool AArcher::HasActiveAbility(const EAbility Key)
+{
+	FGameplayAbilitySpec* Spec = GetAbilitySpecByKey(Key);
+	if (Spec != nullptr)
+	{
+		return Spec->IsActive();
+	}
+	return false;
 }
 
 bool AArcher::CanJumpInternal_Implementation() const

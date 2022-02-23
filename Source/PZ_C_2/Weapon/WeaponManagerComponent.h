@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BaseRangeWeapon.h"
+#include "GameplayAbilitySpec.h"
 #include "Components/ActorComponent.h"
 #include "WeaponManagerComponent.generated.h"
 
@@ -128,22 +129,10 @@ public:
 #pragma endregion
 
 #pragma region Firing
-private:
+public:
 	UPROPERTY(BlueprintAssignable, meta=(AllowPrivateAccess="true"))
 	FOnChangeAimState OnChangeAimState;
-
-	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess="true"))
-	float AimingCameraTransitionDuration;
-
-	FTimerHandle AimingCameraTimer;
-	FTimerHandle AimingCompleteTimer;
-
-	// cumulative value for camera animation time
-	float CameraInterpTime;
-
-	void CalcCameraPosition(FVector& Offset, float& Distance, const float Delta, const float InterpSpeed) const;
-	void UpdateCameraPosition();
-public:
+	
 	UFUNCTION()
 	void OnFireAction();
 
@@ -152,9 +141,6 @@ public:
 
 	UFUNCTION()
 	void OnInterruptFireAction();
-
-	// [local]
-	void SetAimCamera(const bool IsAim);
 #pragma endregion
 
 #pragma region Reloading

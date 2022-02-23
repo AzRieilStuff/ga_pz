@@ -110,6 +110,7 @@ bool ABaseRangeWeapon::CanReload() const
 
 bool ABaseRangeWeapon::CanFire() const
 {
+	return true;
 	return Ammo.InClip > 0 && !bIsReloading;
 }
 

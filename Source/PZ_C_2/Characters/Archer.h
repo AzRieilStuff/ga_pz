@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayAbilitySpec.h"
+#include "GameplayEffect.h"
 #include "PZ_C_2/Weapon/WeaponManagerComponent.h"
 #include "Archer.generated.h"
 
@@ -26,6 +28,15 @@ struct FCharacterSaveData
 
 	UPROPERTY()
 	FQuat Rotation;
+};
+
+UENUM()
+enum class EAbility : uint8
+{
+	Aim,
+	Shoot,
+	Jump,
+	Sprint
 };
 
 UENUM(Blueprintable, Meta = (Bitflags))
@@ -87,6 +98,27 @@ public:
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	class UCharacterAttributeSet* Attributes;
+
+	void GrantDefaultAbilities();
+
+	void ApplyDefaultEffects();
+
+	TMap<EAbility, FGameplayAbilitySpecHandle> AbilitiesMap;
+public:
+	// abilities
+	FGameplayAbilitySpecHandle* GetAbilityHandleByKey(const EAbility Key);
+
+	FGameplayAbilitySpec* GetAbilitySpecByKey(const EAbility Key);
+
+	UFUNCTION(BlueprintCallable)
+	bool HasActiveAbility(const EAbility Key);
+
+	UPROPERTY(EditDefaultsOnly, Category="Abilities")
+	TMap<EAbility, TSubclassOf<UGameplayAbility>> DefaultAbilities;
+
+	UPROPERTY(EditDefaultsOnly, Category="Abilities")
+	TArray<TSubclassOf<UGameplayEffect>> ApplyEffectsOnStartup;
+	
 #pragma endregion
 
 #pragma region Camera

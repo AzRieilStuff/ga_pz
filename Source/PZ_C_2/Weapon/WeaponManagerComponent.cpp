@@ -2,10 +2,12 @@
 
 #include "WeaponManagerComponent.h"
 
+#include "AbilitySystemComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "PZ_C_2/Abilities/AimAbility.h"
 #include "PZ_C_2/Characters/Archer.h"
 #include "PZ_C_2/Items/Core/PickBoxComponent.h"
 
@@ -16,8 +18,6 @@ UWeaponManagerComponent::UWeaponManagerComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	PrimaryComponentTick.SetTickFunctionEnable(false);
-
-	AimingCameraTransitionDuration = 1.f;
 }
 
 void UWeaponManagerComponent::SetCurrentWeapon(ABaseRangeWeapon* Weapon, ABaseRangeWeapon* PrevWeapon)
@@ -120,55 +120,6 @@ void UWeaponManagerComponent::UnequipWeapon()
 	}
 }
 
-void UWeaponManagerComponent::CalcCameraPosition(FVector& Offset, float& Distance, const float Delta,
-                                                 const float InterpSpeed) const
-{
-	const USpringArmComponent* Arm = Character->GetSpringArmComponent();
-
-	Offset = FMath::VInterpTo(
-		Arm->TargetOffset,
-		Character->CameraOffsetCurrent,
-		Delta,
-		InterpSpeed
-	);
-
-	Distance = FMath::FInterpTo(
-		Arm->TargetArmLength,
-		Character->CameraDistanceCurrent,
-		Delta,
-		InterpSpeed
-	);
-}
-
-void UWeaponManagerComponent::UpdateCameraPosition()
-{
-	FTimerManager& TimerManager = GetWorld()->GetTimerManager();
-	const float Delta = TimerManager.GetTimerElapsed(AimingCameraTimer);
-	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, FString::Printf(TEXT("%f"), Delta));
-
-	CameraInterpTime += Delta;
-	{
-		FVector CameraArmOffset;
-		float CameraArmLength;
-
-		CalcCameraPosition(
-			CameraArmOffset,
-			CameraArmLength,
-			Delta,
-			(CameraInterpTime / AimingCameraTransitionDuration) * 10.f // scale speed depends on left distance, 
-		);
-
-		Character->GetSpringArmComponent()->TargetArmLength = CameraArmLength;
-		Character->GetSpringArmComponent()->TargetOffset = CameraArmOffset;
-	}
-
-	if (CameraInterpTime > AimingCameraTransitionDuration)
-	{
-		TimerManager.ClearTimer(AimingCameraTimer);
-		CameraInterpTime = 0;
-	}
-}
-
 void UWeaponManagerComponent::OnFireAction()
 {
 	if (CurrentWeapon == nullptr || !CurrentWeapon->CanFire() || !bIsWeaponArmed)
@@ -181,34 +132,40 @@ void UWeaponManagerComponent::OnFireAction()
 		return;
 	}
 
-	// start aiming
-	Character->SetState(ECharacterStateFlags::Aiming);
-	SetAimCamera(true);
+	FGameplayAbilitySpec* AimAbilitySpec = Character->GetAbilitySpecByKey(EAbility::Aim);
 
-	GetWorld()->GetTimerManager().SetTimer(AimingCompleteTimer, [this]
+	if (AimAbilitySpec && AimAbilitySpec->Handle.IsValid())
 	{
-		Character->SetState(ECharacterStateFlags::AimReady);
-	}, CurrentWeapon->AimingDuration, false);
+		Character->AbilitySystemComponent->TryActivateAbility(AimAbilitySpec->Handle);
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
+		                                 FString::FromInt(AimAbilitySpec->Ability->GetUniqueID()));
+	}
 }
 
 void UWeaponManagerComponent::OnFireReleasedAction()
 {
-	FTimerManager& TimerManager = GetWorld()->GetTimerManager();
-	if (Character->HasState(ECharacterStateFlags::AimReady))
-	{
-		// shoot
-		Character->ClearState(ECharacterStateFlags::Aiming);
-		Character->ClearState(ECharacterStateFlags::AimReady);
-		SetAimCamera(false);
+	const FGameplayAbilitySpec* AimAbilitySpec = Character->GetAbilitySpecByKey(EAbility::Aim);
 
-		CurrentWeapon->Fire();
-	}
-	else if (Character->HasState(ECharacterStateFlags::Aiming))
+	if (AimAbilitySpec == nullptr || !AimAbilitySpec->IsActive())
 	{
-		// break
-		Character->ClearState(ECharacterStateFlags::Aiming);
-		SetAimCamera(false);
-		TimerManager.ClearTimer(AimingCompleteTimer);
+		return;
+	}
+
+	UAimAbility* AimAbility = Cast<UAimAbility, UGameplayAbility>(*AimAbilitySpec->GetAbilityInstances().GetData());
+
+	if (AimAbility == nullptr)
+	{
+		return;
+	}
+
+	if (AimAbility->GetIsAimReady())
+	{
+		CurrentWeapon->Fire();
+		Character->AbilitySystemComponent->CancelAbilityHandle(AimAbilitySpec->Handle);
+	}
+	else
+	{
+		Character->AbilitySystemComponent->CancelAbilityHandle(AimAbilitySpec->Handle);
 	}
 }
 
@@ -219,36 +176,13 @@ void UWeaponManagerComponent::OnInterruptFireAction()
 		return;
 	}
 
-	if (Character->HasState(ECharacterStateFlags::Aiming))
+	FGameplayAbilitySpec* AimAbility = Character->GetAbilitySpecByKey(EAbility::Aim);
+	if (AimAbility != nullptr && AimAbility->Handle.IsValid())
 	{
-		SetAimCamera(false);
-		Character->ClearState(ECharacterStateFlags::Aiming);
-		Character->ClearState(ECharacterStateFlags::AimReady);
+		Character->AbilitySystemComponent->CancelAbilityHandle(AimAbility->Handle);
 	}
 
 	//CurrentWeapon->InterruptFire();
-}
-
-void UWeaponManagerComponent::SetAimCamera(const bool IsAim)
-{
-	Character->CameraDistanceCurrent = IsAim ? Character->CameraDistanceAiming : Character->CameraDistanceDefault;
-	Character->CameraOffsetCurrent = IsAim ? Character->CameraOffsetAiming : Character->CameraOffsetDefault;
-
-	OnChangeAimState.Broadcast(IsAim);
-
-	// start animation
-	const FTimerManager& TimerManager = GetWorld()->GetTimerManager();
-
-	// if we interrupt aiming, reuse current timer, so if we aiming for .7s, return in default state for the same
-	if (TimerManager.IsTimerActive(AimingCameraTimer))
-	{
-		CameraInterpTime = AimingCameraTransitionDuration - CameraInterpTime;
-	}
-	else
-	{
-		GetWorld()->GetTimerManager().SetTimer(AimingCameraTimer, this, &ThisClass::UpdateCameraPosition,
-		                                       .025f, true);
-	}
 }
 
 void UWeaponManagerComponent::OnReloadAction()

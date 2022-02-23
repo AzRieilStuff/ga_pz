@@ -55,4 +55,8 @@ void UCharacterAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& At
 	{
 		NewValue = FMath::Clamp(NewValue, 0.f, MaxHealth.GetCurrentValue());
 	}
+	else if (Attribute == GetStaminaAttribute())
+	{
+		NewValue = FMath::Clamp(NewValue, 0.f, MaxStamina.GetCurrentValue());
+	}
 }
