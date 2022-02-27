@@ -1,5 +1,6 @@
 ﻿#include "AimAbility.h"
 
+#include "AbilitySystemComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "PZ_C_2/Characters/Archer.h"
 #include "PZ_C_2/Effects/ConsumeStaminaGameplayEffect.h"
@@ -12,13 +13,14 @@ UAimAbility::UAimAbility()
 
 	CostGameplayEffectClass = UConsumeStaminaGameplayEffect::StaticClass();
 	AimingCameraTransitionDuration = 1.f;
+
+	ActivationOwnedTags.AddTag(FGameplayTag::RequestGameplayTag("Character.Aiming"));
 }
 
 void UAimAbility::UpdateCameraPosition()
 {
 	FTimerManager& TimerManager = GetWorld()->GetTimerManager();
 	const float Delta = TimerManager.GetTimerElapsed(AimingCameraTimer);
-	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, FString::Printf(TEXT("%f"), Delta));
 
 	CameraInterpTime += Delta;
 	{
@@ -118,17 +120,12 @@ void UAimAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SourceCharacter->SetState(ECharacterStateFlags::Aiming);
 	SetAimCamera(true);
 
 	const float Duration = SourceCharacter->WeaponManagerComponent->CurrentWeapon->AimingDuration;
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
-	                                 FString::FromInt(GetUniqueID()));
-	GetWorld()->GetTimerManager().SetTimer(AimingCompleteTimer, [this]
+
+	GetWorld()->GetTimerManager().SetTimer(AimingCompleteTimer, [this, TriggerEventData]
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
-		                                 FString::FromInt(GetUniqueID()));
-		SourceCharacter->SetState(ECharacterStateFlags::AimReady);
 		bIsAimReady = true;
 	}, Duration, false);
 }
@@ -145,9 +142,6 @@ void UAimAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGam
 	TimerManager.ClearTimer(AimingCompleteTimer);
 
 	bIsAimReady = false;
-	
-	SourceCharacter->ClearState(ECharacterStateFlags::Aiming);
-	SourceCharacter->ClearState(ECharacterStateFlags::AimReady);
 }
 
 void UAimAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,

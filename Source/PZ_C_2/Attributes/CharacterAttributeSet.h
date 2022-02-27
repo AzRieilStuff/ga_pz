@@ -26,6 +26,10 @@ public:
 	FGameplayAttributeData MaxHealth;
 	ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, MaxHealth)
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes", Replicated=OnRep_HealthRegenRate)
+	FGameplayAttributeData HealthRegenRate;
+	ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, HealthRegenRate)
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes", Replicated=OnRep_Speed)
 	FGameplayAttributeData Speed;
 	ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, Speed)
@@ -42,11 +46,18 @@ public:
 	FGameplayAttributeData MaxStamina;
 	ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, MaxStamina)
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes", Replicated=OnRep_StaminaRegenRate)
+	FGameplayAttributeData StaminaRegenRate;
+	ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, StaminaRegenRate)
+
 	UFUNCTION()
 	void OnRep_MaxHealth(const FGameplayAttributeData OldValue);
 
 	UFUNCTION()
 	void OnRep_Health(const FGameplayAttributeData OldValue );
+
+	UFUNCTION()
+	void OnRep_HealthRegenRate(const FGameplayAttributeData OldValue);
 
 	UFUNCTION()
 	void OnRep_Speed(const FGameplayAttributeData OldValue);
@@ -59,6 +70,9 @@ public:
 	
 	UFUNCTION()
 	void OnRep_MaxStamina(const FGameplayAttributeData OldValue);
+
+	UFUNCTION()
+	void OnRep_StaminaRegenRate(const FGameplayAttributeData OldValue);
 
 	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
 };

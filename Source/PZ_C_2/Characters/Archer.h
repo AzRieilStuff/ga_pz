@@ -39,16 +39,16 @@ enum class EAbility : uint8
 	Sprint
 };
 
+// Animation states that are not part of GAS
 UENUM(Blueprintable, Meta = (Bitflags))
 enum class ECharacterStateFlags : uint8
 {
-	Firing = 0,
+	NONE = 0,
 	// old
 
 	DisarmingBow,
 	ArmingBow,
 	Aiming,
-	AimReady
 };
 
 ENUM_CLASS_FLAGS(ECharacterStateFlags);
@@ -61,6 +61,9 @@ class PZ_C_2_API AArcher : public ACharacter, public IAbilitySystemInterface
 
 public:
 	AArcher();
+
+	// [server]
+	virtual void PossessedBy(AController* NewController) override;
 
 protected:
 	virtual void PostInitializeComponents() override;
@@ -94,7 +97,7 @@ public:
 	};
 #pragma endregion
 
-#pragma region GAS
+#pragma region GAS	
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	class UCharacterAttributeSet* Attributes;
@@ -103,6 +106,10 @@ private:
 
 	void ApplyDefaultEffects();
 
+	// [client]
+	void InitClientAbilityMap();
+
+	// storing abilities that exists only in one instance per class, used for easier access to GAS spec handle
 	TMap<EAbility, FGameplayAbilitySpecHandle> AbilitiesMap;
 public:
 	// abilities
@@ -202,10 +209,7 @@ private:
 #pragma endregion
 
 #pragma region Character states
-	/*
-	 * states are using for animation replication, not qualified to be smth rely on
-	 * will be replicated if changed from server of from owner
-	*/
+	// states are using mostly for animation replication, not reliable much
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,
 		meta = (Bitmask, BitmaskEnum = "ECharacterStateFlags", AllowPrivateAccess="true"),

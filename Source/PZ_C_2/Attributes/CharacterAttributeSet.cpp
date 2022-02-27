@@ -15,6 +15,8 @@ void UCharacterAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	DOREPLIFETIME_CONDITION_NOTIFY(UCharacterAttributeSet, SprintSpeed, COND_OwnerOnly, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UCharacterAttributeSet, Stamina, COND_OwnerOnly, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UCharacterAttributeSet, MaxStamina, COND_OwnerOnly, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UCharacterAttributeSet, StaminaRegenRate, COND_OwnerOnly, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UCharacterAttributeSet, HealthRegenRate, COND_OwnerOnly, REPNOTIFY_Always);
 }
 
 void UCharacterAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData OldValue)
@@ -25,6 +27,11 @@ void UCharacterAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData OldVal
 void UCharacterAttributeSet::OnRep_Health(const FGameplayAttributeData OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UCharacterAttributeSet, Health, OldValue);
+}
+
+void UCharacterAttributeSet::OnRep_HealthRegenRate(const FGameplayAttributeData OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UCharacterAttributeSet, HealthRegenRate, OldValue);
 }
 
 void UCharacterAttributeSet::OnRep_Speed(const FGameplayAttributeData OldValue)
@@ -45,6 +52,11 @@ void UCharacterAttributeSet::OnRep_Stamina(const FGameplayAttributeData OldValue
 void UCharacterAttributeSet::OnRep_MaxStamina(const FGameplayAttributeData OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UCharacterAttributeSet, MaxStamina, OldValue);
+}
+
+void UCharacterAttributeSet::OnRep_StaminaRegenRate(const FGameplayAttributeData OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UCharacterAttributeSet, StaminaRegenRate, OldValue);
 }
 
 void UCharacterAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const

@@ -17,6 +17,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "PZ_C_2/Ammo/Arrow.h"
 #include "PZ_C_2/Attributes/CharacterAttributeSet.h"
+#include "PZ_C_2/Effects/PassiveHealthRegeneration.h"
+#include "PZ_C_2/Effects/PassiveStaminaRegeneration.h"
 #include "PZ_C_2/Framework/GameInstanceMain.h"
 
 // Sets default values
@@ -55,6 +57,7 @@ AArcher::AArcher()
 
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>("AbilitySystemComponent");
 	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 	Attributes = CreateDefaultSubobject<UCharacterAttributeSet>(TEXT("CharacterAttributeSet"));
 
 	// Stats defaults
@@ -70,6 +73,23 @@ AArcher::AArcher()
 	CameraOffsetAiming = FVector(0, 30.f, 50.f);
 
 	MaxPitchRotation = 40.f;
+
+	// default effects
+	ApplyEffectsOnStartup.Add(UPassiveHealthRegeneration::StaticClass());
+	ApplyEffectsOnStartup.Add(UPassiveStaminaRegeneration::StaticClass());
+}
+
+void AArcher::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	}
+
+	// ASC MixedMode replication requires that the ASC Owner's Owner be the Controller.
+	SetOwner(NewController);
 }
 
 // Called when the game starts or when spawned
@@ -84,6 +104,9 @@ void AArcher::PostInitializeComponents()
 		UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->ViewPitchMax = MaxPitchRotation;
 		UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->ViewPitchMin = -MaxPitchRotation;
 	}
+
+	GrantDefaultAbilities();
+	ApplyDefaultEffects();
 }
 
 void AArcher::BeginPlay()
@@ -103,9 +126,12 @@ void AArcher::BeginPlay()
 		//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, "Equip default weapon");
 	}
 
+	if (IsLocallyControlled())
+	{
+		InitClientAbilityMap();
+	}
+
 	CharacterMovementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
-	GrantDefaultAbilities();
-	ApplyDefaultEffects();
 }
 
 void AArcher::EquipDefaultWeapon()
@@ -126,10 +152,12 @@ void AArcher::SetState(ECharacterStateFlags Flag)
 
 	StateFlags |= 1 << static_cast<int32>(Flag);
 
+	/*
 	if (GetLocalRole() != ROLE_Authority && IsLocallyControlled())
 	{
 		ServerSetState(Flag);
 	}
+	*/
 }
 
 void AArcher::ServerSetState_Implementation(ECharacterStateFlags Flag)
@@ -145,10 +173,12 @@ void AArcher::ClearState(ECharacterStateFlags Flag)
 	}
 
 	StateFlags &= ~(1 << static_cast<int32>(Flag));
+	/*
 	if (GetLocalRole() != ROLE_Authority && IsLocallyControlled())
 	{
 		ServerClearState(Flag);
 	}
+	*/
 }
 
 void AArcher::ServerClearState_Implementation(ECharacterStateFlags Flag)
@@ -189,7 +219,7 @@ void AArcher::GrantDefaultAbilities()
 		return;
 	}
 
-	for (auto Ability : DefaultAbilities)
+	for (auto Ability : DefaultAbilities) // grant abilities on server
 	{
 		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(
 			Ability.Value,
@@ -200,10 +230,16 @@ void AArcher::GrantDefaultAbilities()
 
 		AbilitySystemComponent->GiveAbility(Spec);
 
-		AbilitiesMap.Add(
-			Ability.Key, AbilitySystemComponent->GiveAbility(Spec));
+		/*
+		if (IsLocallyControlled())
+		{
+			AbilitiesMap.Add(
+				Ability.Key, AbilitySystemComponent->GiveAbility(Spec));
+		}
+		*/
 	}
 }
+
 
 void AArcher::ApplyDefaultEffects()
 {
@@ -211,6 +247,24 @@ void AArcher::ApplyDefaultEffects()
 	{
 		AbilitySystemComponent->ApplyGameplayEffectToSelf(Effect.GetDefaultObject(), 1.0,
 		                                                  FGameplayEffectContextHandle());
+	}
+}
+
+void AArcher::InitClientAbilityMap()
+{
+	for (auto Ability : DefaultAbilities)
+	{
+		FGameplayAbilitySpec* GameAbilitySpec = AbilitySystemComponent->GetActivatableAbilities().FindByPredicate(
+			[Ability](const FGameplayAbilitySpec& Current)
+			{
+				return Current.Ability->IsA(Ability.Value.Get());
+			});
+
+		if (GameAbilitySpec != nullptr)
+		{
+			AbilitiesMap.Add(
+				Ability.Key, (*GameAbilitySpec).Handle);
+		}
 	}
 }
 
@@ -243,7 +297,7 @@ bool AArcher::HasActiveAbility(const EAbility Key)
 
 bool AArcher::CanJumpInternal_Implementation() const
 {
-	return Super::CanJumpInternal_Implementation() && !HasState(ECharacterStateFlags::Firing);
+	return Super::CanJumpInternal_Implementation() && !WeaponManagerComponent->IsAiming();
 }
 
 UCharacterMovementComponent* AArcher::GetCharacterMovementComponent() const

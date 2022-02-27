@@ -122,7 +122,7 @@ void UWeaponManagerComponent::UnequipWeapon()
 
 void UWeaponManagerComponent::OnFireAction()
 {
-	if (CurrentWeapon == nullptr || !CurrentWeapon->CanFire() || !bIsWeaponArmed)
+	if (CurrentWeapon == nullptr || !CurrentWeapon->CanFire())
 	{
 		return;
 	}
@@ -132,13 +132,18 @@ void UWeaponManagerComponent::OnFireAction()
 		return;
 	}
 
+	// we have unarmed valid weapon, arm
+	if (!bIsWeaponArmed)
+	{
+		OnToggleArmAction();
+		return;
+	}
+
 	FGameplayAbilitySpec* AimAbilitySpec = Character->GetAbilitySpecByKey(EAbility::Aim);
 
 	if (AimAbilitySpec && AimAbilitySpec->Handle.IsValid())
 	{
 		Character->AbilitySystemComponent->TryActivateAbility(AimAbilitySpec->Handle);
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
-		                                 FString::FromInt(AimAbilitySpec->Ability->GetUniqueID()));
 	}
 }
 
@@ -237,6 +242,13 @@ void UWeaponManagerComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
+bool UWeaponManagerComponent::IsAiming()
+{
+	return IsWeaponEquipped() && Character->GetAbilitySystemComponent()->HasMatchingGameplayTag(
+		FGameplayTag::RequestGameplayTag("Character.Aiming")
+	);
+}
+
 void UWeaponManagerComponent::OnToggleArmAction()
 {
 	if (!IsWeaponEquipped())
@@ -245,9 +257,11 @@ void UWeaponManagerComponent::OnToggleArmAction()
 	}
 
 	// has conflicting state
-	if (Character->HasState(ECharacterStateFlags::Firing) ||
+	if (
+		Character->WeaponManagerComponent->IsAiming() ||
 		Character->HasState(ECharacterStateFlags::DisarmingBow) ||
-		Character->HasState(ECharacterStateFlags::ArmingBow))
+		Character->HasState(ECharacterStateFlags::ArmingBow)
+	)
 	{
 		return;
 	}
