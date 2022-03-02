@@ -15,7 +15,7 @@ class PZ_C_2_API AArrow : public ABaseProjectile
 
 	FTimerHandle DestroyTimer;
 
-	float Lifetime = 15.f;
+	float Lifetime = 150.f;
 
 public:
 	// Sets default values for this actor's properties

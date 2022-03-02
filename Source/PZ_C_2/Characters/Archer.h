@@ -238,4 +238,13 @@ public:
 	bool HasState(ECharacterStateFlags Flag, int32 BitMask) const;
 
 #pragma endregion
+
+#pragma region Projectile sticking
+private:
+	TArray<FName> ProjectileStickSocketNames;
+
+	void LocateStickSockets();
+
+	FName* FindClosestSocket(const FVector Position) ;
+#pragma endregion 
 };

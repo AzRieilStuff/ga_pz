@@ -48,7 +48,7 @@ AArcher::AArcher()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName);
 
-	GetMesh()->SetIsReplicated(true); // replicate bone rotation
+	GetMesh()->SetIsReplicated(true); // replicate bone rotation & socket attaches ( ? )
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	GetMesh()->SetCollisionResponseToAllChannels(ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Block);
@@ -107,6 +107,11 @@ void AArcher::PostInitializeComponents()
 
 	GrantDefaultAbilities();
 	ApplyDefaultEffects();
+
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		LocateStickSockets();
+	}
 }
 
 void AArcher::BeginPlay()
@@ -196,6 +201,41 @@ bool AArcher::HasState(ECharacterStateFlags Flag, int32 BitMask) const
 	return ((BitMask) & (1 << static_cast<int32>(Flag))) > 0;
 }
 
+void AArcher::LocateStickSockets()
+{
+	TArray<FName> AllSockets = GetMesh()->GetAllSocketNames();
+	ProjectileStickSocketNames.Empty();
+
+	for (const FName& Name : AllSockets)
+	{
+		if (!Name.ToString().EndsWith("StickSocket"))
+		{
+			continue;
+		}
+
+		ProjectileStickSocketNames.Add(Name);
+	}
+}
+
+FName* AArcher::FindClosestSocket(const FVector Position)
+{
+	if (ProjectileStickSocketNames.Num() == 0)
+	{
+		return nullptr;
+	}
+
+	ProjectileStickSocketNames.Sort([this, Position](const FName& V1, const FName& V2)
+	{
+		const FVector SocketLocation1 = GetMesh()->GetSocketLocation(V1);
+		const FVector SocketLocation2 = GetMesh()->GetSocketLocation(V2);
+
+		return FVector::Dist(SocketLocation1, Position) < FVector::Dist(SocketLocation2, Position);
+	});
+
+
+	return &ProjectileStickSocketNames[0];
+}
+
 float AArcher::TakeDamage(float DamageTaken, const struct FDamageEvent& DamageEvent, AController* EventInstigator,
                           AActor* DamageCauser)
 {
@@ -206,8 +246,20 @@ float AArcher::TakeDamage(float DamageTaken, const struct FDamageEvent& DamageEv
 	if (DamageCauser->IsA(AArrow::StaticClass()))
 	{
 		// sticking
-		DamageCauser->SetOwner(this);
-		DamageCauser->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepWorldTransform);
+
+		if (GetLocalRole() == ROLE_Authority)
+		{
+			FName* Socket = FindClosestSocket(DamageCauser->GetActorLocation());
+			if (Socket != nullptr)
+			{
+				DamageCauser->SetOwner(this);
+				DamageCauser->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepWorldTransform, *Socket);
+			}
+			else
+			{
+				DamageCauser->Destroy();
+			}
+		}
 	}
 	return DamageTaken;
 }
