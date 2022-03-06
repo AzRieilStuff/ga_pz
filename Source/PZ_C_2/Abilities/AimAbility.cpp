@@ -74,7 +74,7 @@ void UAimAbility::SetAimCamera(const bool IsAim)
 		                                       ? SourceCharacter->CameraOffsetAiming
 		                                       : SourceCharacter->CameraOffsetDefault;
 
-	SourceCharacter->WeaponManagerComponent->OnChangeAimState.Broadcast(IsAim);
+	SourceCharacter->GetWeaponManagerComponent()->OnChangeAimState.Broadcast(IsAim);
 
 	// start animation
 	const FTimerManager& TimerManager = GetWorld()->GetTimerManager();
@@ -122,7 +122,7 @@ void UAimAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 
 	SetAimCamera(true);
 
-	const float Duration = SourceCharacter->WeaponManagerComponent->CurrentWeapon->AimingDuration;
+	const float Duration = SourceCharacter->GetWeaponManagerComponent()->CurrentWeapon->AimingDuration;
 
 	GetWorld()->GetTimerManager().SetTimer(AimingCompleteTimer, [this, TriggerEventData]
 	{

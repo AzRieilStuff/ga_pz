@@ -5,4 +5,5 @@
 
 UAmmoBoxInventoryItem::UAmmoBoxInventoryItem()
 {
+	SlotType = EInventorySlot::MainWeaponAmmo;
 }

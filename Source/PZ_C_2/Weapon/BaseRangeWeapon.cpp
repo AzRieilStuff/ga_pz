@@ -17,13 +17,14 @@ ABaseRangeWeapon::ABaseRangeWeapon()
 	ProjectileClass = ABaseProjectile::StaticClass();
 
 	bDestroyOnPickup = false;
-	bStoreable = false;
 
 	// should be replicated with weapon owner
 	bNetUseOwnerRelevancy = true;
 
 	// update ammo info
 	NetUpdateFrequency = 3.f;
+
+	MaxPerStack = 1;
 }
 
 
@@ -151,13 +152,13 @@ void ABaseRangeWeapon::UseAmmo_Implementation()
 
 bool ABaseRangeWeapon::CanPickupBy(AArcher* Character) const
 {
-	return bPickable && Character->WeaponManagerComponent->CanEquipWeapon(this);
+	return bPickable && Character->GetWeaponManagerComponent()->CanEquipWeapon(this);
 }
 
 void ABaseRangeWeapon::ServerPickup(AArcher* Character)
 {
 	//Character->WeaponManagerComponent->CurrentWeapon = this;
-	Character->WeaponManagerComponent->EquipWeapon(this);
+	Character->GetWeaponManagerComponent()->EquipWeapon(this);
 
 	Super::ServerPickup(Character);
 }

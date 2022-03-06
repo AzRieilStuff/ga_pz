@@ -143,7 +143,7 @@ void UWeaponManagerComponent::OnFireAction()
 
 	if (AimAbilitySpec && AimAbilitySpec->Handle.IsValid())
 	{
-		Character->AbilitySystemComponent->TryActivateAbility(AimAbilitySpec->Handle);
+		Character->GetAbilitySystemComponent()->TryActivateAbility(AimAbilitySpec->Handle);
 	}
 }
 
@@ -166,11 +166,11 @@ void UWeaponManagerComponent::OnFireReleasedAction()
 	if (AimAbility->GetIsAimReady())
 	{
 		CurrentWeapon->Fire();
-		Character->AbilitySystemComponent->CancelAbilityHandle(AimAbilitySpec->Handle);
+		Character->GetAbilitySystemComponent()->CancelAbilityHandle(AimAbilitySpec->Handle);
 	}
 	else
 	{
-		Character->AbilitySystemComponent->CancelAbilityHandle(AimAbilitySpec->Handle);
+		Character->GetAbilitySystemComponent()->CancelAbilityHandle(AimAbilitySpec->Handle);
 	}
 }
 
@@ -184,7 +184,7 @@ void UWeaponManagerComponent::OnInterruptFireAction()
 	FGameplayAbilitySpec* AimAbility = Character->GetAbilitySpecByKey(EAbility::Aim);
 	if (AimAbility != nullptr && AimAbility->Handle.IsValid())
 	{
-		Character->AbilitySystemComponent->CancelAbilityHandle(AimAbility->Handle);
+		Character->GetAbilitySystemComponent()->CancelAbilityHandle(AimAbility->Handle);
 	}
 
 	//CurrentWeapon->InterruptFire();
@@ -258,7 +258,7 @@ void UWeaponManagerComponent::OnToggleArmAction()
 
 	// has conflicting state
 	if (
-		Character->WeaponManagerComponent->IsAiming() ||
+		Character->GetWeaponManagerComponent()->IsAiming() ||
 		Character->HasState(ECharacterStateFlags::DisarmingBow) ||
 		Character->HasState(ECharacterStateFlags::ArmingBow)
 	)

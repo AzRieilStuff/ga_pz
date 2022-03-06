@@ -5,6 +5,6 @@ bool IPickableInterface::CanPickupBy(AArcher* Character) const
 	return false;
 }
 
-void IPickableInterface::Pickup(AArcher* Character)
+void IPickableInterface::TryPickup(AArcher* Character)
 {
 }

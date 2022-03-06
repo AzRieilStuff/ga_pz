@@ -398,8 +398,7 @@ void AArcher::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 		if (InventoryManagerComponent)
 		{
-			PlayerInputComponent->BindAction("DropFromInventory", IE_Pressed, InventoryManagerComponent,
-			                                 &UInventoryManagerComponent::OnDropItemAction);
+			
 		}
 	}
 }

@@ -16,5 +16,5 @@ class IPickableInterface
 
 	virtual bool CanPickupBy(AArcher* Character) const;
 
-	virtual void Pickup(AArcher* Character);
+	virtual void TryPickup(AArcher* Character);
 };

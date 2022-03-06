@@ -5,6 +5,18 @@
 #include "CoreMinimal.h"
 #include "InventoryManagerComponent.generated.h"
 
+UENUM()
+enum class EInventorySlot : uint8
+{
+	None = 0,
+	MainWeaponAmmo,
+	Quiver,
+	MainWeapon,
+	Consumable,
+	MAX
+};
+ENUM_RANGE_BY_FIRST_AND_LAST(EInventorySlot, EInventorySlot::None, EInventorySlot::MAX);
+
 class ABaseItem;
 class UBaseInventoryItem;
 class AArcher;
@@ -19,56 +31,34 @@ class PZ_C_2_API UInventoryManagerComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastStoreItem(ABaseItem* Item);
+	// Active items for each slot
+	UPROPERTY()
+	TMap<EInventorySlot, UBaseInventoryItem*> ActiveItems;
+	
+	// Active items for each slot
+	TMap<EInventorySlot, int32> DistinctItemLimits;
+
+	// All items
+	UPROPERTY()
+	TArray<UBaseInventoryItem*> Items;
+
+	// todo Switching delay
+	TMap<EInventorySlot, float> SwitchDelay;
+
+	// todo Activation delay
+	TMap<EInventorySlot, float> ActivationDelay;
 public:
 	UInventoryManagerComponent();
 
 	virtual void BeginPlay() override;
 
-	UPROPERTY()
-	TArray<UBaseInventoryItem*> Items;
+	TArray<UBaseInventoryItem*> GetItems(const EInventorySlot SlotType) const;
 
-	UPROPERTY(BlueprintReadWrite)
-	int32 Slots = 10;
+	UBaseInventoryItem* GetActiveItem(const EInventorySlot SlotType) const;
 
-	UFUNCTION(BlueprintCallable)
-	TArray<UBaseInventoryItem*> GetItems();
+	bool TryAddItem(UBaseInventoryItem* Item);
 
-	UFUNCTION(BlueprintCallable)
-	UBaseInventoryItem* GetItem(const int32 Index) const;
+	bool TryAddItem(ABaseItem* ItemActor);
 
-	void SetItemAmount(const int32 ItemIndex, const int32 Amount);
-	
-	UFUNCTION(BlueprintCallable)
-	void OnUseItemAction(const int32 ItemIndex);
-	
-	UFUNCTION(Server, BlueprintCallable, Reliable) /**/
-	virtual void ServerUseItem(const int32 ItemIndex);
-	
-	UFUNCTION(Client, Reliable)
-	virtual void ClientUseItem(const int32 ItemIndex, const bool Used);
-
-	UFUNCTION(Server, BlueprintCallable, Reliable)
-	void ServerStoreItem(ABaseItem* Item);
-
-	UFUNCTION(BlueprintCallable)
-	bool HasFreeSlot() const;
-
-	bool CanPickupItem(const class ABaseItem* Item) const;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnItemInteraction OnItemRemoved;
-	
-	UPROPERTY(BlueprintAssignable)
-	FOnItemInteraction OnItemStored;
-
-	// [local] changes from local ui`
-	UPROPERTY(BlueprintReadWrite)
-	int32 FocusItemIndex;
-
-	void OnDropItemAction();
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerDropItem(const int ItemIndex);
+	bool CanStoreItem(const UBaseInventoryItem* Item) const;
 };

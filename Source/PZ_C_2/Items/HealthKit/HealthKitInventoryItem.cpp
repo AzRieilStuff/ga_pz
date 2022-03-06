@@ -6,6 +6,7 @@
 UHealthKitInventoryItem::UHealthKitInventoryItem()
 {
 	VisualActorClass = AHealthKit::StaticClass();
+	SlotType = EInventorySlot::Consumable;
 }
 
 bool UHealthKitInventoryItem::UseItem(AArcher* Target)

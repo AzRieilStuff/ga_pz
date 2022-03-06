@@ -72,7 +72,7 @@ protected:
 
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
+
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -82,14 +82,27 @@ public:
 	                         AActor* DamageCauser) override;
 
 #pragma region Components
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Replicated)
+private:
+	UPROPERTY(Replicated)
 	UWeaponManagerComponent* WeaponManagerComponent;
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	UPROPERTY()
 	class UInventoryManagerComponent* InventoryManagerComponent;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	UPROPERTY()
 	class UAbilitySystemComponent* AbilitySystemComponent;
+public:
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	inline UWeaponManagerComponent* GetWeaponManagerComponent() const
+	{
+		return WeaponManagerComponent;
+	};
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	inline UInventoryManagerComponent* GetInventoryManagerComponent() const
+	{
+		return InventoryManagerComponent;
+	};
 
 	inline virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override
 	{
@@ -97,7 +110,7 @@ public:
 	};
 #pragma endregion
 
-#pragma region GAS	
+#pragma region GAS
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	class UCharacterAttributeSet* Attributes;
@@ -125,7 +138,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category="Abilities")
 	TArray<TSubclassOf<UGameplayEffect>> ApplyEffectsOnStartup;
-	
+
 #pragma endregion
 
 #pragma region Camera
@@ -245,6 +258,6 @@ private:
 
 	void LocateStickSockets();
 
-	FName* FindClosestSocket(const FVector Position) ;
-#pragma endregion 
+	FName* FindClosestSocket(const FVector Position);
+#pragma endregion
 };
