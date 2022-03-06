@@ -11,7 +11,7 @@ void AShortgunBow::ServerPerformFire_Implementation(FVector AimLocation)
 	{
 		if (ABaseProjectile* Arrow = SpawnProjectile(AimLocation))
 		{
-			//Arrow->EnableMovement();
+			Arrow->OnShoot();
 		}
 	}
 }

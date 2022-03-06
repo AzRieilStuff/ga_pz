@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "PZ_C_2/Inventory/InventoryManagerComponent.h"
 
 #include "BaseInventoryItem.generated.h"
 
@@ -9,22 +10,8 @@ UCLASS(Blueprintable)
 class UBaseInventoryItem : public UObject
 {
 	GENERATED_BODY()
-
-	/**
-	 * @brief Is currently processing
-	 */
-	bool bLocked = false;
-
-	//friend class UInventoryManagerComponent;
-
 protected:
 public:
-	inline bool IsLocked() const { return bLocked; };
-
-	inline void Lock() { bLocked = true; }
-
-	inline void Unlock() { bLocked = false; }
-
 	UBaseInventoryItem();
 
 	// static fails
@@ -52,4 +39,5 @@ public:
 	UPROPERTY()
 	int32 Amount;
 
+	EInventorySlot SlotType;
 };

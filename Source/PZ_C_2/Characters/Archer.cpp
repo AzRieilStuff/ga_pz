@@ -1,8 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Archer.h"
 
+#include "AbilitySystemComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/Widget.h"
 #include "Components/WidgetComponent.h"
@@ -11,14 +12,18 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "PZ_C_2/Ammo/Arrow.h"
+#include "PZ_C_2/Attributes/CharacterAttributeSet.h"
+#include "PZ_C_2/Effects/PassiveHealthRegeneration.h"
+#include "PZ_C_2/Effects/PassiveStaminaRegeneration.h"
 #include "PZ_C_2/Framework/GameInstanceMain.h"
 
 // Sets default values
 AArcher::AArcher()
 {
-	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 
@@ -28,25 +33,63 @@ AArcher::AArcher()
 	InventoryManagerComponent = CreateDefaultSubobject<UInventoryManagerComponent>("InventoryComponent");
 	InventoryManagerComponent->SetIsReplicated(true);
 
-	GetMesh()->SetIsReplicated(true); // replicate bone rotation
+	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArm");
+	SpringArmComponent->SetIsReplicated(false);
+	SpringArmComponent->TargetArmLength = 300.f;
+	SpringArmComponent->SetupAttachment(RootComponent);
+	SpringArmComponent->SetRelativeRotation(FRotator(-45.f, 0.f, 0.f));
+	SpringArmComponent->TargetOffset = FVector(0, 0, 75.f);
+	SpringArmComponent->bEnableCameraLag = false;
+	SpringArmComponent->bUsePawnControlRotation = true;
+	SpringArmComponent->bInheritRoll = false;
+	SpringArmComponent->bInheritPitch = true;
+	SpringArmComponent->bInheritYaw = true;
+
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
+	CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName);
+
+	GetMesh()->SetIsReplicated(true); // replicate bone rotation & socket attaches ( ? )
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	GetMesh()->SetCollisionResponseToAllChannels(ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Block);
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
 
-	TopBar = CreateDefaultSubobject<UWidgetComponent>("TopBar");
-	TopBar->SetupAttachment(GetMesh());
-	TopBar->SetRelativeLocation(FVector(0, 0, 185.f));
-	TopBar->SetRelativeRotation(FRotator::MakeFromEuler(FVector(0.f, 0.f, -90.f)));
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>("AbilitySystemComponent");
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+	Attributes = CreateDefaultSubobject<UCharacterAttributeSet>(TEXT("CharacterAttributeSet"));
 
-	//Initialize the player's Health
-	MaxHealth = 100.0f;
-	CurrentHealth = 90.f;
+	// Stats defaults
+	ArmingDuration = 1.f;
 
 	GetCharacterMovement()->JumpZVelocity = 800.f;
+	//bNetUseOwnerRelevancy = true;
+
+	// camera default settings
+	CameraDistanceDefault = 300.f;
+	CameraDistanceAiming = 50.f;
+	CameraOffsetDefault = FVector(0, 0, 100.f);
+	CameraOffsetAiming = FVector(0, 30.f, 50.f);
 
 	MaxPitchRotation = 40.f;
+
+	// default effects
+	ApplyEffectsOnStartup.Add(UPassiveHealthRegeneration::StaticClass());
+	ApplyEffectsOnStartup.Add(UPassiveStaminaRegeneration::StaticClass());
+}
+
+void AArcher::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	}
+
+	// ASC MixedMode replication requires that the ASC Owner's Owner be the Controller.
+	SetOwner(NewController);
 }
 
 // Called when the game starts or when spawned
@@ -61,18 +104,39 @@ void AArcher::PostInitializeComponents()
 		UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->ViewPitchMax = MaxPitchRotation;
 		UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->ViewPitchMin = -MaxPitchRotation;
 	}
+
+	GrantDefaultAbilities();
+	ApplyDefaultEffects();
+
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		LocateStickSockets();
+	}
 }
 
 void AArcher::BeginPlay()
 {
 	Super::BeginPlay();
 
+	CameraDistanceCurrent = CameraDistanceDefault;
+	CameraOffsetCurrent = CameraOffsetDefault;
+
+	SpringArmComponent->TargetArmLength = CameraDistanceCurrent;
+	SpringArmComponent->TargetOffset = CameraOffsetCurrent;
+
 	// Init default weapon
 	if (HasAuthority() && DefaultWeapon)
 	{
 		GetWorldTimerManager().SetTimerForNextTick(this, &AArcher::EquipDefaultWeapon);
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, "Equip default weapon");
+		//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, "Equip default weapon");
 	}
+
+	if (IsLocallyControlled())
+	{
+		InitClientAbilityMap();
+	}
+
+	CharacterMovementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
 }
 
 void AArcher::EquipDefaultWeapon()
@@ -80,83 +144,225 @@ void AArcher::EquipDefaultWeapon()
 	WeaponManagerComponent->EquipWeaponFromClass(DefaultWeapon);
 }
 
-
-void AArcher::SetCurrentHealth(float healthValue)
+void AArcher::OnRep_StateFlags(const int32 PrevValue)
 {
-	// Update server value
-	if (GetLocalRole() == ROLE_Authority)
+}
+
+void AArcher::SetState(ECharacterStateFlags Flag)
+{
+	if (HasState(Flag))
 	{
-		CurrentHealth = FMath::Clamp(healthValue, 0.f, MaxHealth);
-		OnHealthUpdate(); // if server changes value, RepNotify wont call
+		return;
+	}
+
+	StateFlags |= 1 << static_cast<int32>(Flag);
+
+	/*
+	if (GetLocalRole() != ROLE_Authority && IsLocallyControlled())
+	{
+		ServerSetState(Flag);
+	}
+	*/
+}
+
+void AArcher::ServerSetState_Implementation(ECharacterStateFlags Flag)
+{
+	StateFlags |= 1 << static_cast<int32>(Flag);
+}
+
+void AArcher::ClearState(ECharacterStateFlags Flag)
+{
+	if (!HasState(Flag))
+	{
+		return;
+	}
+
+	StateFlags &= ~(1 << static_cast<int32>(Flag));
+	/*
+	if (GetLocalRole() != ROLE_Authority && IsLocallyControlled())
+	{
+		ServerClearState(Flag);
+	}
+	*/
+}
+
+void AArcher::ServerClearState_Implementation(ECharacterStateFlags Flag)
+{
+	StateFlags &= ~(1 << static_cast<int32>(Flag));
+}
+
+bool AArcher::HasState(ECharacterStateFlags Flag) const
+{
+	return HasState(Flag, StateFlags);
+}
+
+bool AArcher::HasState(ECharacterStateFlags Flag, int32 BitMask) const
+{
+	return ((BitMask) & (1 << static_cast<int32>(Flag))) > 0;
+}
+
+void AArcher::LocateStickSockets()
+{
+	TArray<FName> AllSockets = GetMesh()->GetAllSocketNames();
+	ProjectileStickSocketNames.Empty();
+
+	for (const FName& Name : AllSockets)
+	{
+		if (!Name.ToString().EndsWith("StickSocket"))
+		{
+			continue;
+		}
+
+		ProjectileStickSocketNames.Add(Name);
 	}
 }
 
-float AArcher::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator,
+FName* AArcher::FindClosestSocket(const FVector Position)
+{
+	if (ProjectileStickSocketNames.Num() == 0)
+	{
+		return nullptr;
+	}
+
+	ProjectileStickSocketNames.Sort([this, Position](const FName& V1, const FName& V2)
+	{
+		const FVector SocketLocation1 = GetMesh()->GetSocketLocation(V1);
+		const FVector SocketLocation2 = GetMesh()->GetSocketLocation(V2);
+
+		return FVector::Dist(SocketLocation1, Position) < FVector::Dist(SocketLocation2, Position);
+	});
+
+
+	return &ProjectileStickSocketNames[0];
+}
+
+float AArcher::TakeDamage(float DamageTaken, const struct FDamageEvent& DamageEvent, AController* EventInstigator,
                           AActor* DamageCauser)
 {
 	Super::TakeDamage(DamageTaken, DamageEvent, EventInstigator, DamageCauser);
 
-	AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, DamageTaken] {
-		float damageApplied = CurrentHealth - DamageTaken;
+	Attributes->SetHealth(Attributes->GetHealth() - DamageTaken);
 
-		AsyncTask(ENamedThreads::GameThread, [this, damageApplied]
+	if (DamageCauser->IsA(AArrow::StaticClass()))
+	{
+		// sticking
+
+		if (GetLocalRole() == ROLE_Authority)
 		{
-			SetCurrentHealth(damageApplied);
-		});
-	});
-
+			FName* Socket = FindClosestSocket(DamageCauser->GetActorLocation());
+			if (Socket != nullptr)
+			{
+				DamageCauser->SetOwner(this);
+				DamageCauser->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepWorldTransform, *Socket);
+			}
+			else
+			{
+				DamageCauser->Destroy();
+			}
+		}
+	}
 	return DamageTaken;
 }
 
-FCharacterSaveData AArcher::GetSaveData() const
+void AArcher::GrantDefaultAbilities()
 {
-	return FCharacterSaveData{
-		CurrentHealth,
-		GetActorLocation(),
-		GetActorRotation().Quaternion()
-	};
+	if (GetLocalRole() != ROLE_Authority || !IsValid(AbilitySystemComponent))
+	{
+		return;
+	}
+
+	for (auto Ability : DefaultAbilities) // grant abilities on server
+	{
+		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(
+			Ability.Value,
+			1.0,
+			INDEX_NONE,
+			this
+		);
+
+		AbilitySystemComponent->GiveAbility(Spec);
+
+		/*
+		if (IsLocallyControlled())
+		{
+			AbilitiesMap.Add(
+				Ability.Key, AbilitySystemComponent->GiveAbility(Spec));
+		}
+		*/
+	}
 }
 
-void AArcher::InitFromSaveData(const FCharacterSaveData Data)
+
+void AArcher::ApplyDefaultEffects()
 {
-	CurrentHealth = Data.Health;
-	SetActorLocation(Data.Location, false, nullptr, ETeleportType::ResetPhysics);
-	SetActorRotation(Data.Rotation, ETeleportType::ResetPhysics);
+	for (auto Effect : ApplyEffectsOnStartup)
+	{
+		AbilitySystemComponent->ApplyGameplayEffectToSelf(Effect.GetDefaultObject(), 1.0,
+		                                                  FGameplayEffectContextHandle());
+	}
 }
 
+void AArcher::InitClientAbilityMap()
+{
+	for (auto Ability : DefaultAbilities)
+	{
+		FGameplayAbilitySpec* GameAbilitySpec = AbilitySystemComponent->GetActivatableAbilities().FindByPredicate(
+			[Ability](const FGameplayAbilitySpec& Current)
+			{
+				return Current.Ability->IsA(Ability.Value.Get());
+			});
+
+		if (GameAbilitySpec != nullptr)
+		{
+			AbilitiesMap.Add(
+				Ability.Key, (*GameAbilitySpec).Handle);
+		}
+	}
+}
+
+FGameplayAbilitySpecHandle* AArcher::GetAbilityHandleByKey(const EAbility Key)
+{
+	return AbilitiesMap.Find(Key);
+}
+
+FGameplayAbilitySpec* AArcher::GetAbilitySpecByKey(const EAbility Key)
+{
+	FGameplayAbilitySpecHandle* Handle = GetAbilityHandleByKey(Key);
+
+	if (Handle == nullptr)
+	{
+		return nullptr;
+	}
+
+	return AbilitySystemComponent->FindAbilitySpecFromHandle(*Handle);
+}
+
+bool AArcher::HasActiveAbility(const EAbility Key)
+{
+	FGameplayAbilitySpec* Spec = GetAbilitySpecByKey(Key);
+	if (Spec != nullptr)
+	{
+		return Spec->IsActive();
+	}
+	return false;
+}
+
+bool AArcher::CanJumpInternal_Implementation() const
+{
+	return Super::CanJumpInternal_Implementation() && !WeaponManagerComponent->IsAiming();
+}
+
+UCharacterMovementComponent* AArcher::GetCharacterMovementComponent() const
+{
+	return CharacterMovementComponent;
+}
 
 void AArcher::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AArcher, CurrentHealth);
-	//DOREPLIFETIME_CONDITION(AArcher, WeaponManagerComponent, COND_InitialOnly);
-}
-
-void AArcher::OnHealthUpdate()
-{
-	if (IsLocallyControlled()) // update local
-	{
-		FString healthMessage = FString::Printf(TEXT("Player %s now has %f HP"), *GetFName().ToString(), CurrentHealth);
-
-		auto PC = GetWorld()->GetFirstPlayerController();
-		PC->ClientMessage(healthMessage);
-	}
-
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		FString healthMessage = FString::Printf(
-			TEXT("%s now has %f HP ( ROLE_Authority )"), *GetFName().ToString(), CurrentHealth);
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Blue, healthMessage);
-	}
-
-	OnHealthChange.Broadcast();
-	OnHealthChangeDynamic.Broadcast();
-}
-
-void AArcher::OnRep_CurrentHealth()
-{
-	OnHealthUpdate();
+	//DOREPLIFETIME(AArcher, CurrentHealth);
+	DOREPLIFETIME_CONDITION(AArcher, StateFlags, COND_SkipOwner);
 }
 
 // Called every frame
@@ -174,22 +380,25 @@ void AArcher::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	if (GameInstance)
 	{
-		PlayerInputComponent->BindAction("QuickSave", IE_Pressed, GameInstance, &UGameInstanceMain::QuickSave);
-		PlayerInputComponent->BindAction("QuickLoad", IE_Pressed, GameInstance, &UGameInstanceMain::QuickLoad);
 		PlayerInputComponent->BindAction("Climb", IE_Pressed, this, &AArcher::Climb);
 
 		if (WeaponManagerComponent)
 		{
 			PlayerInputComponent->BindAction("Fire", IE_Pressed, WeaponManagerComponent,
-			                                 &UWeaponManagerComponent::InteractWeapon);
+			                                 &UWeaponManagerComponent::OnFireAction);
+			PlayerInputComponent->BindAction("Fire", IE_Released, WeaponManagerComponent,
+			                                 &UWeaponManagerComponent::OnFireReleasedAction);
 			PlayerInputComponent->BindAction("Reload", IE_Pressed, WeaponManagerComponent,
-			                                 &UWeaponManagerComponent::ReloadWeapon);
+			                                 &UWeaponManagerComponent::OnReloadAction);
+			PlayerInputComponent->BindAction("ArmToggle", IE_Pressed, WeaponManagerComponent,
+			                                 &UWeaponManagerComponent::OnToggleArmAction);
+			PlayerInputComponent->BindAction("InterruptFire", IE_Pressed, WeaponManagerComponent,
+			                                 &UWeaponManagerComponent::OnInterruptFireAction);
 		}
 
 		if (InventoryManagerComponent)
 		{
-			PlayerInputComponent->BindAction("DropFromInventory", IE_Pressed, InventoryManagerComponent,
-			                                 &UInventoryManagerComponent::OnDropItemAction);
+			
 		}
 	}
 }
@@ -263,7 +472,7 @@ void AArcher::ClimbServer_Implementation()
 	FVector WallNormal = FrontTrace.Normal;
 	FVector WallHitLocation = FrontTrace.Location;
 
-	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCharacterMovement()->StopMovementImmediately();
 
 	PlayClimbAnimationMulticast();
@@ -272,7 +481,7 @@ void AArcher::ClimbServer_Implementation()
 	GetWorldTimerManager().SetTimer(RestoreClimbingState, [this]
 	{
 		IsClimbing = false;
-		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, "Test");
 	}, ClimbingMontage->SequenceLength, false);
 

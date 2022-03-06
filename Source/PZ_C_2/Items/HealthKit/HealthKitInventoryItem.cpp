@@ -6,13 +6,14 @@
 UHealthKitInventoryItem::UHealthKitInventoryItem()
 {
 	VisualActorClass = AHealthKit::StaticClass();
+	SlotType = EInventorySlot::Consumable;
 }
 
 bool UHealthKitInventoryItem::UseItem(AArcher* Target)
 {
 	Super::UseItem(Target);
 
-	Target->SetCurrentHealth(Target->CurrentHealth + HealAmount);
+	//Target->SetCurrentHealth(Target->CurrentHealth + HealAmount);
 	return true;
 }
 
@@ -29,5 +30,5 @@ UBaseInventoryItem* AHealthKit::GenerateInventoryData(UBaseInventoryItem* Target
 
 void UHealthKitInventoryItem::ServerUseHealthKit_Implementation(AArcher* Target, int32 RestoreAmount) const
 {
-	Target->SetCurrentHealth(Target->CurrentHealth + RestoreAmount);
+	//Target->SetCurrentHealth(Target->CurrentHealth + RestoreAmount);
 }

@@ -26,12 +26,12 @@ EBTNodeResult::Type UBTTask_Shoot::ExecuteTask(UBehaviorTreeComponent& OwnerComp
 		return EBTNodeResult::Failed;
 	}
 
-	if( Character->bIsFiring )
+	if (Character->GetWeaponManagerComponent()->IsAiming())
 	{
 		return EBTNodeResult::InProgress;
 	}
 
-	Character->WeaponManagerComponent->InteractWeapon();
+	Character->GetWeaponManagerComponent()->OnFireAction();
 
 	return EBTNodeResult::Succeeded;
 }

@@ -25,10 +25,7 @@ UPickBoxComponent::UPickBoxComponent()
 	SetCollisionResponseToAllChannels(ECR_Ignore);
 	SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-
-	//bHiddenInGame = false;
-
-	//OnComponentBeginOverlap.AddDynamic(this, &UPickBoxComponent::OnActorBeginOverlap);
+	SetCollisionObjectType(ECC_WorldDynamic);
 }
 
 void UPickBoxComponent::BeginPlay()
@@ -40,8 +37,11 @@ void UPickBoxComponent::BeginPlay()
 
 void UPickBoxComponent::EnablePhysics()
 {
+	// GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
+	//                                  FString::Printf(TEXT("Enable for %s"), *GetOwner()->GetName()));
 	SetNotifyRigidBodyCollision(true); // "generate hit events"
 	SetSimulatePhysics(true);
+	SetEnableGravity(true);
 	SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	SetCollisionEnabled(ECollisionEnabled::PhysicsOnly); // do not interact until begin dropped
 }

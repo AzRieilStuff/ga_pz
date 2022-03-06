@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BaseRangeWeapon.h"
+#include "GameplayAbilitySpec.h"
 #include "Components/ActorComponent.h"
 #include "WeaponManagerComponent.generated.h"
 
@@ -11,18 +12,34 @@ class AArcher;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponInteraction, ABaseRangeWeapon*, Item);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnChangeAimState, bool, State);
+
 /**
  * 
  */
 UCLASS()
 class PZ_C_2_API UWeaponManagerComponent : public UActorComponent
 {
-	// temporary solution
-	void SetBowMeshVisibility(bool State) const;
-
-	const FName BowSocketName = FName("BowSocket");
-
 	GENERATED_BODY()
+public:
+	UPROPERTY(Replicated)
+	AArcher* Character;
+
+	virtual void InitializeComponent() override;
+
+	virtual void BeginPlay() override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+	                           FActorComponentTickFunction* ThisTickFunction) override;
+
+	UFUNCTION()
+	bool IsAiming();
+
+	UWeaponManagerComponent();
+
+#pragma region Equipping
 
 protected:
 	// [server]
@@ -30,13 +47,25 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipWeapon(ABaseRangeWeapon* Weapon);
-	
+
 	UFUNCTION(Server, Reliable)
 	void ServerUnequipWeapon();
-public:
-	UWeaponManagerComponent();
 
-	// [local]
+private:
+	const FName BowArmSocket = FName("BowSocket");
+
+	const FName BowBackSocket = FName("SpineBowSocket");
+
+	const FName QuiverBackSocket = FName("SpineQuiverSocket");
+
+	FTimerHandle DisarmTimer;
+	FTimerHandle ArmTimer;
+
+	UPROPERTY(VisibleAnywhere, meta=(AllowPrivateAccess="true"))
+	bool bIsWeaponArmed;
+
+public:
+	// [client]
 	UFUNCTION()
 	virtual void EquipWeapon(ABaseRangeWeapon* NewWeapon);
 
@@ -44,18 +73,9 @@ public:
 	UFUNCTION()
 	virtual void EquipWeaponFromClass(TSubclassOf<ABaseRangeWeapon> WeaponClass);
 
-	// [local]
+	// [client]
 	UFUNCTION()
 	void UnequipWeapon();
-
-	UFUNCTION()
-	void InteractWeapon();
-
-	UFUNCTION(BlueprintCallable)
-	void ReloadWeapon();
-
-	UFUNCTION(BlueprintPure, BlueprintCallable)
-	FORCEINLINE bool IsFiring() { return CurrentWeapon && CurrentWeapon->bIsFiring; };
 
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 	FORCEINLINE bool IsWeaponEquipped() { return CurrentWeapon != nullptr; };
@@ -66,21 +86,74 @@ public:
 	UFUNCTION()
 	void OnRep_CurrentWeapon(ABaseRangeWeapon* PrevWeapon);
 
-	UPROPERTY(Replicated)
-	AArcher* Character;
-
-	virtual void InitializeComponent() override;
-
-	virtual void BeginPlay() override;
-
 	UFUNCTION()
 	bool CanEquipWeapon(const ABaseRangeWeapon* NewWeapon) const;
-	
+
 	UPROPERTY(BlueprintAssignable)
 	FOnWeaponInteraction OnWeaponEquipped;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnWeaponInteraction OnWeaponUnequipped;
 
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool IsWeaponArmed() const { return bIsWeaponArmed; }
+
+	void OnToggleArmAction();
+
+	UFUNCTION(Server, Unreliable)
+	void ServerDisarmWeapon();
+
+	UFUNCTION(Server, Unreliable)
+	void ServerArmWeapon();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastDisarmWeapon();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastArmWeapon();
+
+	void DisarmWeapon();
+
+	void OnDisarmTimerEnds();
+
+	void ArmWeapon();
+
+	void OnArmTimerEnds();
+
+	// [client] calls from anim notify event
+	UFUNCTION(BlueprintCallable)
+	void OnDisarmWeaponPlaced();
+
+	// [client] calls from anim notify event
+	UFUNCTION(BlueprintCallable)
+	void OnArmWeaponPlaced();
+	// ~arming & disarming end
+
+#pragma endregion
+
+#pragma region Firing
+public:
+	UPROPERTY(BlueprintAssignable, meta=(AllowPrivateAccess="true"))
+	FOnChangeAimState OnChangeAimState;
+	
+	UFUNCTION()
+	void OnFireAction();
+
+	UFUNCTION()
+	void OnFireReleasedAction();
+
+	UFUNCTION()
+	void OnInterruptFireAction();
+#pragma endregion
+
+#pragma region Reloading
+	UFUNCTION(BlueprintCallable)
+	void OnReloadAction();
+
+	UFUNCTION(Server, Unreliable)
+	void ServerReloadCurrentWeapon();
+
+	UFUNCTION(BlueprintPure, BlueprintCallable)
+	FORCEINLINE bool IsFiring() { return CurrentWeapon && CurrentWeapon->bIsFiring; };
+#pragma endregion
 };

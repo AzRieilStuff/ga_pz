@@ -23,7 +23,7 @@ AArrow::AArrow()
 	MeshComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	MeshComponent->SetMobility(EComponentMobility::Movable);
 	MeshComponent->SetRelativeLocation(FVector(-32.0, 0, 0.f));
- 
+
 	// Init assets from local lib
 	const ConstructorHelpers::FObjectFinder<USkeletalMesh> MeshFinder(
 		TEXT("/Game/Ammo/Arrow/SM_Arrow.SM_Arrow"), LOAD_None);
@@ -34,13 +34,16 @@ AArrow::AArrow()
 	}
 
 	// config collision
+	CollisionComponent->SetCollisionObjectType(ECC_GameTraceChannel1);
 	CollisionComponent->SetCollisionProfileName("Projectile");
 	CollisionComponent->SetGenerateOverlapEvents(false);
 	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
+
 	CollisionComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	CollisionComponent->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Block);
-	CollisionComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+
+	CollisionComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); // others projectiles
 }
 
 void AArrow::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -56,9 +59,19 @@ void AArrow::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* Other
 	}
 }
 
+void AArrow::OnShoot()
+{
+	if (GetOwner() && GetOwner()->GetLocalRole() == ROLE_Authority)
+	{
+		GetWorld()->GetTimerManager().SetTimer(DestroyTimer, [this]
+		{
+			Destroy();
+		}, Lifetime, false);
+	}
+}
+
 // Called when the game starts or when spawned
 void AArrow::BeginPlay()
 {
-	
 	Super::BeginPlay();
 }

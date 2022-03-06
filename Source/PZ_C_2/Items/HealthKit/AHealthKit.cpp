@@ -7,7 +7,6 @@ AHealthKit::AHealthKit()
 {
 	HealAmount = 10;
 	bDestroyOnPickup = true;
-	bStoreable = true;
 	bPickable = true;
 }
 

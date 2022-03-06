@@ -21,6 +21,9 @@ public:
 
 	virtual void OnPossess(APawn* InPawn) override;
 
+	// [client(?)]
+	virtual void AcknowledgePossession(APawn* P) override;
+
 	UPROPERTY(BlueprintReadOnly)
 	AArcher* PlayerCharacter;
 	

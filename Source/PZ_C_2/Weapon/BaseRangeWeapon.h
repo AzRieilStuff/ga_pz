@@ -14,10 +14,10 @@ struct FAmmoData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 InClip;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Total;
 };
 
@@ -25,17 +25,31 @@ struct FAmmoData
 UCLASS(Blueprintable, Config=Weapon, defaultconfig)
 class PZ_C_2_API ABaseRangeWeapon : public ABaseItem, public IReloadable
 {
+private:
 	GENERATED_BODY()
 
-	// [local + server] run animation & timer
-	void StartShootingTimer();
+	friend class UWeaponManagerComponent;
+public:
+	ABaseRangeWeapon();
 
+	UPROPERTY(Replicated)
+	UWeaponManagerComponent* OwnerManagerComponent;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual void BeginPlay() override;
+
+#pragma region Firing
+public:
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category=WeaponStats)
+	float AimingDuration;
+	
 protected:
 	// [server] 
 	virtual class ABaseProjectile* SpawnProjectile(FVector AimLocation);
 
 	// [local + server] runs for each client 
-	virtual void OnShootingTimerEnd();
+	virtual void Fire();
 
 	// [server] handle shooting, spawn projectiles, shoot effect
 	UFUNCTION(Server, Reliable)
@@ -45,26 +59,18 @@ protected:
 	virtual void ComputeProjectileTransform(const AArcher* Character, FVector AimLocation, FVector& Location,
 	                                        FRotator& Rotation);
 
-	// [local]
+	// [local] get endpoint of trace from camera view
 	FVector GetAimLocation(const AArcher* Character) const;
 
 public:
-	ABaseRangeWeapon();
 
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	UPROPERTY(Replicated)
-	UWeaponManagerComponent* OwnerManagerComponent;
-
-	virtual void BeginPlay() override;
-
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="WeaponStats")
 	int32 MaxAmmoTotal;
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="WeaponStats")
 	int32 MaxAmmoInClip;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Replicated)
 	FAmmoData Ammo;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Config, Category=WeaponStats)
@@ -76,46 +82,42 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Config, Category=WeaponStats)
 	int32 Range;
 
-	UFUNCTION(BlueprintCallable)
-	virtual void FireAction();
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	virtual void ServerFireAction();
-
-	UFUNCTION(NetMulticast, Reliable)
-	virtual void MulticastFireAction();
-
 	UPROPERTY(EditAnywhere, Category="Gameplay|Projectile")
 	TSubclassOf<class ABaseProjectile> ProjectileClass;
 
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsFiring = false;
+
+#pragma  endregion
+
+#pragma region Reloading
+	// [server]
 	UFUNCTION(BlueprintCallable)
 	void RestoreAmmo();
 
 	UFUNCTION(BlueprintCallable)
 	bool CanFire() const;
 
-	//~ Begin IReloadable Interface.
+	// IReloadable Interface.
 	virtual bool CanReload() const override;
 
+	// [server]
 	UFUNCTION(BlueprintCallable)
 	virtual void Reload() override;
-	//~ End IReloadable Interface
+	// ~IReloadable Interface
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsReloading = false;
 
-	UPROPERTY(BlueprintReadOnly)
-	bool bIsFiring = false;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Config, Category=WeaponStats)
-	float FireRate;
-
 	UFUNCTION(Client, Reliable)
 	void UseAmmo();
+#pragma endregion
 
+#pragma region Picking
 	virtual bool CanPickupBy(AArcher* Character) const override;
 
 	//virtual void MulticastPickup_Implementation(AArcher* Character) override;
 
 	virtual void ServerPickup(AArcher* Character) override;
+#pragma endregion
 };

@@ -10,6 +10,8 @@
 #include "PZ_C_2/Characters/Archer.h"
 #include "PZ_C_2/Inventory/InventoryManagerComponent.h"
 
+int32 ABaseItem::MaxPerStack;
+bool ABaseItem::bStackable;
 
 // Sets default values
 ABaseItem::ABaseItem()
@@ -37,23 +39,18 @@ void ABaseItem::BeginPlay()
 	Super::BeginPlay();
 
 	PickBoxComponent->OnComponentHit.AddDynamic(this, &ABaseItem::OnHit);
-	OnDropped();
+
+	// allow to indicate drop only if item was pickable when spawned
+	if (PickBoxComponent->IsSimulatingPhysics())
+	{
+		OnDropped();
+	}
 }
 
-
-bool ABaseItem::ServerPickup_Validate(AArcher* Character)
-{
-	return CanPickupBy(Character);
-}
 
 bool ABaseItem::CanPickupBy(AArcher* Character) const
 {
-	if (bStoreable)
-	{
-		return Character->InventoryManagerComponent->CanPickupItem(this);
-	}
-
-	return false; // todo autouse? 
+	return Character->GetInventoryManagerComponent()->CanStoreItem(GenerateInventoryData()); // todo autouse? 
 }
 
 void ABaseItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -81,49 +78,51 @@ UBaseInventoryItem* ABaseItem::GenerateInventoryData(UBaseInventoryItem* Target)
 	return Target;
 }
 
-void ABaseItem::Pickup(AArcher* Character)
+void ABaseItem::TryPickup(AArcher* Character)
 {
-	if (Character->GetLocalRole() > ROLE_SimulatedProxy)
+	if (!bPickable || Character->GetLocalRole() <= ROLE_SimulatedProxy)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, Character->GetName());
+		return;
 	}
 
-	ServerPickup(Character);
-
-	if (bDestroyOnPickup)
+	if (Character->GetLocalRole() == ROLE_Authority)
 	{
-		PickBoxComponent->UnregisterComponent();
-		SetHidden(true); // 'destroy' locally but keep valid for rpc calls
-	}
-}
-
-void ABaseItem::ServerPickup_Implementation(AArcher* Character)
-{
-	MulticastPickup(Character);
-}
-
-void ABaseItem::MulticastPickup_Implementation(AArcher* Character)
-{
-	if (PickBoxComponent)
-	{
-		PickBoxComponent->UnregisterComponent(); // todo drop ability
-	}
-
-	// store into inventory for current pawn
-	if (bStoreable)
-	{
-		if (Character->IsLocallyControlled())
+		if (Character->GetInventoryManagerComponent()->TryAddItem(this) && bDestroyOnPickup)
 		{
-			Character->InventoryManagerComponent->ServerStoreItem(this);
-			SetHidden(true); // we cant destroy object yet as we need valid Actor for RPC
+			Destroy();
 		}
 	}
 	else
 	{
-		if (bDestroyOnPickup)
-		{
-			MarkPendingKill(); // Destroy for all
-		}
+		Character->GetInventoryManagerComponent()->TryAddItem(this); // allow client to predict picking
+		PickBoxComponent->UnregisterComponent(); // prevent further interaction
+		ServerPickup(Character);
+	}
+}
+
+bool ABaseItem::ServerPickup_Validate(AArcher* Character)
+{
+	return CanPickupBy(Character);
+}
+
+void ABaseItem::ServerPickup_Implementation(AArcher* Character)
+{
+	// there, we guarantee item was picked and it was valid
+	if (bDestroyOnPickup)
+	{
+		Destroy(); // will be replicated automatically
+	}
+	else
+	{
+		MulticastPickup(Character); // item has no ownership, so use multicast for now
+	}
+}
+
+void ABaseItem::MulticastPickup_Implementation(AArcher* Character)
+{
+	if( Character->IsLocallyControlled() )
+	{
+		PickBoxComponent->RegisterComponent(); // restore active pickable state
 	}
 }
 
@@ -137,11 +136,12 @@ void ABaseItem::NotifyActorBeginOverlap(AActor* OtherActor)
 	{
 		AArcher* Character = Cast<AArcher>(OtherActor);
 
-		if (Character && CanPickupBy(Character))
+		if (!Character)
 		{
-			Pickup(Character);
-			//FOnItemPicked.ExecuteIfBound(this, Character);
+			return;
 		}
+
+		TryPickup(Character);
 	}
 }
 
