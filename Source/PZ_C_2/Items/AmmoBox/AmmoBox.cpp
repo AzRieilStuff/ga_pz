@@ -10,6 +10,7 @@ AAmmoBox::AAmmoBox()
 {
 	bDestroyOnPickup = true;
 	bPickable = true;
+	bStackable = true;
 
 	ProjectileType = AArrow::StaticClass();
 	AmmoAmount = 50;

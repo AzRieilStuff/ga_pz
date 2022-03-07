@@ -15,6 +15,7 @@ public:
 	UBaseInventoryItem();
 
 	// static fails
+	UPROPERTY(BlueprintReadOnly)
 	TSubclassOf<ABaseItem> VisualActorClass;
 
 	UPROPERTY(BlueprintReadOnly)
@@ -35,9 +36,14 @@ public:
 
 	UFUNCTION()
 	virtual bool CanUsedOn(AActor* Target) const;
-	
-	UPROPERTY()
+
+	UPROPERTY(BlueprintReadOnly)
 	int32 Amount;
 
+	UPROPERTY(BlueprintReadOnly)
 	EInventorySlot SlotType;
+
+	// helper method to access item static member from BPs	
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	ABaseItem* GetItemDefaultObject() const;
 };

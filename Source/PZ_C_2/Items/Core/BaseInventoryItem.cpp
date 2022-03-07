@@ -16,6 +16,11 @@ bool UBaseInventoryItem::CanUsedOn(AActor* Target) const
 	return true;
 }
 
+ABaseItem* UBaseInventoryItem::GetItemDefaultObject() const
+{
+	return VisualActorClass ? VisualActorClass.GetDefaultObject() : nullptr;
+}
+
 UBaseInventoryItem::UBaseInventoryItem()
 {
 	VisualActorClass = ABaseItem::StaticClass();

@@ -63,7 +63,7 @@ public:
 
 	// can be stacked with other items of this type
 	UFUNCTION(BlueprintCallable)
-	static inline int32 GetIsStackable() { return bStackable; };
+	static inline bool GetIsStackable() { return bStackable; };
 
 	UFUNCTION()
 	virtual UBaseInventoryItem* GenerateInventoryData(UBaseInventoryItem* Target = nullptr) const;

@@ -8,6 +8,7 @@ AHealthKit::AHealthKit()
 	HealAmount = 10;
 	bDestroyOnPickup = true;
 	bPickable = true;
+	bStackable = true;
 }
 
 bool AHealthKit::CanPickupBy(AArcher* Character) const

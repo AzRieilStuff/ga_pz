@@ -12,11 +12,11 @@ UInventoryManagerComponent::UInventoryManagerComponent()
 {
 	ActiveItems.Empty();
 	DistinctItemLimits.Empty();
-	
+
 	for (const EInventorySlot SlotType : TEnumRange<EInventorySlot>())
 	{
 		ActiveItems.Add(SlotType, nullptr);
-		DistinctItemLimits.Add(SlotType, 0); 
+		DistinctItemLimits.Add(SlotType, 0);
 	}
 
 	DistinctItemLimits[EInventorySlot::MainWeapon] = 1;
@@ -27,11 +27,7 @@ UInventoryManagerComponent::UInventoryManagerComponent()
 void UInventoryManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (GetOwner()->GetLocalRole() > ROLE_SimulatedProxy)
-	{
-		//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, GetOwner()->GetName());
-	}
+	OnInventoryStateChange.BindUObject(this, &ThisClass::UpdateSelectedItem);
 }
 
 TArray<UBaseInventoryItem*> UInventoryManagerComponent::GetItems(const EInventorySlot SlotType) const
@@ -83,6 +79,9 @@ bool UInventoryManagerComponent::TryAddItem(UBaseInventoryItem* Item)
 					ItemClass->GetStackLimit()
 				);
 
+				OnInventoryStateChange.Execute();
+				OnItemPicked.Broadcast(SameSlotItem);
+
 				return true;
 			}
 			else
@@ -98,6 +97,10 @@ bool UInventoryManagerComponent::TryAddItem(UBaseInventoryItem* Item)
 	}
 
 	Items.Add(Item);
+	
+	OnInventoryStateChange.Execute();
+	OnItemPicked.Broadcast(Item);
+
 	return true;
 }
 
@@ -127,7 +130,7 @@ bool UInventoryManagerComponent::CanStoreItem(const UBaseInventoryItem* Item) co
 			continue;
 		}
 
-		
+
 		if (
 			ItemClass->GetIsStackable() &&
 			SameSlotItem->Amount < ItemClass->GetStackLimit())
@@ -147,4 +150,23 @@ bool UInventoryManagerComponent::CanStoreItem(const UBaseInventoryItem* Item) co
 	}
 
 	return true;
+}
+
+void UInventoryManagerComponent::UpdateSelectedItem()
+{
+	for (const auto ActiveItem : ActiveItems)
+	{
+		if (ActiveItem.Value != nullptr) // there is already an item
+		{
+			continue;
+		}
+
+		TArray<UBaseInventoryItem*> CurrentSlotItems = GetItems(ActiveItem.Key);
+		if (CurrentSlotItems.Num() == 0)
+		{
+			continue;
+		}
+
+		ActiveItems[ActiveItem.Key] = CurrentSlotItems[0];
+	}
 }
