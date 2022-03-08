@@ -39,6 +39,8 @@ public:
 
 	virtual void BeginPlay() override;
 
+	virtual UBaseInventoryItem* GenerateInventoryData(UBaseInventoryItem* Target) const override;
+
 #pragma region Firing
 public:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Config, Category=WeaponStats)

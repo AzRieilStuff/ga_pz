@@ -2,7 +2,6 @@
 #include "AHealthKit.h"
 #include "PZ_C_2/Characters/Archer.h"
 
-
 UHealthKitInventoryItem::UHealthKitInventoryItem()
 {
 	VisualActorClass = AHealthKit::StaticClass();
@@ -17,14 +16,9 @@ bool UHealthKitInventoryItem::UseItem(AArcher* Target)
 	return true;
 }
 
-UBaseInventoryItem* AHealthKit::GenerateInventoryData(UBaseInventoryItem* Target) const
+int32 UHealthKitInventoryItem::GetStackLimit() const
 {
-	UHealthKitInventoryItem* KitItem = NewObject<UHealthKitInventoryItem>();
-	Super::GenerateInventoryData(KitItem);
-
-	KitItem->HealAmount = HealAmount;
-
-	return KitItem;
+	return 5;
 }
 
 

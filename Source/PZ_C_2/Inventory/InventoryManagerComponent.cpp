@@ -5,8 +5,47 @@
 #include "Kismet/GameplayStatics.h"
 #include "PZ_C_2/Characters/Archer.h"
 #include "PZ_C_2/Items/Core/BaseInventoryItem.h"
+#include "Containers/ContainerAllocationPolicies.h"
 #include "PZ_C_2/Items/Core/BaseItem.h"
 #include "PZ_C_2/Items/Core/PickBoxComponent.h"
+
+DEFINE_LOG_CATEGORY_STATIC(LogInventory, All, All);
+
+void UInventoryManagerComponent::InitDefaultInventory()
+{
+	for (const auto Row : DefaultInventory)
+	{
+		if (!IsValid(Row.Key))
+		{
+			UE_LOG(LogInventory, Warning, TEXT("Invalid default inventory record"));
+			continue;
+		}
+
+		// cdo
+		auto a = Row.Key.GetDefaultObject();
+		UBaseInventoryItem* Item = Row.Key.GetDefaultObject()->GenerateInventoryData();
+
+		if (Item == nullptr)
+		{
+			UE_LOG(LogInventory, Error, TEXT("Failed to init default inventory on item %s"),
+			       *Item->GetName());
+			continue;
+		}
+
+		if (Item->GetIsStackable())
+		{
+			Item->Amount = Row.Value < 1 ? 1 : Row.Value;
+		}
+
+		if (!TryAddItem(Item))
+		{
+			UE_LOG(LogInventory, Error, TEXT("Failed to add inventory item on %s"),
+			       *Item->GetName());
+
+			Item->ConditionalBeginDestroy();
+		};
+	}
+}
 
 UInventoryManagerComponent::UInventoryManagerComponent()
 {
@@ -27,7 +66,9 @@ UInventoryManagerComponent::UInventoryManagerComponent()
 void UInventoryManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	OnInventoryStateChange.BindUObject(this, &ThisClass::UpdateSelectedItem);
+	OnInventoryStateChange.AddUObject(this, &ThisClass::UpdateSelectedItem);
+
+	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::InitDefaultInventory);
 }
 
 TArray<UBaseInventoryItem*> UInventoryManagerComponent::GetItems(const EInventorySlot SlotType) const
@@ -58,8 +99,6 @@ bool UInventoryManagerComponent::TryAddItem(UBaseInventoryItem* Item)
 
 	if (SameSlotItems.Num() > 0)
 	{
-		const ABaseItem* ItemClass = Item->VisualActorClass->GetDefaultObject<ABaseItem>();
-
 		// look for similar item to merge stacks
 		for (UBaseInventoryItem* SameSlotItem : SameSlotItems)
 		{
@@ -69,17 +108,16 @@ bool UInventoryManagerComponent::TryAddItem(UBaseInventoryItem* Item)
 			}
 
 			// if we have a similar item, try to merge them, break otherwise
-			if (
-				ItemClass->GetIsStackable() &&
-				SameSlotItem->Amount < ItemClass->GetStackLimit())
+			const int32 PerStackLimit = Item->GetStackLimit();
+			if (SameSlotItem->Amount < PerStackLimit)
 			{
 				// merge items to its possible cap.
 				SameSlotItem->Amount = FMath::Min(
 					SameSlotItem->Amount + Item->Amount,
-					ItemClass->GetStackLimit()
+					PerStackLimit
 				);
 
-				OnInventoryStateChange.Execute();
+				OnInventoryStateChange.Broadcast();
 				OnItemPicked.Broadcast(SameSlotItem);
 
 				return true;
@@ -97,8 +135,8 @@ bool UInventoryManagerComponent::TryAddItem(UBaseInventoryItem* Item)
 	}
 
 	Items.Add(Item);
-	
-	OnInventoryStateChange.Execute();
+
+	OnInventoryStateChange.Broadcast();
 	OnItemPicked.Broadcast(Item);
 
 	return true;
@@ -106,8 +144,8 @@ bool UInventoryManagerComponent::TryAddItem(UBaseInventoryItem* Item)
 
 bool UInventoryManagerComponent::TryAddItem(ABaseItem* ItemActor)
 {
-	UBaseInventoryItem* NewItem = NewObject<UBaseInventoryItem>();
-	return TryAddItem(ItemActor->GenerateInventoryData(NewItem));
+	//UBaseInventoryItem* NewItem = NewObject<UBaseInventoryItem>();
+	return TryAddItem(ItemActor->GenerateInventoryData());
 }
 
 bool UInventoryManagerComponent::CanStoreItem(const UBaseInventoryItem* Item) const
@@ -120,8 +158,6 @@ bool UInventoryManagerComponent::CanStoreItem(const UBaseInventoryItem* Item) co
 		return true;
 	}
 
-	const ABaseItem* ItemClass = Item->VisualActorClass->GetDefaultObject<ABaseItem>();
-
 	for (const UBaseInventoryItem* SameSlotItem : SameSlotItems)
 	{
 		// check can be stacked with existing item
@@ -130,10 +166,7 @@ bool UInventoryManagerComponent::CanStoreItem(const UBaseInventoryItem* Item) co
 			continue;
 		}
 
-
-		if (
-			ItemClass->GetIsStackable() &&
-			SameSlotItem->Amount < ItemClass->GetStackLimit())
+		if (SameSlotItem->Amount < Item->GetStackLimit())
 		{
 			return true;
 		}
@@ -169,4 +202,29 @@ void UInventoryManagerComponent::UpdateSelectedItem()
 
 		ActiveItems[ActiveItem.Key] = CurrentSlotItems[0];
 	}
+}
+
+void UInventoryManagerComponent::ConsumeItem(const UBaseInventoryItem* Item, const int32 Amount)
+{
+	if (Amount == 0)
+	{
+		return;
+	}
+	int32 InventoryItemIndex;
+
+	auto InventoryItem = Items.FindByPredicate([Item](UBaseInventoryItem* Value)
+	{
+		return Value == Item;
+	});
+
+	// passed item isnt stored in this inventory
+	if (InventoryItem == nullptr)
+	{
+		UE_LOG(LogInventory, Error, TEXT("Trying to remove %s from %s inventory, but there is no one"), Item->GetName(),
+		       GetOwner()->GetName())
+		return;
+	}
+
+	(*InventoryItem)->Amount -= Amount;
+	OnItemAmountChange.Broadcast(*InventoryItem);
 }

@@ -6,7 +6,7 @@
 class ABaseItem;
 class AArcher;
 
-UCLASS(Blueprintable)
+UCLASS(Blueprintable, Abstract)
 class UBaseInventoryItem : public UObject
 {
 	GENERATED_BODY()
@@ -27,6 +27,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FString IconLabel;
 
+	UPROPERTY(BlueprintReadOnly)
+	int32 Amount;
+
+	UPROPERTY(BlueprintReadOnly)
+	EInventorySlot SlotType;
+
 	// [local]
 	UFUNCTION(BlueprintCallable)
 	virtual bool UseItem(AArcher* Target);
@@ -37,13 +43,13 @@ public:
 	UFUNCTION()
 	virtual bool CanUsedOn(AActor* Target) const;
 
-	UPROPERTY(BlueprintReadOnly)
-	int32 Amount;
-
-	UPROPERTY(BlueprintReadOnly)
-	EInventorySlot SlotType;
-
 	// helper method to access item static member from BPs	
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	ABaseItem* GetItemDefaultObject() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	virtual int32 GetStackLimit() const PURE_VIRTUAL(UBaseInventoryItem::GetStackLimit, return 1;);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	virtual bool GetIsStackable() const { return GetStackLimit() > 1; };
 };

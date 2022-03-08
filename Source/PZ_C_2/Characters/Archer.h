@@ -86,7 +86,7 @@ private:
 	UPROPERTY(Replicated)
 	UWeaponManagerComponent* WeaponManagerComponent;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	class UInventoryManagerComponent* InventoryManagerComponent;
 
 	UPROPERTY()
@@ -206,13 +206,6 @@ public:
 
 #pragma region Weapon interaction
 public:
-	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess = "true"))
-	TSubclassOf<ABaseRangeWeapon> DefaultWeapon;
-
-	// [server]
-	UFUNCTION()
-	void EquipDefaultWeapon();
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float ArmingDuration;
 private:

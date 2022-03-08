@@ -18,4 +18,6 @@ class PZ_C_2_API UAmmoBoxInventoryItem : public UBaseInventoryItem
 	GENERATED_BODY()
 public:
 	UAmmoBoxInventoryItem();
+
+	virtual int32 GetStackLimit() const override;
 };

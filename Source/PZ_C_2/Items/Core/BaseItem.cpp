@@ -56,16 +56,12 @@ bool ABaseItem::CanPickupBy(AArcher* Character) const
 void ABaseItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	//DOREPLIFETIME_CONDITION(ABaseItem, PickBoxComponent, COND_None);
 }
 
 UBaseInventoryItem* ABaseItem::GenerateInventoryData(UBaseInventoryItem* Target) const
 {
-	if (Target == nullptr)
-	{
-		Target = NewObject<UBaseInventoryItem>();
-	}
+	// Target must to be initialized in derived classes
+	check(Target);
 
 	Target->Name = GetName();
 	Target->IconLabel = FString("");
@@ -94,9 +90,14 @@ void ABaseItem::TryPickup(AArcher* Character)
 	}
 	else
 	{
-		Character->GetInventoryManagerComponent()->TryAddItem(this); // allow client to predict picking
-		PickBoxComponent->UnregisterComponent(); // prevent further interaction
-		ServerPickup(Character);
+		bool LocalResult = Character->GetInventoryManagerComponent()->TryAddItem(this);
+		// allow client to predict picking
+
+		if (LocalResult)
+		{
+			PickBoxComponent->UnregisterComponent(); // prevent further interaction
+			ServerPickup(Character);
+		}
 	}
 }
 
@@ -107,10 +108,12 @@ bool ABaseItem::ServerPickup_Validate(AArcher* Character)
 
 void ABaseItem::ServerPickup_Implementation(AArcher* Character)
 {
-	// there, we guarantee item was picked and it was valid
+	// keep server value synchronized with client
+	Character->GetInventoryManagerComponent()->TryAddItem(this);
+
 	if (bDestroyOnPickup)
 	{
-		Destroy(); // will be replicated automatically
+		Destroy(); // will be replicated by UE
 	}
 	else
 	{
@@ -120,7 +123,7 @@ void ABaseItem::ServerPickup_Implementation(AArcher* Character)
 
 void ABaseItem::MulticastPickup_Implementation(AArcher* Character)
 {
-	if( Character->IsLocallyControlled() )
+	if (Character->IsLocallyControlled())
 	{
 		PickBoxComponent->RegisterComponent(); // restore active pickable state
 	}

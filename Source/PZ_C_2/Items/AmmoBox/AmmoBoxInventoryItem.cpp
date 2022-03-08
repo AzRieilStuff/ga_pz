@@ -7,3 +7,8 @@ UAmmoBoxInventoryItem::UAmmoBoxInventoryItem()
 {
 	SlotType = EInventorySlot::MainWeaponAmmo;
 }
+
+int32 UAmmoBoxInventoryItem::GetStackLimit() const
+{
+	return 50;
+}

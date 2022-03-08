@@ -25,6 +25,8 @@ public:
 	UPROPERTY(Replicated)
 	AArcher* Character;
 
+	virtual void OnRegister() override;
+
 	virtual void InitializeComponent() override;
 
 	virtual void BeginPlay() override;
@@ -64,6 +66,9 @@ private:
 	UPROPERTY(VisibleAnywhere, meta=(AllowPrivateAccess="true"))
 	bool bIsWeaponArmed;
 
+	// [client]
+	UFUNCTION()
+	void AutoEquipWeapon();
 public:
 	// [client]
 	UFUNCTION()

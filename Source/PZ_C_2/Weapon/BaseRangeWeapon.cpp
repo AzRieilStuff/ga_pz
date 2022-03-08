@@ -4,6 +4,7 @@
 #include "BaseRangeWeapon.h"
 
 #include "CollisionQueryParams.h"
+#include "RangeWeaponInventoryItem.h"
 #include "TimerManager.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -39,6 +40,14 @@ void ABaseRangeWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void ABaseRangeWeapon::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+UBaseInventoryItem* ABaseRangeWeapon::GenerateInventoryData(UBaseInventoryItem* Target) const
+{
+	URangeWeaponInventoryItem* Item = NewObject<URangeWeaponInventoryItem>();
+	Super::GenerateInventoryData(Item);
+
+	return Item;
 }
 
 

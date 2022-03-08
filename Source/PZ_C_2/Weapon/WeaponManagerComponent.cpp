@@ -9,6 +9,7 @@
 #include "Net/UnrealNetwork.h"
 #include "PZ_C_2/Abilities/AimAbility.h"
 #include "PZ_C_2/Characters/Archer.h"
+#include "PZ_C_2/Items/Core/BaseInventoryItem.h"
 #include "PZ_C_2/Items/Core/PickBoxComponent.h"
 
 
@@ -71,6 +72,23 @@ void UWeaponManagerComponent::ServerEquipWeapon_Implementation(ABaseRangeWeapon*
 void UWeaponManagerComponent::ServerUnequipWeapon_Implementation()
 {
 	UnequipWeapon();
+}
+
+void UWeaponManagerComponent::AutoEquipWeapon()
+{
+	if (IsWeaponEquipped())
+	{
+		return;
+	}
+
+	UBaseInventoryItem* Weapon = Character->GetInventoryManagerComponent()->GetActiveItem(EInventorySlot::MainWeapon);
+	if (Weapon == nullptr || !Weapon->VisualActorClass->IsChildOf(ABaseRangeWeapon::StaticClass()))
+	{
+		return;
+	}
+
+	const TSubclassOf<ABaseRangeWeapon> WeaponClass = *Weapon->VisualActorClass;
+	EquipWeaponFromClass(WeaponClass);
 }
 
 void UWeaponManagerComponent::EquipWeapon(ABaseRangeWeapon* NewWeapon)
@@ -210,6 +228,14 @@ void UWeaponManagerComponent::OnRep_CurrentWeapon(ABaseRangeWeapon* PrevWeapon)
 	UE_LOG(LogTemp, Warning, TEXT("Weapon changed on client %s"), *Character->GetName());
 }
 
+void UWeaponManagerComponent::OnRegister()
+{
+	Super::OnRegister();
+
+	Character = Cast<AArcher>(GetOwner());
+	check(Character);
+}
+
 void UWeaponManagerComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
@@ -219,9 +245,10 @@ void UWeaponManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Character = Cast<AArcher>(GetOwner());
+	Character->GetInventoryManagerComponent()
+	         ->OnInventoryStateChange.AddUObject(this, &ThisClass::AutoEquipWeapon);
 }
-
+  
 bool UWeaponManagerComponent::CanEquipWeapon(const ABaseRangeWeapon* NewWeapon) const
 {
 	// for now allow to equip any if no current weapon

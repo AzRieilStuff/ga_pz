@@ -19,4 +19,6 @@ public :
 	UHealthKitInventoryItem();
 
 	virtual bool UseItem(AArcher* Target) override;
+
+	virtual int32 GetStackLimit() const override;
 };

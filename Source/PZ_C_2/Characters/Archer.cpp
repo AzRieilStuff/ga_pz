@@ -1,5 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+
 #include "Archer.h"
 
 #include "AbilitySystemComponent.h"
@@ -20,6 +21,7 @@
 #include "PZ_C_2/Effects/PassiveHealthRegeneration.h"
 #include "PZ_C_2/Effects/PassiveStaminaRegeneration.h"
 #include "PZ_C_2/Framework/GameInstanceMain.h"
+#include "PZ_C_2/Items/Core/BaseInventoryItem.h"
 
 // Sets default values
 AArcher::AArcher()
@@ -124,24 +126,12 @@ void AArcher::BeginPlay()
 	SpringArmComponent->TargetArmLength = CameraDistanceCurrent;
 	SpringArmComponent->TargetOffset = CameraOffsetCurrent;
 
-	// Init default weapon
-	if (HasAuthority() && DefaultWeapon)
-	{
-		GetWorldTimerManager().SetTimerForNextTick(this, &AArcher::EquipDefaultWeapon);
-		//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, "Equip default weapon");
-	}
-
 	if (IsLocallyControlled())
 	{
 		InitClientAbilityMap();
 	}
 
 	CharacterMovementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
-}
-
-void AArcher::EquipDefaultWeapon()
-{
-	WeaponManagerComponent->EquipWeaponFromClass(DefaultWeapon);
 }
 
 void AArcher::OnRep_StateFlags(const int32 PrevValue)
@@ -398,7 +388,6 @@ void AArcher::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 		if (InventoryManagerComponent)
 		{
-			
 		}
 	}
 }

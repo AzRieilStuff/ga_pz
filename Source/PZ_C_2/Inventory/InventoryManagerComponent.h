@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PZ_C_2/Items/Core/BaseInventoryItem.h"
 #include "InventoryManagerComponent.generated.h"
 
 UENUM()
@@ -26,7 +27,7 @@ class AArcher;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemStateChange, const UBaseInventoryItem*, Item);
 
-DECLARE_DELEGATE(FOnInventoryStateChange)
+DECLARE_MULTICAST_DELEGATE(FOnInventoryStateChange)
 
 /**
  * 
@@ -52,6 +53,11 @@ class PZ_C_2_API UInventoryManagerComponent : public UActorComponent
 
 	// todo Activation delay
 	TMap<EInventorySlot, float> ActivationDelay;
+
+	UPROPERTY(EditDefaultsOnly, meta=(AllowPrivateAccess))
+	TMap<TSubclassOf<ABaseItem>, int32> DefaultInventory;
+
+	void InitDefaultInventory();
 public:
 	UInventoryManagerComponent();
 
@@ -60,16 +66,18 @@ public:
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 	inline TMap<EInventorySlot, UBaseInventoryItem*> GetActiveItems() const { return ActiveItems; };
 
-	TArray<UBaseInventoryItem*> GetItems(const EInventorySlot SlotType) const;
+	const TArray<UBaseInventoryItem*> GetItems(const EInventorySlot SlotType) const;
 
-	UBaseInventoryItem* GetActiveItem(const EInventorySlot SlotType) const;
+	const UBaseInventoryItem* GetActiveItem(const EInventorySlot SlotType) const;
 
+#pragma region Adding
 	UPROPERTY(BlueprintAssignable)
 	FOnItemStateChange OnItemPicked;
 
+	// Any of inventory contains was changed ( items, amount, etc )
 	FOnInventoryStateChange OnInventoryStateChange;
 
-	// [server + client]
+	// [server + client] add item to inventory if possible ( affect local only )
 	bool TryAddItem(UBaseInventoryItem* Item);
 
 	bool TryAddItem(ABaseItem* ItemActor);
@@ -77,4 +85,14 @@ public:
 	bool CanStoreItem(const UBaseInventoryItem* Item) const;
 
 	void UpdateSelectedItem();
+#pragma endregion
+#pragma region Using
+public:
+	UPROPERTY(BlueprintAssignable)
+	FOnItemStateChange OnItemAmountChange;
+
+	void ConsumeItem(EInventorySlot ActiveSlot, const int32 Amount);
+
+	void ConsumeItem(const UBaseInventoryItem* Item, const int32 Amount);
+#pragma endregion
 };

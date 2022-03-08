@@ -58,13 +58,6 @@ protected:
 	static bool bStackable;
 
 public:
-	UFUNCTION(BlueprintCallable)
-	static inline int32 GetStackLimit() { return MaxPerStack; };
-
-	// can be stacked with other items of this type
-	UFUNCTION(BlueprintCallable)
-	static inline bool GetIsStackable() { return bStackable; };
-
 	UFUNCTION()
 	virtual UBaseInventoryItem* GenerateInventoryData(UBaseInventoryItem* Target = nullptr) const;
 

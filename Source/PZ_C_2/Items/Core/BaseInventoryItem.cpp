@@ -1,6 +1,13 @@
 ﻿#include "BaseInventoryItem.h"
 #include "BaseItem.h"
 
+UBaseInventoryItem::UBaseInventoryItem()
+{
+	VisualActorClass = ABaseItem::StaticClass();
+	Amount = 1;
+	Icon = nullptr;
+}
+
 bool UBaseInventoryItem::UseItem(AArcher* Target)
 {
 	return false;
@@ -19,11 +26,4 @@ bool UBaseInventoryItem::CanUsedOn(AActor* Target) const
 ABaseItem* UBaseInventoryItem::GetItemDefaultObject() const
 {
 	return VisualActorClass ? VisualActorClass.GetDefaultObject() : nullptr;
-}
-
-UBaseInventoryItem::UBaseInventoryItem()
-{
-	VisualActorClass = ABaseItem::StaticClass();
-	Amount = 1;
-	Icon = nullptr;
 }
