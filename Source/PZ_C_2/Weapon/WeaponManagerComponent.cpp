@@ -81,7 +81,8 @@ void UWeaponManagerComponent::AutoEquipWeapon()
 		return;
 	}
 
-	UBaseInventoryItem* Weapon = Character->GetInventoryManagerComponent()->GetActiveItem(EInventorySlot::MainWeapon);
+	const UBaseInventoryItem* Weapon = Character->GetInventoryManagerComponent()->GetActiveItem(
+		EInventorySlot::MainWeapon);
 	if (Weapon == nullptr || !Weapon->VisualActorClass->IsChildOf(ABaseRangeWeapon::StaticClass()))
 	{
 		return;
@@ -208,6 +209,14 @@ void UWeaponManagerComponent::OnInterruptFireAction()
 	//CurrentWeapon->InterruptFire();
 }
 
+bool UWeaponManagerComponent::HasAmmo() const
+{
+	UBaseInventoryItem* AmmoPack = Character->GetInventoryManagerComponent()->GetActiveItem(
+		EInventorySlot::MainWeaponAmmo);
+
+	return AmmoPack != nullptr && AmmoPack->GetAmount() > 0;
+}
+
 void UWeaponManagerComponent::OnReloadAction()
 {
 }
@@ -248,7 +257,7 @@ void UWeaponManagerComponent::BeginPlay()
 	Character->GetInventoryManagerComponent()
 	         ->OnInventoryStateChange.AddUObject(this, &ThisClass::AutoEquipWeapon);
 }
-  
+
 bool UWeaponManagerComponent::CanEquipWeapon(const ABaseRangeWeapon* NewWeapon) const
 {
 	// for now allow to equip any if no current weapon

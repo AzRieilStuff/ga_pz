@@ -32,7 +32,6 @@ ABaseItem::ABaseItem()
 	MaxPerStack = 1;
 }
 
-
 // Called when the game starts or when spawned
 void ABaseItem::BeginPlay()
 {
@@ -66,7 +65,7 @@ UBaseInventoryItem* ABaseItem::GenerateInventoryData(UBaseInventoryItem* Target)
 	Target->Name = GetName();
 	Target->IconLabel = FString("");
 	Target->Icon = InventoryIcon;
-	Target->Amount = 1;
+	Target->SetAmount(1);
 
 	Target->VisualActorClass = GetClass();
 

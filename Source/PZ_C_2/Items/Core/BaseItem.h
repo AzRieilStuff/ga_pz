@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "PickableInterface.h"
-#include "GameFramework/Actor.h"
 #include "PZ_C_2/Inventory/InventoryManagerComponent.h"
 #include "BaseItem.generated.h"
 
 class AArcher;
 class UPickBoxComponent;
 class UBaseInventoryItem;
+class AActor;
 
 UCLASS()
 class PZ_C_2_API ABaseItem : public AActor, public IPickableInterface

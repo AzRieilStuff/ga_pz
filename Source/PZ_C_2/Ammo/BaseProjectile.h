@@ -11,12 +11,16 @@ class PZ_C_2_API ABaseProjectile : public AActor
 {
 	GENERATED_BODY()
 
+protected:
+	bool bStick;
+
 public:
 	ABaseProjectile();
 
 	// [server]
 	virtual void OnShoot();
 
+	inline bool GetShouldStick() const { return bStick; };
 protected:
 	virtual void BeginPlay() override;
 

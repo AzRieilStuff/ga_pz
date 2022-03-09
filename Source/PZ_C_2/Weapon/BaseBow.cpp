@@ -5,7 +5,7 @@
 #include "PZ_C_2/Characters/Archer.h"
 #include "PZ_C_2/Items/Core/PickBoxComponent.h"
 
-ABaseProjectile* ABaseBow::SpawnProjectile(FVector AimLocation)
+ABaseProjectile* ABaseBow::SpawnProjectile(FVector AimLocation, const bool DeferredSpawn)
 {
 	Super::SpawnProjectile(AimLocation);
 
@@ -32,10 +32,27 @@ ABaseProjectile* ABaseBow::SpawnProjectile(FVector AimLocation)
 
 	ComputeProjectileTransform(Character, AimLocation, SocketLocation, ArrowRotation);
 
-	AArrow* Arrow = Cast<AArrow>(GetWorld()->SpawnActor(ProjectileClass,
-	                                                    &SocketLocation,
-	                                                    &ArrowRotation,
-	                                                    SpawnParameters));
+	AArrow* Arrow;
+	if (DeferredSpawn)
+	{
+		const FTransform ArrowTransform = FTransform(
+			ArrowRotation,
+			SocketLocation,
+			FVector::OneVector
+		);
+		Arrow = GetWorld()->SpawnActorDeferred<AArrow>(
+			ProjectileClass, ArrowTransform
+		);
+		Arrow->SetOwner(GetOwner());
+		Arrow->SetInstigator(Character);
+	}
+	else
+	{
+		Arrow = Cast<AArrow>(GetWorld()->SpawnActor(ProjectileClass,
+		                                            &SocketLocation,
+		                                            &ArrowRotation,
+		                                            SpawnParameters));
+	}
 
 	if (Arrow == nullptr)
 	{

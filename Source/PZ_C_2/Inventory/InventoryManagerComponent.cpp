@@ -2,12 +2,12 @@
 
 
 #include "InventoryManagerComponent.h"
+
 #include "Kismet/GameplayStatics.h"
 #include "PZ_C_2/Characters/Archer.h"
 #include "PZ_C_2/Items/Core/BaseInventoryItem.h"
 #include "Containers/ContainerAllocationPolicies.h"
 #include "PZ_C_2/Items/Core/BaseItem.h"
-#include "PZ_C_2/Items/Core/PickBoxComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogInventory, All, All);
 
@@ -22,7 +22,6 @@ void UInventoryManagerComponent::InitDefaultInventory()
 		}
 
 		// cdo
-		auto a = Row.Key.GetDefaultObject();
 		UBaseInventoryItem* Item = Row.Key.GetDefaultObject()->GenerateInventoryData();
 
 		if (Item == nullptr)
@@ -34,7 +33,7 @@ void UInventoryManagerComponent::InitDefaultInventory()
 
 		if (Item->GetIsStackable())
 		{
-			Item->Amount = Row.Value < 1 ? 1 : Row.Value;
+			Item->SetAmount(Row.Value < 1 ? 1 : Row.Value);
 		}
 
 		if (!TryAddItem(Item))
@@ -109,13 +108,13 @@ bool UInventoryManagerComponent::TryAddItem(UBaseInventoryItem* Item)
 
 			// if we have a similar item, try to merge them, break otherwise
 			const int32 PerStackLimit = Item->GetStackLimit();
-			if (SameSlotItem->Amount < PerStackLimit)
+			if (SameSlotItem->GetAmount() < PerStackLimit)
 			{
 				// merge items to its possible cap.
-				SameSlotItem->Amount = FMath::Min(
-					SameSlotItem->Amount + Item->Amount,
+				SameSlotItem->SetAmount(FMath::Min(
+					SameSlotItem->GetAmount() + Item->GetAmount(),
 					PerStackLimit
-				);
+				));
 
 				OnInventoryStateChange.Broadcast();
 				OnItemPicked.Broadcast(SameSlotItem);
@@ -166,14 +165,7 @@ bool UInventoryManagerComponent::CanStoreItem(const UBaseInventoryItem* Item) co
 			continue;
 		}
 
-		if (SameSlotItem->Amount < Item->GetStackLimit())
-		{
-			return true;
-		}
-		else // limit is full
-		{
-			return false;
-		}
+		return !SameSlotItem->GetIsStackFull();
 	}
 
 	// check place for new unique items
@@ -204,15 +196,21 @@ void UInventoryManagerComponent::UpdateSelectedItem()
 	}
 }
 
+void UInventoryManagerComponent::ConsumeItem(const EInventorySlot ActiveSlot, const int32 Amount)
+{
+	return ConsumeItem(GetActiveItem(ActiveSlot), Amount);
+}
+
 void UInventoryManagerComponent::ConsumeItem(const UBaseInventoryItem* Item, const int32 Amount)
 {
-	if (Amount == 0)
+	if (Amount == 0 || Item == nullptr)
 	{
+		UE_LOG(LogInventory, Warning, TEXT("Invalid consuming call"));
 		return;
 	}
-	int32 InventoryItemIndex;
 
-	auto InventoryItem = Items.FindByPredicate([Item](UBaseInventoryItem* Value)
+	// get non-const pointer
+	const auto InventoryItem = Items.FindByPredicate([Item](UBaseInventoryItem* Value)
 	{
 		return Value == Item;
 	});
@@ -220,11 +218,12 @@ void UInventoryManagerComponent::ConsumeItem(const UBaseInventoryItem* Item, con
 	// passed item isnt stored in this inventory
 	if (InventoryItem == nullptr)
 	{
-		UE_LOG(LogInventory, Error, TEXT("Trying to remove %s from %s inventory, but there is no one"), Item->GetName(),
-		       GetOwner()->GetName())
+		UE_LOG(LogInventory, Error, TEXT("Trying to remove %s from %s inventory, but there is no one"),
+		       *Item->GetName(),
+		       *GetOwner()->GetName())
 		return;
 	}
 
-	(*InventoryItem)->Amount -= Amount;
+	(*InventoryItem)->ModifyAmount(-Amount);
 	OnItemAmountChange.Broadcast(*InventoryItem);
 }

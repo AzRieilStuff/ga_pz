@@ -250,7 +250,7 @@ private:
 	TArray<FName> ProjectileStickSocketNames;
 
 	void LocateStickSockets();
-
+public:
 	FName* FindClosestSocket(const FVector Position);
 #pragma endregion
 };

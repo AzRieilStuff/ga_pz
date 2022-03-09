@@ -54,8 +54,21 @@ void AArrow::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* Other
 	AArcher* Character = Cast<AArcher>(OtherActor);
 	if (Character != nullptr)
 	{
-		// todo sticking
-		// Destroy();
+		// sticking
+		FName* Socket = Character->FindClosestSocket(GetActorLocation());
+		if (Socket != nullptr)
+		{
+			SetOwner(Character);
+			AttachToComponent(
+				Character->GetMesh(),
+				FAttachmentTransformRules::KeepWorldTransform,
+				*Socket
+			);
+		}
+		else
+		{
+			Destroy();
+		}
 	}
 }
 

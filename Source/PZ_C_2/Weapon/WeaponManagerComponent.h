@@ -6,8 +6,10 @@
 #include "BaseRangeWeapon.h"
 #include "GameplayAbilitySpec.h"
 #include "Components/ActorComponent.h"
+
 #include "WeaponManagerComponent.generated.h"
 
+class ABaseRangeWeapon;
 class AArcher;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponInteraction, ABaseRangeWeapon*, Item);
@@ -149,6 +151,8 @@ public:
 
 	UFUNCTION()
 	void OnInterruptFireAction();
+
+	bool HasAmmo() const;
 #pragma endregion
 
 #pragma region Reloading

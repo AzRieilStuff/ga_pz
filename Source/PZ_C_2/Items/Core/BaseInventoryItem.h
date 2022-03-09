@@ -1,20 +1,25 @@
 ﻿#pragma once
-#include "PZ_C_2/Inventory/InventoryManagerComponent.h"
-
 #include "BaseInventoryItem.generated.h"
 
 class ABaseItem;
 class AArcher;
+class UInventoryManagerComponent;
+
+enum class EInventorySlot : uint8;
 
 UCLASS(Blueprintable, Abstract)
 class UBaseInventoryItem : public UObject
 {
 	GENERATED_BODY()
-protected:
+
+	int32 Amount;
+
 public:
 	UBaseInventoryItem();
 
-	// static fails
+	UBaseInventoryItem(EInventorySlot Slot, TSubclassOf<ABaseItem> ActorClass, int32 InitAmount, FString ItemName,
+	                   UTexture* IconTexture);
+
 	UPROPERTY(BlueprintReadOnly)
 	TSubclassOf<ABaseItem> VisualActorClass;
 
@@ -26,9 +31,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FString IconLabel;
-
-	UPROPERTY(BlueprintReadOnly)
-	int32 Amount;
 
 	UPROPERTY(BlueprintReadOnly)
 	EInventorySlot SlotType;
@@ -52,4 +54,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	virtual bool GetIsStackable() const { return GetStackLimit() > 1; };
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	inline bool GetIsStackFull() const { return Amount == GetStackLimit(); };
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	inline int32 GetAmount() const { return Amount; };
+
+	void SetAmount(const int NewAmount);
+
+	void ModifyAmount(const int ModValue);
+	
 };

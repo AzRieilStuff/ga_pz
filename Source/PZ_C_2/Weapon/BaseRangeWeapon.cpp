@@ -53,6 +53,35 @@ UBaseInventoryItem* ABaseRangeWeapon::GenerateInventoryData(UBaseInventoryItem* 
 
 void ABaseRangeWeapon::ServerPerformFire_Implementation(FVector AimLocation)
 {
+	ABaseProjectile* Arrow = SpawnProjectile(AimLocation, true);
+	if (Arrow == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to replicate shooting on arrow spawn"));
+		return;
+	}
+
+	// Do not replicate arrow as one was shoot already from client
+	Arrow->SetReplicates(false);
+	Arrow->FinishSpawning(Arrow->GetTransform());
+
+	Arrow->OnShoot();
+
+	// keep inventory state synchronized with server
+	OwnerManagerComponent->Character->GetInventoryManagerComponent()->ConsumeItem(
+		EInventorySlot::MainWeaponAmmo, 1
+	);
+
+	MulticastPerformFire(AimLocation);
+}
+
+void ABaseRangeWeapon::MulticastPerformFire_Implementation(const FVector AimLocation)
+{
+	// Commit shoot visuals for all but server & client who perform it
+	if (GetOwner()->GetLocalRole() != ROLE_SimulatedProxy || GetOwner()->GetRemoteRole() == ROLE_Authority)
+	{
+		return;
+	}
+
 	ABaseProjectile* Arrow = SpawnProjectile(AimLocation);
 	Arrow->OnShoot();
 }
@@ -98,7 +127,7 @@ FVector ABaseRangeWeapon::GetAimLocation(const AArcher* Character) const
 	return AimTarget;
 }
 
-ABaseProjectile* ABaseRangeWeapon::SpawnProjectile(FVector AimLocation)
+ABaseProjectile* ABaseRangeWeapon::SpawnProjectile(FVector AimLocation, const bool DeferredSpawn)
 {
 	return nullptr;
 }
@@ -106,11 +135,28 @@ ABaseProjectile* ABaseRangeWeapon::SpawnProjectile(FVector AimLocation)
 void ABaseRangeWeapon::Fire()
 {
 	// from server or client but only once per shoot
-	if (OwnerManagerComponent->Character->IsLocallyControlled())
+	FVector Aim = GetAimLocation(OwnerManagerComponent->Character);
+
+	ABaseProjectile* Arrow = SpawnProjectile(Aim);
+	Arrow->OnShoot();
+
+	OwnerManagerComponent->Character->GetInventoryManagerComponent()->ConsumeItem(
+		EInventorySlot::MainWeaponAmmo, 1
+	);
+
+	if (GetOwner()->GetLocalRole() != ROLE_Authority)
 	{
-		FVector Aim = GetAimLocation(OwnerManagerComponent->Character);
 		ServerPerformFire(Aim);
 	}
+	else
+	{
+		MulticastPerformFire(Aim);
+	}
+}
+
+bool ABaseRangeWeapon::ServerPerformFire_Validate(FVector AimLocation)
+{
+	return CanFire(); // kick bastard if he is firing without ammo
 }
 
 bool ABaseRangeWeapon::CanReload() const
@@ -120,8 +166,7 @@ bool ABaseRangeWeapon::CanReload() const
 
 bool ABaseRangeWeapon::CanFire() const
 {
-	return true;
-	return Ammo.InClip > 0 && !bIsReloading;
+	return OwnerManagerComponent->HasAmmo();
 }
 
 void ABaseRangeWeapon::RestoreAmmo()

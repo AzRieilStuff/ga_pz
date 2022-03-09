@@ -48,14 +48,17 @@ public:
 	
 protected:
 	// [server] 
-	virtual class ABaseProjectile* SpawnProjectile(FVector AimLocation);
+	virtual class ABaseProjectile* SpawnProjectile(FVector AimLocation, const bool DeferredSpawn = false);
 
-	// [local + server] runs for each client 
+	// [local + server] runs for each client, invokes from ability
 	virtual void Fire();
 
 	// [server] handle shooting, spawn projectiles, shoot effect
-	UFUNCTION(Server, Reliable)
+	UFUNCTION(Server, Reliable, WithValidation)
 	virtual void ServerPerformFire(FVector AimLocation);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastPerformFire(const FVector AimLocation);
 
 	// [server] 
 	virtual void ComputeProjectileTransform(const AArcher* Character, FVector AimLocation, FVector& Location,

@@ -232,25 +232,6 @@ float AArcher::TakeDamage(float DamageTaken, const struct FDamageEvent& DamageEv
 	Super::TakeDamage(DamageTaken, DamageEvent, EventInstigator, DamageCauser);
 
 	Attributes->SetHealth(Attributes->GetHealth() - DamageTaken);
-
-	if (DamageCauser->IsA(AArrow::StaticClass()))
-	{
-		// sticking
-
-		if (GetLocalRole() == ROLE_Authority)
-		{
-			FName* Socket = FindClosestSocket(DamageCauser->GetActorLocation());
-			if (Socket != nullptr)
-			{
-				DamageCauser->SetOwner(this);
-				DamageCauser->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepWorldTransform, *Socket);
-			}
-			else
-			{
-				DamageCauser->Destroy();
-			}
-		}
-	}
 	return DamageTaken;
 }
 
@@ -410,7 +391,6 @@ void AArcher::ClimbServer_Implementation()
 	{
 		return;
 	}
-
 
 	// debug
 	const FName TraceTag("Debug");

@@ -3,10 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PZ_C_2/Items/Core/BaseInventoryItem.h"
 #include "InventoryManagerComponent.generated.h"
 
-UENUM()
+UENUM(BlueprintType)
 enum class EInventorySlot : uint8
 {
 	None = 0,
@@ -66,9 +65,9 @@ public:
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 	inline TMap<EInventorySlot, UBaseInventoryItem*> GetActiveItems() const { return ActiveItems; };
 
-	const TArray<UBaseInventoryItem*> GetItems(const EInventorySlot SlotType) const;
+	TArray<UBaseInventoryItem*> GetItems(const EInventorySlot SlotType) const;
 
-	const UBaseInventoryItem* GetActiveItem(const EInventorySlot SlotType) const;
+	UBaseInventoryItem* GetActiveItem(const EInventorySlot SlotType) const;
 
 #pragma region Adding
 	UPROPERTY(BlueprintAssignable)
@@ -91,7 +90,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnItemStateChange OnItemAmountChange;
 
-	void ConsumeItem(EInventorySlot ActiveSlot, const int32 Amount);
+	void ConsumeItem(const EInventorySlot ActiveSlot, const int32 Amount);
 
 	void ConsumeItem(const UBaseInventoryItem* Item, const int32 Amount);
 #pragma endregion
