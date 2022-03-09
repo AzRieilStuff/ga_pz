@@ -74,21 +74,21 @@ void UWeaponManagerComponent::ServerUnequipWeapon_Implementation()
 	UnequipWeapon();
 }
 
-void UWeaponManagerComponent::AutoEquipWeapon()
+void UWeaponManagerComponent::AutoEquipWeapon(UBaseInventoryItem* PickedItem)
 {
 	if (IsWeaponEquipped())
 	{
 		return;
 	}
 
-	const UBaseInventoryItem* Weapon = Character->GetInventoryManagerComponent()->GetActiveItem(
-		EInventorySlot::MainWeapon);
-	if (Weapon == nullptr || !Weapon->VisualActorClass->IsChildOf(ABaseRangeWeapon::StaticClass()))
+	//const UBaseInventoryItem* Weapon = Character->GetInventoryManagerComponent()->GetActiveItem(EInventorySlot::MainWeapon);
+
+	if (PickedItem == nullptr || !PickedItem->VisualActorClass->IsChildOf(ABaseRangeWeapon::StaticClass()))
 	{
 		return;
 	}
 
-	const TSubclassOf<ABaseRangeWeapon> WeaponClass = *Weapon->VisualActorClass;
+	const TSubclassOf<ABaseRangeWeapon> WeaponClass = *PickedItem->VisualActorClass;
 	EquipWeaponFromClass(WeaponClass);
 }
 
@@ -255,7 +255,7 @@ void UWeaponManagerComponent::BeginPlay()
 	Super::BeginPlay();
 
 	Character->GetInventoryManagerComponent()
-	         ->OnInventoryStateChange.AddUObject(this, &ThisClass::AutoEquipWeapon);
+	         ->OnItemPicked.AddDynamic(this, &ThisClass::AutoEquipWeapon);
 }
 
 bool UWeaponManagerComponent::CanEquipWeapon(const ABaseRangeWeapon* NewWeapon) const

@@ -24,9 +24,8 @@ class AArcher;
 
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemInteraction, const UBaseInventoryItem*, Item);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemStateChange, const UBaseInventoryItem*, Item);
-
-DECLARE_MULTICAST_DELEGATE(FOnInventoryStateChange)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemStateChange, UBaseInventoryItem*, Item);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSlotItemChanged, const EInventorySlot, Slot);
 
 /**
  * 
@@ -73,8 +72,11 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnItemStateChange OnItemPicked;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnSlotItemChanged OnActiveSlotItemChanged;
+
 	// Any of inventory contains was changed ( items, amount, etc )
-	FOnInventoryStateChange OnInventoryStateChange;
+	//FOnInventoryStateChange OnInventoryStateChange;
 
 	// [server + client] add item to inventory if possible ( affect local only )
 	bool TryAddItem(UBaseInventoryItem* Item);
@@ -83,15 +85,26 @@ public:
 
 	bool CanStoreItem(const UBaseInventoryItem* Item) const;
 
-	void UpdateSelectedItem();
+	UFUNCTION()
+	void UpdateSelectedItem(UBaseInventoryItem* UpdatedItem);
+
+	void UpdateSelectedItem(const EInventorySlot Slot);
+
+	UFUNCTION()
+	void RemoveItem(UBaseInventoryItem* Item);
+
 #pragma endregion
 #pragma region Using
 public:
 	UPROPERTY(BlueprintAssignable)
 	FOnItemStateChange OnItemAmountChange;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnItemStateChange OnItemRemoved;
+
 	void ConsumeItem(const EInventorySlot ActiveSlot, const int32 Amount);
 
-	void ConsumeItem(const UBaseInventoryItem* Item, const int32 Amount);
+	void ConsumeItem(UBaseInventoryItem* Item, const int32 Amount);
+
 #pragma endregion
 };

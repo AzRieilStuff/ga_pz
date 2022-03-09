@@ -70,7 +70,7 @@ private:
 
 	// [client]
 	UFUNCTION()
-	void AutoEquipWeapon();
+	void AutoEquipWeapon(class UBaseInventoryItem* PickedItem);
 public:
 	// [client]
 	UFUNCTION()

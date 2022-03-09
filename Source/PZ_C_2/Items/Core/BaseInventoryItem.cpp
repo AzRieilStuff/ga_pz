@@ -22,12 +22,14 @@ UBaseInventoryItem::UBaseInventoryItem()
 	Icon = nullptr;
 }
 
+/*
 UBaseInventoryItem::UBaseInventoryItem(EInventorySlot Slot = EInventorySlot::None,
                                        TSubclassOf<ABaseItem> ActorClass = nullptr, int32 InitAmount = 1,
                                        FString ItemName = FString(""), UTexture* IconTexture = nullptr)
 	: Amount(InitAmount), VisualActorClass(ActorClass), Icon(IconTexture), Name(ItemName), SlotType(Slot)
 {
 }
+*/
 
 bool UBaseInventoryItem::UseItem(AArcher* Target)
 {

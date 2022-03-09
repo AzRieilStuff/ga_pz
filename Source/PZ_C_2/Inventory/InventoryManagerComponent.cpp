@@ -65,7 +65,8 @@ UInventoryManagerComponent::UInventoryManagerComponent()
 void UInventoryManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	OnInventoryStateChange.AddUObject(this, &ThisClass::UpdateSelectedItem);
+	
+	OnItemPicked.AddDynamic(this, &ThisClass::UpdateSelectedItem);
 
 	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::InitDefaultInventory);
 }
@@ -116,7 +117,7 @@ bool UInventoryManagerComponent::TryAddItem(UBaseInventoryItem* Item)
 					PerStackLimit
 				));
 
-				OnInventoryStateChange.Broadcast();
+				//OnInventoryStateChange.Broadcast();
 				OnItemPicked.Broadcast(SameSlotItem);
 
 				return true;
@@ -135,7 +136,7 @@ bool UInventoryManagerComponent::TryAddItem(UBaseInventoryItem* Item)
 
 	Items.Add(Item);
 
-	OnInventoryStateChange.Broadcast();
+	//OnInventoryStateChange.Broadcast();
 	OnItemPicked.Broadcast(Item);
 
 	return true;
@@ -177,23 +178,45 @@ bool UInventoryManagerComponent::CanStoreItem(const UBaseInventoryItem* Item) co
 	return true;
 }
 
-void UInventoryManagerComponent::UpdateSelectedItem()
+void UInventoryManagerComponent::UpdateSelectedItem(UBaseInventoryItem* UpdatedItem)
 {
-	for (const auto ActiveItem : ActiveItems)
+	UpdateSelectedItem(UpdatedItem->SlotType);
+}
+
+void UInventoryManagerComponent::UpdateSelectedItem(const EInventorySlot Slot)
+{
+	if (ActiveItems[Slot] != nullptr) // there is already an item
 	{
-		if (ActiveItem.Value != nullptr) // there is already an item
-		{
-			continue;
-		}
-
-		TArray<UBaseInventoryItem*> CurrentSlotItems = GetItems(ActiveItem.Key);
-		if (CurrentSlotItems.Num() == 0)
-		{
-			continue;
-		}
-
-		ActiveItems[ActiveItem.Key] = CurrentSlotItems[0];
+		return;
 	}
+
+	TArray<UBaseInventoryItem*> CurrentSlotItems = GetItems(Slot);
+	if (CurrentSlotItems.Num() == 0)
+	{
+		return;
+	}
+
+	ActiveItems[Slot] = CurrentSlotItems[0];
+	OnActiveSlotItemChanged.Broadcast(Slot);
+}
+
+void UInventoryManagerComponent::RemoveItem(UBaseInventoryItem* Item)
+{
+	if (Item->GetAmount() > 0)
+	{
+		return;
+	}
+
+	if (ActiveItems[Item->SlotType] == Item)
+	{
+		ActiveItems[Item->SlotType] = nullptr;
+		OnActiveSlotItemChanged.Broadcast(Item->SlotType);
+	}
+
+	Items.Remove(Item);
+	UpdateSelectedItem(Item);
+
+	OnItemRemoved.Broadcast(Item);
 }
 
 void UInventoryManagerComponent::ConsumeItem(const EInventorySlot ActiveSlot, const int32 Amount)
@@ -201,7 +224,7 @@ void UInventoryManagerComponent::ConsumeItem(const EInventorySlot ActiveSlot, co
 	return ConsumeItem(GetActiveItem(ActiveSlot), Amount);
 }
 
-void UInventoryManagerComponent::ConsumeItem(const UBaseInventoryItem* Item, const int32 Amount)
+void UInventoryManagerComponent::ConsumeItem(UBaseInventoryItem* Item, const int32 Amount)
 {
 	if (Amount == 0 || Item == nullptr)
 	{
@@ -209,14 +232,14 @@ void UInventoryManagerComponent::ConsumeItem(const UBaseInventoryItem* Item, con
 		return;
 	}
 
-	// get non-const pointer
-	const auto InventoryItem = Items.FindByPredicate([Item](UBaseInventoryItem* Value)
+	// ensure item is present in current inventory
+	const auto InventoryItemPtr = Items.FindByPredicate([Item](UBaseInventoryItem* Value)
 	{
 		return Value == Item;
 	});
 
 	// passed item isnt stored in this inventory
-	if (InventoryItem == nullptr)
+	if (InventoryItemPtr == nullptr)
 	{
 		UE_LOG(LogInventory, Error, TEXT("Trying to remove %s from %s inventory, but there is no one"),
 		       *Item->GetName(),
@@ -224,6 +247,20 @@ void UInventoryManagerComponent::ConsumeItem(const UBaseInventoryItem* Item, con
 		return;
 	}
 
-	(*InventoryItem)->ModifyAmount(-Amount);
-	OnItemAmountChange.Broadcast(*InventoryItem);
+	UBaseInventoryItem* InventoryItem = *InventoryItemPtr;
+	InventoryItem->ModifyAmount(-Amount);
+	
+	if (Amount <= 0)
+	{
+		RemoveItem(InventoryItem);
+	}
+	else
+	{
+		OnItemAmountChange.Broadcast(InventoryItem);
+
+		if( ActiveItems[InventoryItem->SlotType] == InventoryItem )
+		{
+			OnActiveSlotItemChanged.Broadcast(InventoryItem->SlotType);
+		}
+	}
 }
