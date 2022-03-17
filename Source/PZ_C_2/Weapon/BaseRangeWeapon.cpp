@@ -67,8 +67,8 @@ void ABaseRangeWeapon::ServerPerformFire_Implementation(FVector AimLocation)
 	Arrow->OnShoot();
 
 	// keep inventory state synchronized with server
-	OwnerManagerComponent->Character->GetInventoryManagerComponent()->ConsumeItem(
-		EInventorySlot::MainWeaponAmmo, 1
+	OwnerManagerComponent->Character->GetInventoryManagerComponent()->ModifyItemAmount(
+		EInventorySlot::MainWeaponAmmo, -1
 	);
 
 	MulticastPerformFire(AimLocation);
@@ -140,8 +140,8 @@ void ABaseRangeWeapon::Fire()
 	ABaseProjectile* Arrow = SpawnProjectile(Aim);
 	Arrow->OnShoot();
 
-	OwnerManagerComponent->Character->GetInventoryManagerComponent()->ConsumeItem(
-		EInventorySlot::MainWeaponAmmo, 1
+	OwnerManagerComponent->Character->GetInventoryManagerComponent()->ModifyItemAmount(
+		EInventorySlot::MainWeaponAmmo, -1
 	);
 
 	if (GetOwner()->GetLocalRole() != ROLE_Authority)
@@ -209,6 +209,7 @@ bool ABaseRangeWeapon::CanPickupBy(AArcher* Character) const
 	return bPickable && Character->GetWeaponManagerComponent()->CanEquipWeapon(this);
 }
 
+/*
 void ABaseRangeWeapon::ServerPickup(AArcher* Character)
 {
 	//Character->WeaponManagerComponent->CurrentWeapon = this;
@@ -216,3 +217,4 @@ void ABaseRangeWeapon::ServerPickup(AArcher* Character)
 
 	Super::ServerPickup(Character);
 }
+*/

@@ -73,58 +73,33 @@ UBaseInventoryItem* ABaseItem::GenerateInventoryData(UBaseInventoryItem* Target)
 	return Target;
 }
 
-void ABaseItem::TryPickup(AArcher* Character)
+void ABaseItem::TryPickup(AArcher* Character) // server
 {
-	if (!bPickable || Character->GetLocalRole() <= ROLE_SimulatedProxy)
+	if (!bPickable)
 	{
 		return;
 	}
 
-	if (Character->GetLocalRole() == ROLE_Authority)
+	if (!Character->GetInventoryManagerComponent()->TryAddItem(this))
 	{
-		if (Character->GetInventoryManagerComponent()->TryAddItem(this) && bDestroyOnPickup)
-		{
-			Destroy();
-		}
+		return;
 	}
-	else
-	{
-		bool LocalResult = Character->GetInventoryManagerComponent()->TryAddItem(this);
-		// allow client to predict picking
 
-		if (LocalResult)
-		{
-			PickBoxComponent->UnregisterComponent(); // prevent further interaction
-			ServerPickup(Character);
-		}
-	}
-}
-
-bool ABaseItem::ServerPickup_Validate(AArcher* Character)
-{
-	return CanPickupBy(Character);
-}
-
-void ABaseItem::ServerPickup_Implementation(AArcher* Character)
-{
-	// keep server value synchronized with client
-	Character->GetInventoryManagerComponent()->TryAddItem(this);
-
-	if (bDestroyOnPickup)
-	{
-		Destroy(); // will be replicated by UE
-	}
-	else
-	{
-		MulticastPickup(Character); // item has no ownership, so use multicast for now
-	}
+	MulticastPickup(Character);
 }
 
 void ABaseItem::MulticastPickup_Implementation(AArcher* Character)
 {
-	if (Character->IsLocallyControlled())
+	if (Character->GetLocalRole() == ROLE_AutonomousProxy)
 	{
-		PickBoxComponent->RegisterComponent(); // restore active pickable state
+		if (!Character->GetInventoryManagerComponent()->TryAddItem(this))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Pickup failed on server, but valid got from server"));
+		}
+	}
+	if (bDestroyOnPickup)
+	{
+		Destroy();
 	}
 }
 
@@ -133,6 +108,12 @@ void ABaseItem::NotifyActorBeginOverlap(AActor* OtherActor)
 	Super::NotifyActorBeginOverlap(OtherActor);
 
 	check(OtherActor);
+
+
+	if (GetLocalRole() != ROLE_Authority)
+	{
+		return;
+	}
 
 	if (bPickable)
 	{

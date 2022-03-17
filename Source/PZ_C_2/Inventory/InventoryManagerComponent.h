@@ -8,12 +8,12 @@
 UENUM(BlueprintType)
 enum class EInventorySlot : uint8
 {
-	None = 0,
+	None = 0 UMETA(Hidden),
 	MainWeaponAmmo,
 	Quiver,
 	MainWeapon,
 	Consumable,
-	MAX
+	MAX UMETA(Hidden)
 };
 
 ENUM_RANGE_BY_FIRST_AND_LAST(EInventorySlot, EInventorySlot::None, EInventorySlot::MAX);
@@ -102,9 +102,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnItemStateChange OnItemRemoved;
 
-	void ConsumeItem(const EInventorySlot ActiveSlot, const int32 Amount);
+	void ModifyItemAmount(const EInventorySlot ActiveSlot, const int32 Amount);
 
-	void ConsumeItem(UBaseInventoryItem* Item, const int32 Amount);
+	void ModifyItemAmount(UBaseInventoryItem* Item, const int32 Amount);
 
 #pragma endregion
 };

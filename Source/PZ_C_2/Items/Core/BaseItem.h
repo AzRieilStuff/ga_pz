@@ -77,15 +77,15 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	inline bool GetIsPickable() const { return bPickable; }
 
-	// [client]
+	// [server]
 	UFUNCTION()
 	virtual void TryPickup(AArcher* Character) override;
 
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastPickup(AArcher* Character);
 
-	UFUNCTION(Server, Reliable, WithValidation)
-	virtual void ServerPickup(AArcher* Character);
+	//UFUNCTION(Server, Reliable, WithValidation)
+	//virtual void ServerPickup(AArcher* Character);
 
 	UFUNCTION(BlueprintCallable)
 	virtual bool CanPickupBy(AArcher* Character) const override;

@@ -111,14 +111,7 @@ bool UInventoryManagerComponent::TryAddItem(UBaseInventoryItem* Item)
 			const int32 PerStackLimit = Item->GetStackLimit();
 			if (SameSlotItem->GetAmount() < PerStackLimit)
 			{
-				// merge items to its possible cap.
-				SameSlotItem->SetAmount(FMath::Min(
-					SameSlotItem->GetAmount() + Item->GetAmount(),
-					PerStackLimit
-				));
-
-				//OnInventoryStateChange.Broadcast();
-				OnItemPicked.Broadcast(SameSlotItem);
+				ModifyItemAmount(SameSlotItem, Item->GetAmount());
 
 				return true;
 			}
@@ -219,12 +212,12 @@ void UInventoryManagerComponent::RemoveItem(UBaseInventoryItem* Item)
 	OnItemRemoved.Broadcast(Item);
 }
 
-void UInventoryManagerComponent::ConsumeItem(const EInventorySlot ActiveSlot, const int32 Amount)
+void UInventoryManagerComponent::ModifyItemAmount(const EInventorySlot ActiveSlot, const int32 Amount)
 {
-	return ConsumeItem(GetActiveItem(ActiveSlot), Amount);
+	return ModifyItemAmount(GetActiveItem(ActiveSlot), Amount);
 }
 
-void UInventoryManagerComponent::ConsumeItem(UBaseInventoryItem* Item, const int32 Amount)
+void UInventoryManagerComponent::ModifyItemAmount(UBaseInventoryItem* Item, const int32 Amount)
 {
 	if (Amount == 0 || Item == nullptr)
 	{
@@ -248,9 +241,9 @@ void UInventoryManagerComponent::ConsumeItem(UBaseInventoryItem* Item, const int
 	}
 
 	UBaseInventoryItem* InventoryItem = *InventoryItemPtr;
-	InventoryItem->ModifyAmount(-Amount);
-	
-	if (Amount <= 0)
+	InventoryItem->ModifyAmount(Amount);
+
+	if (InventoryItem->GetAmount() <= 0)
 	{
 		RemoveItem(InventoryItem);
 	}

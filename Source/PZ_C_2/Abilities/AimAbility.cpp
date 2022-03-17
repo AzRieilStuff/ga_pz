@@ -35,7 +35,12 @@ void UAimAbility::UpdateCameraPosition()
 		);
 
 		SourceCharacter->GetSpringArmComponent()->TargetArmLength = CameraArmLength;
-		SourceCharacter->GetSpringArmComponent()->TargetOffset = CameraArmOffset;
+		SourceCharacter->GetSpringArmComponent()->TargetOffset = FVector(
+			0.f, 0.f, CameraArmOffset.Z
+		);
+		SourceCharacter->GetSpringArmComponent()->SocketOffset = FVector(
+			0.f, CameraArmOffset.Y, 0.f
+		);
 	}
 
 	if (CameraInterpTime > AimingCameraTransitionDuration)
@@ -50,8 +55,14 @@ void UAimAbility::CalcCameraPosition(FVector& Offset, float& Distance, const flo
 {
 	const USpringArmComponent* Arm = SourceCharacter->GetSpringArmComponent();
 
+	const FVector CurrentOffset = FVector(
+		0.f,
+		Arm->SocketOffset.Y,
+		Arm->TargetOffset.Z
+	);
+
 	Offset = FMath::VInterpTo(
-		Arm->TargetOffset,
+		CurrentOffset,
 		SourceCharacter->CameraOffsetCurrent,
 		Delta,
 		InterpSpeed

@@ -123,6 +123,6 @@ public:
 
 	//virtual void MulticastPickup_Implementation(AArcher* Character) override;
 
-	virtual void ServerPickup(AArcher* Character) override;
+	//virtual void ServerPickup(AArcher* Character) override;
 #pragma endregion
 };
